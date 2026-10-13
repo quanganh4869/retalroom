@@ -79,34 +79,23 @@ export const TenantUtilityDetailPage: React.FC = () => {
   return (
     <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Top Bar Navigation */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
         <button
           type="button"
           className="rf-btn rf-btn-secondary"
-          onClick={() => navigate('/tenant/utilities')}
-          style={{ padding: '6px 12px' }}
+          onClick={() => setShowDisputeModal(true)}
         >
-          <ArrowLeft size={14} /> Quay lại lịch sử điện nước
+          <HelpCircle size={14} color="#D97706" /> Báo chỉ số bất thường
         </button>
-
-        <div style={{ display: 'flex', gap: '8px' }}>
-          <button
-            type="button"
-            className="rf-btn rf-btn-secondary"
-            onClick={() => setShowDisputeModal(true)}
+        {relatedInvoice && (
+          <Link
+            to={`/tenant/invoices/${relatedInvoice.id}`}
+            className="rf-btn rf-btn-primary"
+            style={{ textDecoration: 'none' }}
           >
-            <HelpCircle size={14} color="#D97706" /> Báo chỉ số bất thường
-          </button>
-          {relatedInvoice && (
-            <Link
-              to={`/tenant/invoices/${relatedInvoice.id}`}
-              className="rf-btn rf-btn-primary"
-              style={{ textDecoration: 'none' }}
-            >
-              <FileText size={14} /> Xem hóa đơn ({relatedInvoice.code})
-            </Link>
-          )}
-        </div>
+            <FileText size={14} /> Xem hóa đơn ({relatedInvoice.code})
+          </Link>
+        )}
       </div>
 
       {/* Main Content Card */}
