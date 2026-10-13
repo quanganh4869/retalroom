@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
   Calendar,
@@ -12,6 +12,7 @@ import { Modal } from '@/components/ui/Modal';
 export const TenantUtilitiesPage: React.FC = () => {
   const { user } = useAuth();
   const toast = useToast();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const periodParam = searchParams.get('period') || 'all';
@@ -178,10 +179,20 @@ export const TenantUtilitiesPage: React.FC = () => {
               const cost = eUsed * r.electricUnitPrice + wUsed * r.waterUnitPrice;
 
               return (
-                <tr key={r.id}>
+                <tr
+                  key={r.id}
+                  onClick={() => navigate(`/tenant/utilities/${r.id}`)}
+                  style={{
+                    cursor: 'pointer',
+                    transition: 'background-color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  title={`Bấm để xem chi tiết số điện nước kỳ ${r.period}`}
+                >
                   <td>
-                    <strong style={{ color: '#111827' }}>
-                      {r.period}
+                    <strong style={{ color: '#00594C' }}>
+                      {r.period} →
                     </strong>
                     <div style={{ fontSize: '11px', color: '#9CA3AF' }}>Chốt ngày {r.updatedAt}</div>
                   </td>
