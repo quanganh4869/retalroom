@@ -222,6 +222,34 @@ export interface PlatformRolePermission {
   }[];
 }
 
+// Background Jobs
+export interface PlatformBackgroundJob {
+  id: string;
+  jobType: 'BILLING_CYCLE_INVOICE' | 'METER_READING_REMINDER' | 'DATA_CLEANUP_RETENTION' | 'AI_OCR_BATCH' | 'PAYMENT_RECONCILIATION';
+  title: string;
+  status: 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED';
+  createdAt: string;
+  startedAt?: string;
+  completedAt?: string;
+  attempts: number;
+  durationMs: number;
+  lastError?: string;
+  payloadSummary: string;
+}
+
+// Backup & Retention Status
+export interface PlatformBackupRecord {
+  id: string;
+  backupType: 'DATABASE_FULL' | 'DATABASE_SNAPSHOT' | 'MEDIA_STORAGE' | 'AUDIT_VAULT';
+  status: 'COMPLETED' | 'RUNNING' | 'VERIFIED' | 'FAILED';
+  fileSizeMb: number;
+  location: string;
+  completedAt: string;
+  retentionDays: number;
+  checksum: string;
+  isSimulatedDemo: boolean;
+}
+
 // Initial Mock Datasets
 export const initialPlatformAccounts: PlatformAccount[] = [
   {
@@ -1106,4 +1134,92 @@ export const initialPlatformRolePermissions: PlatformRolePermission[] = [
     ],
   },
 ];
+
+export const initialPlatformBackgroundJobs: PlatformBackgroundJob[] = [
+  {
+    id: 'job-001',
+    jobType: 'BILLING_CYCLE_INVOICE',
+    title: 'Tự động tạo hóa đơn thuê bao chu kỳ ngày 15/10/2026',
+    status: 'SUCCEEDED',
+    createdAt: '2026-10-14 00:00:00',
+    startedAt: '2026-10-14 00:00:02',
+    completedAt: '2026-10-14 00:00:15',
+    attempts: 1,
+    durationMs: 13000,
+    payloadSummary: 'Xử lý 42 tổ chức chủ nhà chu kỳ thanh toán giữa tháng',
+  },
+  {
+    id: 'job-002',
+    jobType: 'METER_READING_REMINDER',
+    title: 'Gửi ZNS thông báo chốt điện nước định kỳ cho cư dân',
+    status: 'RUNNING',
+    createdAt: '2026-10-14 02:30:00',
+    startedAt: '2026-10-14 02:30:05',
+    attempts: 1,
+    durationMs: 45000,
+    payloadSummary: 'Gửi 128 tin nhắn Zalo ZNS tới các phòng trọ chưa chốt số',
+  },
+  {
+    id: 'job-003',
+    jobType: 'PAYMENT_RECONCILIATION',
+    title: 'Đối soát giao dịch IPN cổng VNPay & VietQR 24h',
+    status: 'SUCCEEDED',
+    createdAt: '2026-10-13 23:00:00',
+    startedAt: '2026-10-13 23:00:01',
+    completedAt: '2026-10-13 23:00:08',
+    attempts: 1,
+    durationMs: 7200,
+    payloadSummary: 'Đối soát 189 giao dịch thu tiền phòng và thuê bao SaaS',
+  },
+  {
+    id: 'job-004',
+    jobType: 'AI_OCR_BATCH',
+    title: 'Xử lý nhận diện hàng loạt ảnh đồng hồ điện bị nghẽn',
+    status: 'FAILED',
+    createdAt: '2026-10-13 18:20:00',
+    startedAt: '2026-10-13 18:20:02',
+    completedAt: '2026-10-13 18:20:12',
+    attempts: 3,
+    durationMs: 10200,
+    lastError: 'CUDA OutOfMemory: GPU VRAM vượt quá ngưỡng 95% khi xử lý batch 50 ảnh',
+    payloadSummary: 'Batch nhận diện 50 ảnh chụp công tơ điện từ chủ nhà Phúc Thịnh',
+  },
+];
+
+export const initialPlatformBackupRecords: PlatformBackupRecord[] = [
+  {
+    id: 'bk-20261014-01',
+    backupType: 'DATABASE_FULL',
+    status: 'VERIFIED',
+    fileSizeMb: 1240,
+    location: 'S3-ColdStorage / backups / postgres-rentflow-prod-20261014.dump.gz',
+    completedAt: '2026-10-14 01:00:00',
+    retentionDays: 30,
+    checksum: 'sha256:8f43a912bb0e43d9943b1239aa81234981ef',
+    isSimulatedDemo: true,
+  },
+  {
+    id: 'bk-20261013-02',
+    backupType: 'DATABASE_FULL',
+    status: 'COMPLETED',
+    fileSizeMb: 1215,
+    location: 'S3-ColdStorage / backups / postgres-rentflow-prod-20261013.dump.gz',
+    completedAt: '2026-10-13 01:00:00',
+    retentionDays: 30,
+    checksum: 'sha256:7b12c882aa9e11d8832a9910aa71139411bb',
+    isSimulatedDemo: true,
+  },
+  {
+    id: 'bk-20261012-03',
+    backupType: 'MEDIA_STORAGE',
+    status: 'COMPLETED',
+    fileSizeMb: 8450,
+    location: 'S3-ColdStorage / backups / media-contracts-photos-20261012.tar.gz',
+    completedAt: '2026-10-12 03:00:00',
+    retentionDays: 90,
+    checksum: 'sha256:2f11a43299bc11d7742a0011bb51128411fa',
+    isSimulatedDemo: true,
+  },
+];
+
 

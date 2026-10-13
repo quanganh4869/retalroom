@@ -4,10 +4,13 @@ import {
   Globe,
   Lock,
   Save,
+  RotateCcw,
 } from 'lucide-react';
+import { usePlatformAdmin } from './PlatformAdminContext';
 import { useToast } from '@/components/feedback/ToastSystem';
 
 export const AdminSettingsPage: React.FC = () => {
+  const { resetDemoData } = usePlatformAdmin();
   const toast = useToast();
 
   const [platformName, setPlatformName] = useState('RentFlow SaaS Enterprise');
@@ -24,6 +27,13 @@ export const AdminSettingsPage: React.FC = () => {
     toast.success('Đã lưu cấu hình', 'Các thiết lập bảo mật và vận hành nền tảng đã được cập nhật.');
   };
 
+  const handleResetDemo = () => {
+    if (window.confirm('Khôi phục toàn bộ dữ liệu mẫu (Reset Demo)? Tất cả các sửa đổi demo trên trình duyệt sẽ trở về mặc định ban đầu.')) {
+      resetDemoData();
+      toast.info('Đã khôi phục dữ liệu demo', 'Toàn bộ dữ liệu tài khoản, tổ chức, log và sự kiện đã được thiết lập lại mặc định.');
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1440px', margin: '0 auto' }}>
       {/* Header */}
@@ -36,6 +46,17 @@ export const AdminSettingsPage: React.FC = () => {
           <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '4px 0 0 0' }}>
             Cài đặt & Cấu hình nền tảng RentFlow
           </h1>
+        </div>
+
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            type="button"
+            className="rf-btn rf-btn-secondary"
+            onClick={handleResetDemo}
+            title="Xóa cache và nạp lại dataset ban đầu"
+          >
+            <RotateCcw size={14} /> Khôi phục dữ liệu mẫu (Reset Demo)
+          </button>
         </div>
       </div>
 

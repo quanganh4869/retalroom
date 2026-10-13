@@ -218,6 +218,15 @@ export const AdminOrganizationsPage: React.FC = () => {
                         type="button"
                         className="rf-btn rf-btn-secondary"
                         style={{ fontSize: '11px', padding: '4px 8px' }}
+                        title="Xem chi tiết tổ chức"
+                        onClick={() => setSelectedOrg(org)}
+                      >
+                        <MapPin size={12} /> Chi tiết
+                      </button>
+                      <button
+                        type="button"
+                        className="rf-btn rf-btn-secondary"
+                        style={{ fontSize: '11px', padding: '4px 8px' }}
                         title="Đổi gói dịch vụ"
                         onClick={() => {
                           setChangePlanOrg(org);
@@ -249,6 +258,63 @@ export const AdminOrganizationsPage: React.FC = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Organization Detail Modal */}
+      {selectedOrg && !suspendModalOpen && (
+        <Modal
+          isOpen={!!selectedOrg && !suspendModalOpen}
+          onClose={() => setSelectedOrg(null)}
+          title={`Hồ sơ tổ chức: ${selectedOrg.name}`}
+          maxWidth="600px"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px' }}>
+            <div style={{ padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '6px', border: '1px solid #E5E7EB', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div>
+                <span style={{ color: '#6B7280', fontSize: '12px' }}>Chủ sở hữu:</span>
+                <div style={{ fontWeight: 600 }}>{selectedOrg.ownerName}</div>
+              </div>
+              <div>
+                <span style={{ color: '#6B7280', fontSize: '12px' }}>Email:</span>
+                <div style={{ fontWeight: 600, fontFamily: 'monospace' }}>{selectedOrg.ownerEmail}</div>
+              </div>
+              <div>
+                <span style={{ color: '#6B7280', fontSize: '12px' }}>Số điện thoại:</span>
+                <div style={{ fontWeight: 600 }}>{selectedOrg.ownerPhone}</div>
+              </div>
+              <div>
+                <span style={{ color: '#6B7280', fontSize: '12px' }}>Địa chỉ:</span>
+                <div>{selectedOrg.address}</div>
+              </div>
+              <div>
+                <span style={{ color: '#6B7280', fontSize: '12px' }}>Gói thuê bao:</span>
+                <div style={{ fontWeight: 700, color: '#00594C' }}>{selectedOrg.planName}</div>
+              </div>
+              <div>
+                <span style={{ color: '#6B7280', fontSize: '12px' }}>Quy mô phòng:</span>
+                <div style={{ fontWeight: 600 }}>{selectedOrg.roomsCount} / {selectedOrg.maxRoomsQuota} phòng</div>
+              </div>
+              <div>
+                <span style={{ color: '#6B7280', fontSize: '12px' }}>Kỳ thanh toán:</span>
+                <div>{selectedOrg.billingCycle === 'ANNUAL' ? 'Hàng năm' : 'Hàng tháng'}</div>
+              </div>
+              <div>
+                <span style={{ color: '#6B7280', fontSize: '12px' }}>Kỳ hạn tiếp theo:</span>
+                <div>{selectedOrg.nextBillingDate}</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+              <button
+                type="button"
+                className="rf-btn rf-btn-primary"
+                onClick={() => setSelectedOrg(null)}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
 
       {/* Change SaaS Plan Modal */}
       <Modal

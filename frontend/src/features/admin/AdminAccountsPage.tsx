@@ -6,6 +6,10 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
+  Plus,
+  Eye,
+  Edit2,
+  Lock,
 } from 'lucide-react';
 import { usePlatformAdmin } from './PlatformAdminContext';
 import { PlatformAccount } from './types/platformAdmin';
@@ -13,7 +17,7 @@ import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/feedback/ToastSystem';
 
 export const AdminAccountsPage: React.FC = () => {
-  const { accounts, toggleAccountStatus, updateAccountRole } = usePlatformAdmin();
+  const { accounts, toggleAccountStatus, updateAccountRole, createAccount, updateAccount } = usePlatformAdmin();
   const toast = useToast();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,10 +26,64 @@ export const AdminAccountsPage: React.FC = () => {
 
   // Selected account for detail view or status change
   const [selectedAccount, setSelectedAccount] = useState<PlatformAccount | null>(null);
+  const [detailAccount, setDetailAccount] = useState<PlatformAccount | null>(null);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [actionReason, setActionReason] = useState('Yêu cầu kiểm tra an ninh từ Platform Admin');
   const [editingRoleAccount, setEditingRoleAccount] = useState<PlatformAccount | null>(null);
   const [selectedRole, setSelectedRole] = useState<PlatformAccount['role']>('LANDLORD');
+
+  // Create & Edit forms
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [editModalAccount, setEditModalAccount] = useState<PlatformAccount | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    role: 'LANDLORD' as PlatformAccount['role'],
+    organizationName: '',
+  });
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      role: 'LANDLORD',
+      organizationName: '',
+    });
+  };
+
+  const handleCreateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim()) {
+      toast.error('Thiếu thông tin', 'Vui lòng điền đầy đủ Họ tên, Email và Số điện thoại.');
+      return;
+    }
+    createAccount({
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone.trim(),
+      role: formData.role,
+      status: 'ACTIVE',
+      twoFactorEnabled: false,
+      organizationName: formData.organizationName.trim() || undefined,
+    });
+    setCreateModalOpen(false);
+    resetForm();
+    toast.success('Tạo tài khoản thành công', `Đã thêm tài khoản ${formData.email} vào hệ thống demo.`);
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editModalAccount) return;
+    updateAccount(editModalAccount.id, {
+      name: formData.name.trim(),
+      phone: formData.phone.trim(),
+      organizationName: formData.organizationName.trim() || undefined,
+    });
+    setEditModalAccount(null);
+    toast.success('Cập nhật thành công', `Đã lưu thông tin cho tài khoản ${editModalAccount.email}.`);
+  };
 
   const filteredAccounts = accounts.filter((acc) => {
     const matchesSearch =
@@ -91,9 +149,16 @@ export const AdminAccountsPage: React.FC = () => {
           </h1>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
-          <span style={{ fontSize: '13px', color: '#6B7280', alignSelf: 'center' }}>
-            Tổng số: <strong>{accounts.length}</strong> tài khoản
-          </span>
+          <button
+            type="button"
+            className="rf-btn rf-btn-primary"
+            onClick={() => {
+              resetForm();
+              setCreateModalOpen(true);
+            }}
+          >
+            <Plus size={14} /> Thêm tài khoản
+          </button>
         </div>
       </div>
 
@@ -208,6 +273,33 @@ export const AdminAccountsPage: React.FC = () => {
                 </td>
                 <td style={{ textAlign: 'right' }}>
                   <div style={{ display: 'inline-flex', gap: '6px' }}>
+                    <button
+                      type="button"
+                      className="rf-btn rf-btn-secondary"
+                      style={{ fontSize: '11px', padding: '4px 8px' }}
+                      title="Xem chi tiết"
+                      onClick={() => setDetailAccount(acc)}
+                    >
+                      <Eye size={12} />
+                    </button>
+                    <button
+                      type="button"
+                      className="rf-btn rf-btn-secondary"
+                      style={{ fontSize: '11px', padding: '4px 8px' }}
+                      title="Chỉnh sửa thông tin"
+                      onClick={() => {
+                        setEditModalAccount(acc);
+                        setFormData({
+                          name: acc.name,
+                          email: acc.email,
+                          phone: acc.phone,
+                          role: acc.role,
+                          organizationName: acc.organizationName || '',
+                        });
+                      }}
+                    >
+                      <Edit2 size={12} />
+                    </button>
                     <button
                       type="button"
                       className="rf-btn rf-btn-secondary"
@@ -378,6 +470,196 @@ export const AdminAccountsPage: React.FC = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Account Detail Modal */}
+      {detailAccount && (
+        <Modal
+          isOpen={!!detailAccount}
+          onClose={() => setDetailAccount(null)}
+          title={`Hồ sơ tài khoản: ${detailAccount.name}`}
+          maxWidth="560px"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px' }}>
+            <div style={{ padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '6px', border: '1px solid #E5E7EB', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div>
+                <span style={{ color: '#6B7280', fontSize: '12px' }}>Email:</span>
+                <div style={{ fontWeight: 600, fontFamily: 'monospace' }}>{detailAccount.email}</div>
+              </div>
+              <div>
+                <span style={{ color: '#6B7280', fontSize: '12px' }}>Số điện thoại:</span>
+                <div style={{ fontWeight: 600 }}>{detailAccount.phone}</div>
+              </div>
+              <div>
+                <span style={{ color: '#6B7280', fontSize: '12px' }}>Vai trò:</span>
+                <div>{getRoleBadge(detailAccount.role)}</div>
+              </div>
+              <div>
+                <span style={{ color: '#6B7280', fontSize: '12px' }}>Tổ chức:</span>
+                <div style={{ fontWeight: 600, color: '#00594C' }}>{detailAccount.organizationName || 'Nền tảng'}</div>
+              </div>
+              <div>
+                <span style={{ color: '#6B7280', fontSize: '12px' }}>Bảo mật 2FA:</span>
+                <div style={{ fontWeight: 600, color: detailAccount.twoFactorEnabled ? '#16A34A' : '#6B7280' }}>
+                  {detailAccount.twoFactorEnabled ? 'Đã kích hoạt' : 'Chưa bật'}
+                </div>
+              </div>
+              <div>
+                <span style={{ color: '#6B7280', fontSize: '12px' }}>Lần đăng nhập cuối:</span>
+                <div>{detailAccount.lastLoginAt}</div>
+              </div>
+            </div>
+
+            <div style={{ padding: '10px 12px', backgroundColor: '#EFF6FF', borderRadius: '6px', color: '#1E40AF', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Lock size={14} /> Mật khẩu tài khoản được mã hóa bằng thuật toán Argon2/Bcrypt phía máy chủ. Quản trị viên không thể xem hoặc sao chép mật khẩu thô.
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
+              <button
+                type="button"
+                className="rf-btn rf-btn-primary"
+                onClick={() => setDetailAccount(null)}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Create Account Modal */}
+      {createModalOpen && (
+        <Modal
+          isOpen={createModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+          title="Thêm tài khoản mới vào hệ thống"
+          maxWidth="500px"
+        >
+          <form onSubmit={handleCreateSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px' }}>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: '4px' }}>Họ và tên *</label>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="vd: Lê Hoàng Nam"
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: '4px' }}>Địa chỉ Email *</label>
+              <input
+                type="email"
+                required
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="vd: hoangnam@example.com"
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: '4px' }}>Số điện thoại *</label>
+              <input
+                type="tel"
+                required
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                placeholder="vd: 0912 888 999"
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: '4px' }}>Vai trò ban đầu</label>
+              <select
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value as PlatformAccount['role'] })}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', backgroundColor: '#FFFFFF' }}
+              >
+                <option value="LANDLORD">Chủ nhà (Landlord)</option>
+                <option value="TENANT">Khách thuê (Tenant)</option>
+                <option value="SUPPORT_AGENT">Hỗ trợ CSKH (Support Ops)</option>
+                <option value="SUPERADMIN">Platform Admin</option>
+              </select>
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: '4px' }}>Tên tổ chức (Nếu có)</label>
+              <input
+                type="text"
+                value={formData.organizationName}
+                onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
+                placeholder="vd: Hoàng Nam Co-living"
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
+              <button type="button" className="rf-btn rf-btn-secondary" onClick={() => setCreateModalOpen(false)}>
+                Hủy bỏ
+              </button>
+              <button type="submit" className="rf-btn rf-btn-primary">
+                Tạo tài khoản
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Edit Account Modal */}
+      {editModalAccount && (
+        <Modal
+          isOpen={!!editModalAccount}
+          onClose={() => setEditModalAccount(null)}
+          title={`Sửa hồ sơ: ${editModalAccount.email}`}
+          maxWidth="500px"
+        >
+          <form onSubmit={handleEditSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px' }}>
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: '4px' }}>Họ và tên</label>
+              <input
+                type="text"
+                required
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: '4px' }}>Số điện thoại</label>
+              <input
+                type="tel"
+                required
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB' }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: '4px' }}>Tên tổ chức</label>
+              <input
+                type="text"
+                value={formData.organizationName}
+                onChange={(e) => setFormData({ ...formData, organizationName: e.target.value })}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
+              <button type="button" className="rf-btn rf-btn-secondary" onClick={() => setEditModalAccount(null)}>
+                Hủy
+              </button>
+              <button type="submit" className="rf-btn rf-btn-primary">
+                Lưu thay đổi
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 };

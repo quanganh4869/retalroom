@@ -14,6 +14,8 @@ import {
   PlatformSystemLog,
   PlatformIntegration,
   PlatformRolePermission,
+  PlatformBackgroundJob,
+  PlatformBackupRecord,
   initialPlatformAccounts,
   initialPlatformOrganizations,
   initialSubscriptionPlans,
@@ -28,6 +30,8 @@ import {
   initialPlatformSystemLogs,
   initialPlatformIntegrations,
   initialPlatformRolePermissions,
+  initialPlatformBackgroundJobs,
+  initialPlatformBackupRecords,
 } from './types/platformAdmin';
 
 interface PlatformAdminContextType {
@@ -45,7 +49,11 @@ interface PlatformAdminContextType {
   systemLogs: PlatformSystemLog[];
   integrations: PlatformIntegration[];
   rolePermissions: PlatformRolePermission[];
+  backgroundJobs: PlatformBackgroundJob[];
+  backupRecords: PlatformBackupRecord[];
   // Actions
+  createAccount: (data: Omit<PlatformAccount, 'id' | 'createdAt' | 'lastLoginAt'>) => void;
+  updateAccount: (accountId: string, data: Partial<PlatformAccount>) => void;
   toggleAccountStatus: (accountId: string, reason?: string) => void;
   updateAccountRole: (accountId: string, role: PlatformAccount['role']) => void;
   toggleOrganizationStatus: (orgId: string, reason?: string) => void;
@@ -58,6 +66,8 @@ interface PlatformAdminContextType {
   revokeSession: (sessionId: string, reason?: string) => void;
   resolveSecurityEvent: (eventId: string, resolutionNote?: string) => void;
   testIntegrationPing: (integrationId: string) => void;
+  retryBackgroundJob: (jobId: string) => void;
+  resetDemoData: () => void;
   // Computed SaaS Metrics
   metrics: {
     totalAccounts: number;
@@ -147,6 +157,16 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
     return initialPlatformRolePermissions;
   });
 
+  const [backgroundJobs, setBackgroundJobs] = useState<PlatformBackgroundJob[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}backgroundJobs`);
+    return saved ? JSON.parse(saved) : initialPlatformBackgroundJobs;
+  });
+
+  const [backupRecords, setBackupRecords] = useState<PlatformBackupRecord[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}backupRecords`);
+    return saved ? JSON.parse(saved) : initialPlatformBackupRecords;
+  });
+
   // Sync to LocalStorage
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY_PREFIX}accounts`, JSON.stringify(accounts));
@@ -183,6 +203,14 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY_PREFIX}securityEvents`, JSON.stringify(securityEvents));
   }, [securityEvents]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}backgroundJobs`, JSON.stringify(backgroundJobs));
+  }, [backgroundJobs]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}backupRecords`, JSON.stringify(backupRecords));
+  }, [backupRecords]);
 
   // Log an audit event
   const appendAuditLog = (action: string, targetType: PlatformAuditLog['targetType'], targetId: string, details: string) => {
@@ -397,6 +425,72 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
     activeSessionsCount: activeSessions.length,
   };
 
+  const createAccount = (data: Omit<PlatformAccount, 'id' | 'createdAt' | 'lastLoginAt'>) => {
+    const newAcc: PlatformAccount = {
+      ...data,
+      id: `acc-${Date.now()}`,
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      lastLoginAt: 'Chưa đăng nhập',
+    };
+    setAccounts((prev) => [newAcc, ...prev]);
+    appendAuditLog('Tạo tài khoản mới', 'ACCOUNT', newAcc.id, `Tạo tài khoản ${newAcc.email} (${newAcc.role})`);
+  };
+
+  const updateAccount = (accountId: string, data: Partial<PlatformAccount>) => {
+    setAccounts((prev) =>
+      prev.map((acc) => {
+        if (acc.id === accountId) {
+          const updated = { ...acc, ...data };
+          appendAuditLog('Cập nhật hồ sơ tài khoản', 'ACCOUNT', accountId, `Chỉnh sửa thông tin ${acc.email}`);
+          return updated;
+        }
+        return acc;
+      })
+    );
+  };
+
+  const retryBackgroundJob = (jobId: string) => {
+    setBackgroundJobs((prev) =>
+      prev.map((j) => {
+        if (j.id === jobId) {
+          appendAuditLog('Thử lại tác vụ nền', 'SYSTEM', jobId, `Khởi động lại Job ${j.title}`);
+          return {
+            ...j,
+            status: 'RUNNING',
+            attempts: j.attempts + 1,
+            startedAt: 'Vừa xong',
+            lastError: undefined,
+          };
+        }
+        return j;
+      })
+    );
+  };
+
+  const resetDemoData = () => {
+    localStorage.removeItem(`${STORAGE_KEY_PREFIX}accounts`);
+    localStorage.removeItem(`${STORAGE_KEY_PREFIX}organizations`);
+    localStorage.removeItem(`${STORAGE_KEY_PREFIX}plans`);
+    localStorage.removeItem(`${STORAGE_KEY_PREFIX}subscriptions`);
+    localStorage.removeItem(`${STORAGE_KEY_PREFIX}tickets`);
+    localStorage.removeItem(`${STORAGE_KEY_PREFIX}announcements`);
+    localStorage.removeItem(`${STORAGE_KEY_PREFIX}auditLogs`);
+    localStorage.removeItem(`${STORAGE_KEY_PREFIX}activeSessions`);
+    localStorage.removeItem(`${STORAGE_KEY_PREFIX}securityEvents`);
+    localStorage.removeItem(`${STORAGE_KEY_PREFIX}backgroundJobs`);
+    localStorage.removeItem(`${STORAGE_KEY_PREFIX}backupRecords`);
+
+    setAccounts(initialPlatformAccounts);
+    setOrganizations(initialPlatformOrganizations);
+    setTickets(initialPlatformSupportTickets);
+    setAnnouncements(initialPlatformAnnouncements);
+    setAuditLogs(initialPlatformAuditLogs);
+    setActiveSessions(initialPlatformActiveSessions);
+    setSecurityEvents(initialPlatformSecurityEvents);
+    setBackgroundJobs(initialPlatformBackgroundJobs);
+    setBackupRecords(initialPlatformBackupRecords);
+  };
+
   return (
     <PlatformAdminContext.Provider
       value={{
@@ -414,6 +508,10 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         systemLogs,
         integrations,
         rolePermissions,
+        backgroundJobs,
+        backupRecords,
+        createAccount,
+        updateAccount,
         toggleAccountStatus,
         updateAccountRole,
         toggleOrganizationStatus,
@@ -426,6 +524,8 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         revokeSession,
         resolveSecurityEvent,
         testIntegrationPing,
+        retryBackgroundJob,
+        resetDemoData,
         metrics,
       }}
     >

@@ -38,6 +38,8 @@ import { AdminAccessControlPage } from '@/features/admin/AdminAccessControlPage'
 import { AdminSystemLogsPage } from '@/features/admin/AdminSystemLogsPage';
 import { AdminIntegrationsPage } from '@/features/admin/AdminIntegrationsPage';
 import { AdminTransactionsPage } from '@/features/admin/AdminTransactionsPage';
+import { AdminBackgroundJobsPage } from '@/features/admin/AdminBackgroundJobsPage';
+import { AdminBackupsPage } from '@/features/admin/AdminBackupsPage';
 import { PlatformAdminProvider } from '@/features/admin/PlatformAdminContext';
 import { PropertyDetailPage } from '@/features/properties/components/PropertyDetailPage';
 import { RoomDetailPage } from '@/features/rooms/RoomDetailPage';
@@ -358,6 +360,26 @@ export const AppRouter: React.FC = () => {
                 <ProtectedRoute allowedRoles={['SUPERADMIN']}>
                   <AppShell>
                     <AdminIntegrationsPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/platform/jobs"
+              element={
+                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                  <AppShell>
+                    <AdminBackgroundJobsPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/platform/operations/backups"
+              element={
+                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                  <AppShell>
+                    <AdminBackupsPage />
                   </AppShell>
                 </ProtectedRoute>
               }

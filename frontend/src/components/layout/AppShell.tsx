@@ -24,6 +24,8 @@ import {
   KeyRound,
   FileSpreadsheet,
   Server,
+  Database,
+  Play,
 } from 'lucide-react';
 import { useAuth, UserRole } from '@/features/auth/AuthContext';
 import { RentFlowLogo } from '@/components/ui/RentFlowLogo';
@@ -94,7 +96,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const adminF_SystemOpsNav = [
     { name: 'Sức khỏe hệ thống', path: '/platform/system-health', icon: Activity },
     { name: 'Nhật ký ứng dụng & Lỗi', path: '/platform/system-logs', icon: Server },
+    { name: 'Tác vụ nền (Jobs)', path: '/platform/jobs', icon: Play },
     { name: 'Dịch vụ tích hợp', path: '/platform/integrations', icon: Zap },
+    { name: 'Sao lưu & Lưu trữ', path: '/platform/operations/backups', icon: Database },
   ];
 
   const adminG_PlatformConfigNav = [
@@ -385,9 +389,15 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
               } else if (p.includes('/platform/system-logs')) {
                 parentLink = { label: 'Vận hành hệ thống', to: '/platform/system-health' };
                 currentLabel = 'Nhật ký ứng dụng & Lỗi API';
+              } else if (p.includes('/platform/jobs')) {
+                parentLink = { label: 'Vận hành hệ thống', to: '/platform/system-health' };
+                currentLabel = 'Quản lý tác vụ nền (Jobs)';
               } else if (p.includes('/platform/integrations')) {
                 parentLink = { label: 'Vận hành hệ thống', to: '/platform/system-health' };
                 currentLabel = 'Dịch vụ tích hợp ngoại vi';
+              } else if (p.includes('/platform/operations/backups')) {
+                parentLink = { label: 'Vận hành hệ thống', to: '/platform/system-health' };
+                currentLabel = 'Sao lưu & Lưu trữ dữ liệu';
               } else if (p.includes('/platform/settings')) {
                 currentLabel = 'Cài đặt nền tảng';
               } else if (p === '/tenant/dashboard' || p === '/tenant') {
