@@ -19,6 +19,7 @@ export const ExpensesPage: React.FC = () => {
   const searchParam = searchParams.get('q') || '';
 
   const [expenses, setExpenses] = useState<ExpenseItem[]>(mockExpenses);
+  const [selectedExpense, setSelectedExpense] = useState<ExpenseItem | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState('1');
   const [expenseCategory, setExpenseCategory] = useState<ExpenseItem['category']>('Sửa chữa điện nước');
@@ -254,9 +255,19 @@ export const ExpensesPage: React.FC = () => {
           </thead>
           <tbody>
             {filteredExpenses.map((exp) => (
-              <tr key={exp.id}>
+              <tr
+                key={exp.id}
+                onClick={() => setSelectedExpense(exp)}
+                style={{
+                  cursor: 'pointer',
+                  transition: 'background-color 0.15s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                title={`Bấm để xem chi tiết phiếu chi ${exp.code}`}
+              >
                 <td>
-                  <strong style={{ color: '#00594C' }}>{exp.code}</strong>
+                  <strong style={{ color: '#00594C' }}>{exp.code} →</strong>
                 </td>
                 <td>{exp.date}</td>
                 <td>
@@ -369,6 +380,72 @@ export const ExpensesPage: React.FC = () => {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Expense Detail Modal */}
+      <Modal
+        isOpen={!!selectedExpense}
+        onClose={() => setSelectedExpense(null)}
+        title={`Chi tiết phiếu chi ${selectedExpense?.code || ''}`}
+      >
+        {selectedExpense && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '400px' }}>
+            <div style={{ padding: '16px', backgroundColor: '#FEF2F2', border: '1px solid #FEE2E2', borderRadius: '8px', textAlign: 'center' }}>
+              <span style={{ fontSize: '12px', color: '#991B1B' }}>Tổng số tiền chi ra</span>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#DC2626', marginTop: '4px' }}>
+                -{formatVND(selectedExpense.amount)}
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '13px' }}>
+              <div style={{ padding: '10px', backgroundColor: '#F9FAFB', borderRadius: '6px' }}>
+                <span style={{ fontSize: '11px', color: '#6B7280', display: 'block' }}>MÃ PHIẾU CHI</span>
+                <strong>{selectedExpense.code}</strong>
+              </div>
+              <div style={{ padding: '10px', backgroundColor: '#F9FAFB', borderRadius: '6px' }}>
+                <span style={{ fontSize: '11px', color: '#6B7280', display: 'block' }}>NGÀY CHI TIỀN</span>
+                <strong>{selectedExpense.date}</strong>
+              </div>
+              <div style={{ padding: '10px', backgroundColor: '#F9FAFB', borderRadius: '6px' }}>
+                <span style={{ fontSize: '11px', color: '#6B7280', display: 'block' }}>CƠ SỞ TÒA NHÀ</span>
+                <strong>{selectedExpense.propertyName}</strong>
+              </div>
+              <div style={{ padding: '10px', backgroundColor: '#F9FAFB', borderRadius: '6px' }}>
+                <span style={{ fontSize: '11px', color: '#6B7280', display: 'block' }}>DANH MỤC</span>
+                <strong>{selectedExpense.category}</strong>
+              </div>
+              <div style={{ padding: '10px', backgroundColor: '#F9FAFB', borderRadius: '6px' }}>
+                <span style={{ fontSize: '11px', color: '#6B7280', display: 'block' }}>NGƯỜI CHI / QUẢN LÝ</span>
+                <strong>{selectedExpense.payer}</strong>
+              </div>
+              <div style={{ padding: '10px', backgroundColor: '#F9FAFB', borderRadius: '6px' }}>
+                <span style={{ fontSize: '11px', color: '#6B7280', display: 'block' }}>TRẠNG THÁI</span>
+                <span className="rf-badge rf-badge-active">Đã thanh toán</span>
+              </div>
+            </div>
+
+            <div style={{ padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '6px', fontSize: '13px' }}>
+              <span style={{ fontSize: '11px', color: '#6B7280', display: 'block', marginBottom: '4px' }}>NỘI DUNG CHI TIẾT</span>
+              <p style={{ margin: 0, color: '#111827', lineHeight: 1.5 }}>{selectedExpense.description}</p>
+            </div>
+
+            {selectedExpense.relatedMaintenanceId && (
+              <div style={{ padding: '10px', backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE', borderRadius: '6px', fontSize: '13px', color: '#1E40AF' }}>
+                Liên kết tới yêu cầu bảo trì: <strong>#{selectedExpense.relatedMaintenanceId}</strong>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
+              <button
+                type="button"
+                className="rf-btn rf-btn-secondary"
+                onClick={() => setSelectedExpense(null)}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

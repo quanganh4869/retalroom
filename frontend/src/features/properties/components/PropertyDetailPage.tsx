@@ -165,7 +165,6 @@ export const PropertyDetailPage: React.FC = () => {
                 <th>Số người ở</th>
                 <th>Đại diện thuê</th>
                 <th>Trạng thái</th>
-                <th style={{ textAlign: 'right' }}>Hành động</th>
               </tr>
             </thead>
             <tbody>
@@ -173,9 +172,19 @@ export const PropertyDetailPage: React.FC = () => {
                 const count = room.occupants?.length || (room.tenantName ? 1 : 0);
                 const max = room.maxOccupants || 2;
                 return (
-                  <tr key={room.id}>
+                  <tr
+                    key={room.id}
+                    onClick={() => navigate(`/rooms/${room.id}`)}
+                    style={{
+                      cursor: 'pointer',
+                      transition: 'background-color 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                    title={`Bấm để xem chi tiết ${room.code}`}
+                  >
                     <td>
-                      <span style={{ fontWeight: 700, color: '#00594C' }}>{room.code}</span>
+                      <span style={{ fontWeight: 700, color: '#00594C' }}>{room.code} →</span>
                     </td>
                     <td>Tầng {room.floor}</td>
                     <td>{room.type}</td>
@@ -216,15 +225,6 @@ export const PropertyDetailPage: React.FC = () => {
                           ? 'Giữ cọc'
                           : 'Bảo trì'}
                       </span>
-                    </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <Link
-                        to={`/rooms/${room.id}`}
-                        className="rf-btn rf-btn-secondary"
-                        style={{ padding: '3px 8px', fontSize: '11px', textDecoration: 'none' }}
-                      >
-                        Chi tiết phòng
-                      </Link>
                     </td>
                   </tr>
                 );

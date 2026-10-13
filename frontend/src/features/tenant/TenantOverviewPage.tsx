@@ -234,7 +234,7 @@ export const TenantOverviewPage: React.FC = () => {
               {tenantTickets.slice(0, 2).map((t) => (
                 <div
                   key={t.id}
-                  onClick={() => navigate('/tenant/maintenance')}
+                  onClick={() => navigate(`/tenant/maintenance/${t.id}`)}
                   style={{
                     padding: '12px 14px',
                     borderRadius: '6px',
