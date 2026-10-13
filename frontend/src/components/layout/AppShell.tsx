@@ -278,49 +278,6 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           })()}
         </div>
 
-        {/* User Footer */}
-        <div style={{ borderTop: '1px solid #E5E7EB', display: 'flex', flexDirection: 'column' }}>
-          <div
-            style={{
-              padding: '12px 14px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-start',
-              gap: '10px',
-            }}
-          >
-            <div
-              style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                backgroundColor: '#00594C',
-                color: '#FFFFFF',
-                fontSize: '12px',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              {user?.name.slice(0, 2).toUpperCase() || 'NA'}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#111827', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {user?.name || 'Nguyễn An'}
-              </div>
-              <div style={{ fontSize: '11px', color: '#6B7280' }}>{getRoleLabel(user?.role)}</div>
-            </div>
-            <button
-              onClick={handleLogout}
-              title="Đăng xuất"
-              style={{ color: '#9CA3AF', display: 'flex', alignItems: 'center', border: 'none', background: 'none', cursor: 'pointer' }}
-            >
-              <LogOut size={16} />
-            </button>
-          </div>
-        </div>
       </aside>
 
       {/* Main Content Area */}
