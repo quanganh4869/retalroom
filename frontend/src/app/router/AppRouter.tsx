@@ -38,7 +38,11 @@ import { CreateRoomPage } from '@/features/rooms/CreateRoomPage';
 import { InvoiceDetailPage } from '@/features/billing/InvoiceDetailPage';
 import { ContractDetailPage } from '@/features/leases/ContractDetailPage';
 import { ActionModalProvider } from '@/components/ui/ActionModal';
-import { TenantPortalPage } from '@/features/auth/TenantPortalPage';
+import { TenantOverviewPage } from '@/features/tenant/TenantOverviewPage';
+import { TenantInvoicesPage } from '@/features/tenant/TenantInvoicesPage';
+import { TenantUtilitiesPage } from '@/features/tenant/TenantUtilitiesPage';
+import { TenantMaintenancePage } from '@/features/tenant/TenantMaintenancePage';
+import { TenantLeasePage } from '@/features/tenant/TenantLeasePage';
 import { AccessDeniedPage, NotFoundPage } from '@/features/feedback/ErrorPages';
 
 // Role-Protected Guard Route
@@ -94,11 +98,52 @@ export const AppRouter: React.FC = () => {
               element={
                 <ProtectedRoute allowedRoles={['TENANT']}>
                   <AppShell>
-                    <TenantPortalPage />
+                    <TenantOverviewPage />
                   </AppShell>
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/tenant/invoices"
+              element={
+                <ProtectedRoute allowedRoles={['TENANT']}>
+                  <AppShell>
+                    <TenantInvoicesPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tenant/utilities"
+              element={
+                <ProtectedRoute allowedRoles={['TENANT']}>
+                  <AppShell>
+                    <TenantUtilitiesPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tenant/maintenance"
+              element={
+                <ProtectedRoute allowedRoles={['TENANT']}>
+                  <AppShell>
+                    <TenantMaintenancePage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tenant/lease"
+              element={
+                <ProtectedRoute allowedRoles={['TENANT']}>
+                  <AppShell>
+                    <TenantLeasePage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/tenant" element={<Navigate to="/tenant/dashboard" replace />} />
             <Route path="/portal" element={<Navigate to="/tenant/dashboard" replace />} />
 
             {/* 4. Platform SuperAdmin Journey (Master Admin Routes) */}

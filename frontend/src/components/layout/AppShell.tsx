@@ -88,10 +88,10 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   // Tenant Portal Navigation (Section 27 & 35)
   const tenantNav = [
     { name: 'Cổng cư dân (Tổng quan)', path: '/tenant/dashboard', icon: LayoutDashboard },
-    { name: 'Hóa đơn & Tiền phòng', path: '/tenant/dashboard#invoices', icon: Receipt },
-    { name: 'Lịch sử Điện & Nước', path: '/tenant/dashboard#utilities', icon: Zap },
-    { name: 'Báo hỏng & Sửa chữa', path: '/tenant/dashboard#maintenance', icon: Wrench },
-    { name: 'Hợp đồng & Tiền cọc', path: '/tenant/dashboard#contract', icon: FileText },
+    { name: 'Hóa đơn & Tiền phòng', path: '/tenant/invoices', icon: Receipt },
+    { name: 'Lịch sử Điện & Nước', path: '/tenant/utilities', icon: Zap },
+    { name: 'Báo hỏng & Sửa chữa', path: '/tenant/maintenance', icon: Wrench },
+    { name: 'Hợp đồng & Tiền cọc', path: '/tenant/lease', icon: FileText },
   ];
 
   const handleLogout = () => {
@@ -185,14 +185,12 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 16px 8px' }}>
           {(() => {
             const isItemActive = (path: string) => {
-              const [basePath, hash] = path.split('#');
-              if (hash) {
-                return location.pathname === basePath && location.hash === `#${hash}`;
+              if (location.pathname === path) return true;
+              // For nested routes
+              if (path !== '/' && path !== '/tenant/dashboard' && path !== '/landlord/dashboard' && path !== '/platform/dashboard') {
+                return location.pathname.startsWith(path);
               }
-              if (location.hash && (isTenant || isSuperAdmin)) {
-                return false;
-              }
-              return location.pathname === basePath;
+              return false;
             };
 
             const renderNavLink = (item: { name: string; path: string; icon: React.ElementType }) => {
@@ -381,7 +379,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
               {isSuperAdmin
                 ? 'Platform HQ'
                 : isTenant
-                ? `Phòng ${user?.roomCode || 'P.101'}`
+                ? 'Cổng cư dân'
                 : user?.organizationName || 'Nguyễn An Property'}
             </span>
             <span style={{ color: '#9CA3AF' }}>/</span>
@@ -397,6 +395,11 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 if (p.includes('/platform/audit-logs')) return 'Nhật ký Audit Logs';
                 if (p.includes('/platform/system-health')) return 'Sức khỏe hệ thống';
                 if (p.includes('/platform/settings')) return 'Cài đặt nền tảng';
+                if (p === '/tenant/dashboard' || p === '/tenant') return 'Tổng quan';
+                if (p.includes('/tenant/invoices')) return 'Hóa đơn & Tiền phòng';
+                if (p.includes('/tenant/utilities')) return 'Lịch sử Điện & Nước';
+                if (p.includes('/tenant/maintenance')) return 'Báo hỏng & Sửa chữa';
+                if (p.includes('/tenant/lease')) return 'Hợp đồng & Tiền cọc';
                 if (p.includes('/dashboard')) return isTenant ? 'Cổng Cư Dân' : isSuperAdmin ? 'Chỉ số Nền tảng' : 'Tổng quan';
                 if (p.includes('/properties')) return 'Bất động sản';
                 if (p.includes('/rooms/new') || p.includes('/rooms/create')) return 'Thêm phòng mới';
