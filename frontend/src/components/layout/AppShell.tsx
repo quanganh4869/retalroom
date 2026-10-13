@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Building2,
@@ -295,59 +295,157 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             flexShrink: 0,
           }}
         >
-          {/* Dynamic Breadcrumbs */}
+          {/* Dynamic Interactive Breadcrumbs */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
-            <span style={{ color: '#6B7280' }}>RentFlow</span>
+            <Link
+              to={isSuperAdmin ? '/platform/dashboard' : isTenant ? '/tenant/dashboard' : '/landlord/dashboard'}
+              style={{ color: '#6B7280', textDecoration: 'none', transition: 'color 0.15s ease' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#00594C')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}
+            >
+              RentFlow
+            </Link>
             <span style={{ color: '#9CA3AF' }}>/</span>
-            <span style={{ color: '#4B5563' }}>
+            <Link
+              to={isSuperAdmin ? '/platform/dashboard' : isTenant ? '/tenant/dashboard' : '/landlord/dashboard'}
+              style={{ color: '#4B5563', textDecoration: 'none', fontWeight: 500, transition: 'color 0.15s ease' }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#00594C')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#4B5563')}
+            >
               {isSuperAdmin
                 ? 'Platform HQ'
                 : isTenant
                 ? 'Cổng cư dân'
                 : user?.organizationName || 'Nguyễn An Property'}
-            </span>
+            </Link>
             <span style={{ color: '#9CA3AF' }}>/</span>
-            <span style={{ fontWeight: 600, color: '#111827' }}>
-              {(() => {
-                const p = location.pathname;
-                if (p.includes('/platform/accounts')) return 'Tài khoản người dùng';
-                if (p.includes('/platform/organizations')) return 'Tổ chức chủ nhà';
-                if (p.includes('/platform/subscription-plans')) return 'Gói dịch vụ SaaS';
-                if (p.includes('/platform/subscriptions')) return 'Hợp đồng thuê bao';
-                if (p.includes('/platform/support')) return 'Trung tâm hỗ trợ CSKH';
-                if (p.includes('/platform/announcements')) return 'Thông báo toàn hệ thống';
-                if (p.includes('/platform/audit-logs')) return 'Nhật ký Audit Logs';
-                if (p.includes('/platform/system-health')) return 'Sức khỏe hệ thống';
-                if (p.includes('/platform/settings')) return 'Cài đặt nền tảng';
-                if (p === '/tenant/dashboard' || p === '/tenant') return 'Tổng quan';
-                if (p.includes('/tenant/invoices/')) return 'Chi tiết hóa đơn';
-                if (p.includes('/tenant/invoices')) return 'Hóa đơn & Tiền phòng';
-                if (p.includes('/tenant/utilities/')) return 'Chi tiết chỉ số điện nước';
-                if (p.includes('/tenant/utilities')) return 'Lịch sử Điện & Nước';
-                if (p.includes('/tenant/payments')) return 'Lịch sử thanh toán';
-                if (p.includes('/tenant/maintenance')) return 'Báo hỏng & Sửa chữa';
-                if (p.includes('/tenant/lease')) return 'Hợp đồng & Tiền cọc';
-                if (p.includes('/dashboard')) return isTenant ? 'Cổng Cư Dân' : isSuperAdmin ? 'Chỉ số Nền tảng' : 'Tổng quan';
-                if (p.includes('/properties')) return 'Bất động sản';
-                if (p.includes('/rooms/new') || p.includes('/rooms/create')) return 'Thêm phòng mới';
-                if (p.includes('/rooms')) return 'Phòng & Sơ đồ';
-                if (p.includes('/tenants')) return 'Hồ sơ người thuê';
-                if (p.includes('/contracts')) return 'Hợp đồng';
-                if (p.includes('/invoices/')) return 'Chi tiết phiếu thu';
-                if (p.includes('/invoices')) return 'Hóa đơn';
-                if (p.includes('/utilities/readings')) return 'Chi tiết chỉ số công tơ';
-                if (p.includes('/meter-readings')) return 'Chỉ số điện nước';
-                if (p.includes('/payments/')) return 'Chi tiết giao dịch';
-                if (p.includes('/payments')) return 'Thanh toán & Công nợ';
-                if (p.includes('/expenses')) return 'Chi phí vận hành';
-                if (p.includes('/deposits')) return 'Tiền cọc & Quyết toán';
-                if (p.includes('/maintenance')) return 'Bảo trì & Sửa chữa';
-                if (p.includes('/handover')) return 'Bàn giao phòng';
-                if (p.includes('/notifications')) return 'Thông báo';
-                if (p.includes('/settings')) return 'Cài đặt';
-                return 'Chi tiết';
-              })()}
-            </span>
+            {(() => {
+              const p = location.pathname;
+
+              // Helper for generating parent and current crumbs
+              let parentLink: { label: string; to: string } | null = null;
+              let currentLabel = 'Chi tiết';
+
+              if (p.includes('/platform/accounts')) {
+                currentLabel = 'Tài khoản người dùng';
+              } else if (p.includes('/platform/organizations')) {
+                currentLabel = 'Tổ chức chủ nhà';
+              } else if (p.includes('/platform/subscription-plans')) {
+                currentLabel = 'Gói dịch vụ SaaS';
+              } else if (p.includes('/platform/subscriptions')) {
+                currentLabel = 'Hợp đồng thuê bao';
+              } else if (p.includes('/platform/support')) {
+                currentLabel = 'Trung tâm hỗ trợ CSKH';
+              } else if (p.includes('/platform/announcements')) {
+                currentLabel = 'Thông báo toàn hệ thống';
+              } else if (p.includes('/platform/audit-logs')) {
+                currentLabel = 'Nhật ký Audit Logs';
+              } else if (p.includes('/platform/system-health')) {
+                currentLabel = 'Sức khỏe hệ thống';
+              } else if (p.includes('/platform/settings')) {
+                currentLabel = 'Cài đặt nền tảng';
+              } else if (p === '/tenant/dashboard' || p === '/tenant') {
+                currentLabel = 'Tổng quan';
+              } else if (p.startsWith('/tenant/invoices/')) {
+                parentLink = { label: 'Hóa đơn & Tiền phòng', to: '/tenant/invoices' };
+                currentLabel = 'Chi tiết hóa đơn';
+              } else if (p === '/tenant/invoices') {
+                currentLabel = 'Hóa đơn & Tiền phòng';
+              } else if (p.startsWith('/tenant/utilities/')) {
+                parentLink = { label: 'Lịch sử Điện & Nước', to: '/tenant/utilities' };
+                currentLabel = 'Chi tiết chỉ số điện nước';
+              } else if (p === '/tenant/utilities') {
+                currentLabel = 'Lịch sử Điện & Nước';
+              } else if (p === '/tenant/payments') {
+                currentLabel = 'Lịch sử thanh toán';
+              } else if (p.startsWith('/tenant/maintenance/')) {
+                parentLink = { label: 'Báo hỏng & Sửa chữa', to: '/tenant/maintenance' };
+                currentLabel = 'Chi tiết yêu cầu';
+              } else if (p === '/tenant/maintenance') {
+                currentLabel = 'Báo hỏng & Sửa chữa';
+              } else if (p === '/tenant/lease') {
+                currentLabel = 'Hợp đồng & Tiền cọc';
+              } else if (p === '/dashboard' || p === '/landlord/dashboard') {
+                currentLabel = isTenant ? 'Cổng Cư Dân' : isSuperAdmin ? 'Chỉ số Nền tảng' : 'Tổng quan';
+              } else if (p.startsWith('/properties/')) {
+                parentLink = { label: 'Bất động sản', to: '/properties' };
+                currentLabel = 'Chi tiết dãy trọ';
+              } else if (p === '/properties') {
+                currentLabel = 'Bất động sản';
+              } else if (p.includes('/rooms/new') || p.includes('/rooms/create')) {
+                parentLink = { label: 'Phòng & Sơ đồ', to: '/rooms' };
+                currentLabel = 'Thêm phòng mới';
+              } else if (p.startsWith('/rooms/')) {
+                parentLink = { label: 'Phòng & Sơ đồ', to: '/rooms' };
+                currentLabel = 'Chi tiết phòng';
+              } else if (p === '/rooms') {
+                currentLabel = 'Phòng & Sơ đồ';
+              } else if (p === '/tenants') {
+                currentLabel = 'Hồ sơ người thuê';
+              } else if (p.startsWith('/contracts/')) {
+                parentLink = { label: 'Hợp đồng', to: '/contracts' };
+                currentLabel = 'Chi tiết hợp đồng';
+              } else if (p === '/contracts') {
+                currentLabel = 'Hợp đồng';
+              } else if (p.startsWith('/invoices/')) {
+                parentLink = { label: 'Hóa đơn', to: '/invoices' };
+                currentLabel = 'Chi tiết phiếu thu';
+              } else if (p === '/invoices') {
+                currentLabel = 'Hóa đơn';
+              } else if (p.startsWith('/landlord/utilities/readings/') || p.startsWith('/utilities/readings/')) {
+                parentLink = { label: 'Chỉ số điện nước', to: '/meter-readings' };
+                currentLabel = 'Chi tiết chỉ số công tơ';
+              } else if (p === '/meter-readings') {
+                currentLabel = 'Chỉ số điện nước';
+              } else if (p.startsWith('/landlord/payments/') || p.startsWith('/payments/')) {
+                parentLink = { label: 'Thanh toán & Công nợ', to: '/payments' };
+                currentLabel = 'Chi tiết phiếu thu';
+              } else if (p === '/payments') {
+                currentLabel = 'Thanh toán & Công nợ';
+              } else if (p === '/expenses') {
+                currentLabel = 'Chi phí vận hành';
+              } else if (p.startsWith('/deposits/')) {
+                parentLink = { label: 'Tiền cọc & Quyết toán', to: '/deposits' };
+                currentLabel = 'Chi tiết tiền cọc';
+              } else if (p === '/deposits') {
+                currentLabel = 'Tiền cọc & Quyết toán';
+              } else if (p.startsWith('/maintenance/')) {
+                parentLink = { label: 'Bảo trì & Sửa chữa', to: '/maintenance' };
+                currentLabel = 'Chi tiết sự cố';
+              } else if (p === '/maintenance') {
+                currentLabel = 'Bảo trì & Sửa chữa';
+              } else if (p === '/handover') {
+                currentLabel = 'Bàn giao phòng';
+              } else if (p === '/notifications') {
+                currentLabel = 'Thông báo';
+              } else if (p === '/settings') {
+                currentLabel = 'Cài đặt';
+              }
+
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {parentLink && (
+                    <>
+                      <Link
+                        to={parentLink.to}
+                        style={{ color: '#00594C', textDecoration: 'none', fontWeight: 500, transition: 'color 0.15s ease' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                        onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                      >
+                        {parentLink.label}
+                      </Link>
+                      <span style={{ color: '#9CA3AF' }}>/</span>
+                    </>
+                  )}
+                  <Link
+                    to={location.pathname + location.search}
+                    style={{ fontWeight: 600, color: '#111827', textDecoration: 'none' }}
+                  >
+                    {currentLabel}
+                  </Link>
+                </div>
+              );
+            })()}
             <span
               className={`rf-badge ${
                 isSuperAdmin ? 'rf-badge-danger' : isTenant ? 'rf-badge-vacant' : 'rf-badge-active'
