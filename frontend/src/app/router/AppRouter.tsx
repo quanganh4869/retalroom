@@ -31,6 +31,13 @@ import { AdminAnnouncementsPage } from '@/features/admin/AdminAnnouncementsPage'
 import { AdminAuditLogsPage } from '@/features/admin/AdminAuditLogsPage';
 import { AdminSystemHealthPage } from '@/features/admin/AdminSystemHealthPage';
 import { AdminSettingsPage } from '@/features/admin/AdminSettingsPage';
+import { AdminLoginHistoryPage } from '@/features/admin/AdminLoginHistoryPage';
+import { AdminActiveSessionsPage } from '@/features/admin/AdminActiveSessionsPage';
+import { AdminSecurityEventsPage } from '@/features/admin/AdminSecurityEventsPage';
+import { AdminAccessControlPage } from '@/features/admin/AdminAccessControlPage';
+import { AdminSystemLogsPage } from '@/features/admin/AdminSystemLogsPage';
+import { AdminIntegrationsPage } from '@/features/admin/AdminIntegrationsPage';
+import { AdminTransactionsPage } from '@/features/admin/AdminTransactionsPage';
 import { PlatformAdminProvider } from '@/features/admin/PlatformAdminContext';
 import { PropertyDetailPage } from '@/features/properties/components/PropertyDetailPage';
 import { RoomDetailPage } from '@/features/rooms/RoomDetailPage';
@@ -226,6 +233,16 @@ export const AppRouter: React.FC = () => {
               }
             />
             <Route
+              path="/platform/access-control"
+              element={
+                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                  <AppShell>
+                    <AdminAccessControlPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/platform/subscription-plans"
               element={
                 <ProtectedRoute allowedRoles={['SUPERADMIN']}>
@@ -241,6 +258,16 @@ export const AppRouter: React.FC = () => {
                 <ProtectedRoute allowedRoles={['SUPERADMIN']}>
                   <AppShell>
                     <AdminSubscriptionPlansPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/platform/transactions"
+              element={
+                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                  <AppShell>
+                    <AdminTransactionsPage />
                   </AppShell>
                 </ProtectedRoute>
               }
@@ -266,6 +293,36 @@ export const AppRouter: React.FC = () => {
               }
             />
             <Route
+              path="/platform/security/login-history"
+              element={
+                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                  <AppShell>
+                    <AdminLoginHistoryPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/platform/security/sessions"
+              element={
+                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                  <AppShell>
+                    <AdminActiveSessionsPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/platform/security/events"
+              element={
+                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                  <AppShell>
+                    <AdminSecurityEventsPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/platform/audit-logs"
               element={
                 <ProtectedRoute allowedRoles={['SUPERADMIN']}>
@@ -281,6 +338,26 @@ export const AppRouter: React.FC = () => {
                 <ProtectedRoute allowedRoles={['SUPERADMIN']}>
                   <AppShell>
                     <AdminSystemHealthPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/platform/system-logs"
+              element={
+                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                  <AppShell>
+                    <AdminSystemLogsPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/platform/integrations"
+              element={
+                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                  <AppShell>
+                    <AdminIntegrationsPage />
                   </AppShell>
                 </ProtectedRoute>
               }

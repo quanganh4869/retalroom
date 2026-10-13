@@ -310,77 +310,11 @@ export const AdminOverviewPage: React.FC = () => {
           {/* Quick Navigation to Admin Subsystems */}
           <div className="rf-card" style={{ padding: '20px' }}>
             <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', marginBottom: '14px' }}>
-              Phân hệ quản trị nền tảng
+              Lối tắt phân hệ quản trị lõi
             </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
               <div
-                onClick={() => navigate('/platform/accounts')}
-                style={{
-                  padding: '12px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                  cursor: 'pointer',
-                  backgroundColor: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#00594C')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
-              >
-                <Users size={18} color="#00594C" />
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Quản lý Tài khoản</div>
-                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Phân quyền, khóa & xác thực 2FA</div>
-                </div>
-              </div>
-
-              <div
-                onClick={() => navigate('/platform/subscription-plans')}
-                style={{
-                  padding: '12px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                  cursor: 'pointer',
-                  backgroundColor: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#00594C')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
-              >
-                <DollarSign size={18} color="#00594C" />
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Gói dịch vụ SaaS</div>
-                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Biểu phí, hạn mức phòng & tính năng</div>
-                </div>
-              </div>
-
-              <div
-                onClick={() => navigate('/platform/announcements')}
-                style={{
-                  padding: '12px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                  cursor: 'pointer',
-                  backgroundColor: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#00594C')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
-              >
-                <Zap size={18} color="#00594C" />
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Thông báo toàn hệ thống</div>
-                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Broadcast lịch bảo trì & tính năng mới</div>
-                </div>
-              </div>
-
-              <div
-                onClick={() => navigate('/platform/settings')}
+                onClick={() => navigate('/platform/security/login-history')}
                 style={{
                   padding: '12px',
                   borderRadius: '6px',
@@ -396,8 +330,118 @@ export const AdminOverviewPage: React.FC = () => {
               >
                 <ShieldCheck size={18} color="#00594C" />
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Cài đặt bảo mật SaaS</div>
-                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Cấu hình cổng thanh toán & API Keys</div>
+                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Lịch sử Đăng nhập</div>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Phát hiện brute-force & vị trí lạ</div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => navigate('/platform/security/events')}
+                style={{
+                  padding: '12px',
+                  borderRadius: '6px',
+                  border: '1px solid #E5E7EB',
+                  cursor: 'pointer',
+                  backgroundColor: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#DC2626')}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
+              >
+                <AlertCircle size={18} color="#DC2626" />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Sự kiện An ninh ({metrics.securityThreatsCount})</div>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Điều tra cảnh báo & chặn IP</div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => navigate('/platform/access-control')}
+                style={{
+                  padding: '12px',
+                  borderRadius: '6px',
+                  border: '1px solid #E5E7EB',
+                  cursor: 'pointer',
+                  backgroundColor: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#00594C')}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
+              >
+                <Users size={18} color="#00594C" />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Vai trò & Phân quyền</div>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Ma trận quyền hạn RBAC</div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => navigate('/platform/transactions')}
+                style={{
+                  padding: '12px',
+                  borderRadius: '6px',
+                  border: '1px solid #E5E7EB',
+                  cursor: 'pointer',
+                  backgroundColor: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#00594C')}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
+              >
+                <DollarSign size={18} color="#00594C" />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Giao dịch SaaS</div>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Đối soát cổng VNPay / MoMo</div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => navigate('/platform/system-logs')}
+                style={{
+                  padding: '12px',
+                  borderRadius: '6px',
+                  border: '1px solid #E5E7EB',
+                  cursor: 'pointer',
+                  backgroundColor: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#00594C')}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
+              >
+                <Server size={18} color="#00594C" />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Nhật ký ứng dụng & Lỗi</div>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Truy vết lỗi API & HTTP 500</div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => navigate('/platform/integrations')}
+                style={{
+                  padding: '12px',
+                  borderRadius: '6px',
+                  border: '1px solid #E5E7EB',
+                  cursor: 'pointer',
+                  backgroundColor: '#FFFFFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#00594C')}
+                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
+              >
+                <Zap size={18} color="#00594C" />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Dịch vụ Tích hợp</div>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>VNPay, VietQR, Zalo OA, AI OCR</div>
                 </div>
               </div>
             </div>

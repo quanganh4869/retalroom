@@ -20,6 +20,10 @@ import {
   Layers,
   Activity,
   UserCheck,
+  ShieldCheck,
+  KeyRound,
+  FileSpreadsheet,
+  Server,
 } from 'lucide-react';
 import { useAuth, UserRole } from '@/features/auth/AuthContext';
 import { RentFlowLogo } from '@/components/ui/RentFlowLogo';
@@ -58,29 +62,42 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     { name: 'Cài đặt & Gói dịch vụ', path: '/settings', icon: Settings },
   ];
 
-  // Admin Platform Grouped Navigation (Specification Section 11 & Admin Master Spec)
-  const adminOverviewNav = [
+  // Enterprise Admin Navigation (7 Core Architecture Categories)
+  const adminA_OverviewNav = [
     { name: 'Tổng quan nền tảng', path: '/platform/dashboard', icon: LayoutDashboard },
   ];
 
-  const adminUsersNav = [
+  const adminB_UsersAccessNav = [
     { name: 'Tài khoản người dùng', path: '/platform/accounts', icon: UserCheck },
     { name: 'Tổ chức chủ nhà', path: '/platform/organizations', icon: Building2 },
+    { name: 'Vai trò & Phân quyền', path: '/platform/access-control', icon: KeyRound },
   ];
 
-  const adminCommercialNav = [
+  const adminC_CommercialNav = [
     { name: 'Gói dịch vụ SaaS', path: '/platform/subscription-plans', icon: Layers },
     { name: 'Thuê bao nền tảng', path: '/platform/subscriptions', icon: CreditCard },
+    { name: 'Giao dịch SaaS', path: '/platform/transactions', icon: FileSpreadsheet },
   ];
 
-  const adminSupportNav = [
+  const adminD_CustomerOpsNav = [
     { name: 'Ticket hỗ trợ CSKH', path: '/platform/support', icon: LifeBuoy },
-    { name: 'Thông báo hệ thống', path: '/platform/announcements', icon: Bell },
+    { name: 'Thông báo toàn hệ thống', path: '/platform/announcements', icon: Bell },
   ];
 
-  const adminSystemNav = [
-    { name: 'Nhật ký Audit Logs', path: '/platform/audit-logs', icon: ShieldAlert },
+  const adminE_SecurityAuditNav = [
+    { name: 'Lịch sử đăng nhập', path: '/platform/security/login-history', icon: ShieldCheck },
+    { name: 'Phiên đang hoạt động', path: '/platform/security/sessions', icon: Activity },
+    { name: 'Sự kiện bảo mật', path: '/platform/security/events', icon: ShieldAlert },
+    { name: 'Nhật ký Audit Logs', path: '/platform/audit-logs', icon: FileText },
+  ];
+
+  const adminF_SystemOpsNav = [
     { name: 'Sức khỏe hệ thống', path: '/platform/system-health', icon: Activity },
+    { name: 'Nhật ký ứng dụng & Lỗi', path: '/platform/system-logs', icon: Server },
+    { name: 'Dịch vụ tích hợp', path: '/platform/integrations', icon: Zap },
+  ];
+
+  const adminG_PlatformConfigNav = [
     { name: 'Cài đặt nền tảng', path: '/platform/settings', icon: Settings },
   ];
 
@@ -230,30 +247,40 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             if (isSuperAdmin) {
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                  <div style={{ padding: '8px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#DC2626', textTransform: 'uppercase' }}>
-                    Tổng quan
+                  <div style={{ padding: '8px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#DC2626', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    A. Tổng quan
                   </div>
-                  {adminOverviewNav.map(renderNavLink)}
+                  {adminA_OverviewNav.map(renderNavLink)}
 
                   <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
-                    Tài khoản & Tổ chức
+                    B. Người dùng & Truy cập
                   </div>
-                  {adminUsersNav.map(renderNavLink)}
+                  {adminB_UsersAccessNav.map(renderNavLink)}
 
                   <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
-                    Gói dịch vụ & Thuê bao
+                    C. Thương mại & Thuê bao
                   </div>
-                  {adminCommercialNav.map(renderNavLink)}
+                  {adminC_CommercialNav.map(renderNavLink)}
 
                   <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
-                    Vận hành & Hỗ trợ
+                    D. Chăm sóc khách hàng
                   </div>
-                  {adminSupportNav.map(renderNavLink)}
+                  {adminD_CustomerOpsNav.map(renderNavLink)}
 
                   <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
-                    Hệ thống & An ninh
+                    E. Bảo mật & Kiểm toán
                   </div>
-                  {adminSystemNav.map(renderNavLink)}
+                  {adminE_SecurityAuditNav.map(renderNavLink)}
+
+                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
+                    F. Vận hành hệ thống
+                  </div>
+                  {adminF_SystemOpsNav.map(renderNavLink)}
+
+                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
+                    G. Cấu hình nền tảng
+                  </div>
+                  {adminG_PlatformConfigNav.map(renderNavLink)}
                 </div>
               );
             }
@@ -330,18 +357,37 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 currentLabel = 'Tài khoản người dùng';
               } else if (p.includes('/platform/organizations')) {
                 currentLabel = 'Tổ chức chủ nhà';
+              } else if (p.includes('/platform/access-control')) {
+                currentLabel = 'Vai trò & Phân quyền';
               } else if (p.includes('/platform/subscription-plans')) {
                 currentLabel = 'Gói dịch vụ SaaS';
               } else if (p.includes('/platform/subscriptions')) {
                 currentLabel = 'Hợp đồng thuê bao';
+              } else if (p.includes('/platform/transactions')) {
+                currentLabel = 'Giao dịch thanh toán SaaS';
               } else if (p.includes('/platform/support')) {
                 currentLabel = 'Trung tâm hỗ trợ CSKH';
               } else if (p.includes('/platform/announcements')) {
                 currentLabel = 'Thông báo toàn hệ thống';
+              } else if (p.includes('/platform/security/login-history')) {
+                parentLink = { label: 'Bảo mật & Kiểm toán', to: '/platform/audit-logs' };
+                currentLabel = 'Lịch sử đăng nhập (Login Logs)';
+              } else if (p.includes('/platform/security/sessions')) {
+                parentLink = { label: 'Bảo mật & Kiểm toán', to: '/platform/audit-logs' };
+                currentLabel = 'Phiên đang hoạt động (Active Sessions)';
+              } else if (p.includes('/platform/security/events')) {
+                parentLink = { label: 'Bảo mật & Kiểm toán', to: '/platform/audit-logs' };
+                currentLabel = 'Sự kiện an ninh (Security Events)';
               } else if (p.includes('/platform/audit-logs')) {
                 currentLabel = 'Nhật ký Audit Logs';
               } else if (p.includes('/platform/system-health')) {
                 currentLabel = 'Sức khỏe hệ thống';
+              } else if (p.includes('/platform/system-logs')) {
+                parentLink = { label: 'Vận hành hệ thống', to: '/platform/system-health' };
+                currentLabel = 'Nhật ký ứng dụng & Lỗi API';
+              } else if (p.includes('/platform/integrations')) {
+                parentLink = { label: 'Vận hành hệ thống', to: '/platform/system-health' };
+                currentLabel = 'Dịch vụ tích hợp ngoại vi';
               } else if (p.includes('/platform/settings')) {
                 currentLabel = 'Cài đặt nền tảng';
               } else if (p === '/tenant/dashboard' || p === '/tenant') {

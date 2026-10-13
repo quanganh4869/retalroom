@@ -113,6 +113,115 @@ export interface PlatformAuditLog {
   details: string;
 }
 
+// B. Security & Access Logs (Distinct from Audit Logs)
+export interface PlatformLoginLog {
+  id: string;
+  timestamp: string;
+  email: string;
+  userName: string;
+  role: string;
+  organizationName?: string;
+  ipAddress: string;
+  location: string;
+  deviceType: 'DESKTOP' | 'MOBILE' | 'TABLET' | 'API_CLIENT';
+  browser: string;
+  os: string;
+  authMethod: 'PASSWORD' | 'PASSWORD_2FA' | 'GOOGLE_SSO' | 'MAGIC_LINK';
+  status: 'SUCCESS' | 'FAILED' | 'CHALLENGE_REQUIRED' | 'BLOCKED';
+  failureReason?: string;
+}
+
+export interface PlatformActiveSession {
+  id: string;
+  accountId: string;
+  email: string;
+  userName: string;
+  role: string;
+  ipAddress: string;
+  location: string;
+  userAgent: string;
+  device: string;
+  isCurrentSession: boolean;
+  createdAt: string;
+  lastActiveAt: string;
+  expiresAt: string;
+}
+
+export interface PlatformSecurityEvent {
+  id: string;
+  timestamp: string;
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  category: 'BRUTE_FORCE' | 'ACCOUNT_TAKEOVER' | 'RATE_LIMIT' | 'UNUSUAL_GEO' | 'API_ABUSE';
+  title: string;
+  description: string;
+  targetEmail?: string;
+  ipAddress: string;
+  status: 'OPEN' | 'INVESTIGATING' | 'RESOLVED' | 'DISMISSED';
+  resolvedAt?: string;
+  resolvedBy?: string;
+}
+
+// C. Commercial Transactions (SaaS Subscription Payments)
+export interface PlatformTransaction {
+  id: string;
+  code: string;
+  organizationId: string;
+  organizationName: string;
+  planName: string;
+  amountVnd: number;
+  paymentMethod: 'VNPAY' | 'MOMO' | 'BANK_TRANSFER' | 'CREDIT_CARD';
+  gatewayRef: string;
+  status: 'SUCCESS' | 'PENDING' | 'FAILED' | 'REFUNDED';
+  createdAt: string;
+  completedAt?: string;
+  notes?: string;
+}
+
+// F. System Operations (System & API Error Logs, Integrations)
+export interface PlatformSystemLog {
+  id: string;
+  timestamp: string;
+  service: 'API_GATEWAY' | 'AUTH_SVC' | 'BILLING_ENGINE' | 'AI_OCR_SVC' | 'NOTIFICATION_SVC';
+  level: 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
+  correlationId: string;
+  httpMethod?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  endpoint?: string;
+  httpStatus?: number;
+  durationMs: number;
+  message: string;
+  stackTraceSnippet?: string;
+}
+
+export interface PlatformIntegration {
+  id: string;
+  name: string;
+  provider: string;
+  category: 'PAYMENT' | 'SMS_OTP' | 'ZALO_ZNS' | 'AI_SERVICE' | 'STORAGE' | 'EMAIL';
+  status: 'OPERATIONAL' | 'DEGRADED' | 'DISRUPTED' | 'CONFIG_REQUIRED';
+  endpoint: string;
+  authMode: 'API_KEY' | 'OAUTH2' | 'HMAC_SHA256' | 'MUTUAL_TLS';
+  lastPingAt: string;
+  latencyMs: number;
+  errorRate24h: string;
+  description: string;
+}
+
+// Roles & Permissions matrix
+export interface PlatformRolePermission {
+  role: 'SUPERADMIN' | 'SUPPORT_AGENT' | 'BILLING_ADMIN' | 'LANDLORD' | 'TENANT';
+  title: string;
+  description: string;
+  userCount: number;
+  permissions: {
+    module: string;
+    view: boolean;
+    create: boolean;
+    edit: boolean;
+    delete: boolean;
+    restrictedActions: string[];
+  }[];
+}
+
 // Initial Mock Datasets
 export const initialPlatformAccounts: PlatformAccount[] = [
   {
@@ -567,3 +676,434 @@ export const initialPlatformAuditLogs: PlatformAuditLog[] = [
     details: 'Đăng ký tổ chức Hoàng Gia Luxury Apartment qua Landing page',
   },
 ];
+
+export const initialPlatformLoginLogs: PlatformLoginLog[] = [
+  {
+    id: 'login-001',
+    timestamp: '2026-10-12 17:35:10',
+    email: 'admin@rentflow.vn',
+    userName: 'Nguyễn Quốc Anh (SuperAdmin)',
+    role: 'SUPERADMIN',
+    ipAddress: '118.69.182.10',
+    location: 'Hà Nội, Việt Nam',
+    deviceType: 'DESKTOP',
+    browser: 'Chrome 129.0',
+    os: 'Windows 11',
+    authMethod: 'PASSWORD_2FA',
+    status: 'SUCCESS',
+  },
+  {
+    id: 'login-002',
+    timestamp: '2026-10-12 16:40:22',
+    email: 'long.hoanggia@gmail.com',
+    userName: 'Hoàng Gia Long',
+    role: 'LANDLORD',
+    organizationName: 'Hoàng Gia Luxury Apartment',
+    ipAddress: '115.78.21.90',
+    location: 'TP.HCM, Việt Nam',
+    deviceType: 'MOBILE',
+    browser: 'Safari Mobile 18.0',
+    os: 'iOS 18.1',
+    authMethod: 'PASSWORD',
+    status: 'SUCCESS',
+  },
+  {
+    id: 'login-003',
+    timestamp: '2026-10-12 15:12:05',
+    email: 'phucthinh@gmail.com',
+    userName: 'Trần Phúc Thịnh',
+    role: 'LANDLORD',
+    organizationName: 'Phúc Thịnh Home',
+    ipAddress: '14.238.10.45',
+    location: 'Hà Nội, Việt Nam',
+    deviceType: 'DESKTOP',
+    browser: 'Firefox 130.0',
+    os: 'macOS Sonoma',
+    authMethod: 'GOOGLE_SSO',
+    status: 'SUCCESS',
+  },
+  {
+    id: 'login-004',
+    timestamp: '2026-10-12 14:02:18',
+    email: 'unknown-attacker@proton.me',
+    userName: 'Không xác định',
+    role: 'UNAUTHENTICATED',
+    ipAddress: '45.154.255.82',
+    location: 'Frankfurt, Đức (VPN / Tor Node)',
+    deviceType: 'API_CLIENT',
+    browser: 'Python-requests 2.31',
+    os: 'Linux x86_64',
+    authMethod: 'PASSWORD',
+    status: 'FAILED',
+    failureReason: 'Sai mật khẩu (Tài khoản mục tiêu: admin@rentflow.vn, brute-force detected)',
+  },
+  {
+    id: 'login-005',
+    timestamp: '2026-10-12 14:02:15',
+    email: 'unknown-attacker@proton.me',
+    userName: 'Không xác định',
+    role: 'UNAUTHENTICATED',
+    ipAddress: '45.154.255.82',
+    location: 'Frankfurt, Đức (VPN / Tor Node)',
+    deviceType: 'API_CLIENT',
+    browser: 'Python-requests 2.31',
+    os: 'Linux x86_64',
+    authMethod: 'PASSWORD',
+    status: 'BLOCKED',
+    failureReason: 'WAF Rate Limit: Vượt quá 10 lần thử trong 60 giây',
+  },
+  {
+    id: 'login-006',
+    timestamp: '2026-10-12 11:22:40',
+    email: 'tam.minh@yahoo.com',
+    userName: 'Vũ Minh Tâm',
+    role: 'LANDLORD',
+    organizationName: 'Minh Tâm Co-living',
+    ipAddress: '171.244.33.120',
+    location: 'Đà Nẵng, Việt Nam',
+    deviceType: 'DESKTOP',
+    browser: 'Edge 129.0',
+    os: 'Windows 10',
+    authMethod: 'PASSWORD',
+    status: 'SUCCESS',
+  },
+];
+
+export const initialPlatformActiveSessions: PlatformActiveSession[] = [
+  {
+    id: 'sess-001',
+    accountId: 'acc-001',
+    email: 'admin@rentflow.vn',
+    userName: 'Nguyễn Quốc Anh (SuperAdmin)',
+    role: 'SUPERADMIN',
+    ipAddress: '118.69.182.10',
+    location: 'Hà Nội, Việt Nam',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/129.0',
+    device: 'Desktop • Chrome 129 on Windows 11',
+    isCurrentSession: true,
+    createdAt: '2026-10-12 17:35:10',
+    lastActiveAt: 'Vừa xong',
+    expiresAt: '2026-10-19 17:35:10',
+  },
+  {
+    id: 'sess-002',
+    accountId: 'acc-002',
+    email: 'bao.tran@rentflow.vn',
+    userName: 'Trần Văn Bảo (Support Ops)',
+    role: 'SUPPORT_AGENT',
+    ipAddress: '14.161.40.12',
+    location: 'Hà Nội, Việt Nam',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Firefox/130.0',
+    device: 'Desktop • Firefox on Windows 10',
+    isCurrentSession: false,
+    createdAt: '2026-10-12 08:30:00',
+    lastActiveAt: '12 phút trước',
+    expiresAt: '2026-10-19 08:30:00',
+  },
+  {
+    id: 'sess-003',
+    accountId: 'acc-003',
+    email: 'nguyenan@rentflow.vn',
+    userName: 'Nguyễn An (Chủ nhà)',
+    role: 'LANDLORD',
+    ipAddress: '118.69.182.10',
+    location: 'Hà Nội, Việt Nam',
+    userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Safari/18.0',
+    device: 'Desktop • Safari on macOS',
+    isCurrentSession: false,
+    createdAt: '2026-10-12 15:45:00',
+    lastActiveAt: '35 phút trước',
+    expiresAt: '2026-10-19 15:45:00',
+  },
+  {
+    id: 'sess-004',
+    accountId: 'acc-004',
+    email: 'phucthinh@gmail.com',
+    userName: 'Trần Phúc Thịnh',
+    role: 'LANDLORD',
+    ipAddress: '14.238.10.45',
+    location: 'Hà Nội, Việt Nam',
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X)',
+    device: 'Mobile • RentFlow iOS App',
+    isCurrentSession: false,
+    createdAt: '2026-10-12 15:12:05',
+    lastActiveAt: '1 giờ trước',
+    expiresAt: '2026-10-19 15:12:05',
+  },
+];
+
+export const initialPlatformSecurityEvents: PlatformSecurityEvent[] = [
+  {
+    id: 'sec-001',
+    timestamp: '2026-10-12 14:02:18',
+    severity: 'HIGH',
+    category: 'BRUTE_FORCE',
+    title: 'Phát hiện chuỗi dò quét mật khẩu từ IP quốc tế',
+    description: 'IP 45.154.255.82 đã thực hiện 12 lần đăng nhập thất bại liên tiếp vào tài khoản quản trị trong 45 giây. Hệ thống WAF đã tự động đưa địa chỉ IP vào danh sách chặn tạm thời 24h.',
+    targetEmail: 'admin@rentflow.vn',
+    ipAddress: '45.154.255.82',
+    status: 'RESOLVED',
+    resolvedAt: '2026-10-12 14:03:00',
+    resolvedBy: 'Hệ thống tự động (Automated SecOps)',
+  },
+  {
+    id: 'sec-002',
+    timestamp: '2026-10-12 16:45:30',
+    severity: 'MEDIUM',
+    category: 'RATE_LIMIT',
+    title: 'Cảnh báo chữ ký Webhook thanh toán không hợp lệ',
+    description: 'Endpoint nhận callback IPN từ cổng thanh toán ghi nhận 3 request có checksum HMAC không trùng khớp. Giao dịch được chuyển sang trạng thái chờ đối soát thủ công.',
+    ipAddress: '103.1.238.10',
+    status: 'INVESTIGATING',
+  },
+  {
+    id: 'sec-003',
+    timestamp: '2026-10-11 09:15:00',
+    severity: 'LOW',
+    category: 'UNUSUAL_GEO',
+    title: 'Đăng nhập từ vị trí mới chưa từng ghi nhận',
+    description: 'Tài khoản tam.minh@yahoo.com đăng nhập lần đầu từ dải IP Đà Nẵng (171.244.33.120). Email xác thực thiết bị mới đã được gửi tới người dùng thành công.',
+    targetEmail: 'tam.minh@yahoo.com',
+    ipAddress: '171.244.33.120',
+    status: 'RESOLVED',
+    resolvedAt: '2026-10-11 09:20:00',
+    resolvedBy: 'Người dùng xác nhận qua Email',
+  },
+];
+
+export const initialPlatformTransactions: PlatformTransaction[] = [
+  {
+    id: 'tx-001',
+    code: 'TXN-SaaS-20261012-01',
+    organizationId: 'org-001',
+    organizationName: 'Nguyễn An Property',
+    planName: 'Growth PRO (1 Tháng)',
+    amountVnd: 299000,
+    paymentMethod: 'VNPAY',
+    gatewayRef: 'VNP14892019',
+    status: 'SUCCESS',
+    createdAt: '2026-10-12 10:15:00',
+    completedAt: '2026-10-12 10:15:32',
+    notes: 'Tự động gia hạn thuê bao chu kỳ tháng 10/2026',
+  },
+  {
+    id: 'tx-002',
+    code: 'TXN-SaaS-20261010-02',
+    organizationId: 'org-002',
+    organizationName: 'Phúc Thịnh Home',
+    planName: 'Enterprise SaaS (1 Năm)',
+    amountVnd: 5990000,
+    paymentMethod: 'BANK_TRANSFER',
+    gatewayRef: 'MB-REF-89104',
+    status: 'SUCCESS',
+    createdAt: '2026-10-10 14:00:00',
+    completedAt: '2026-10-10 14:05:00',
+    notes: 'Gia hạn gói Enterprise thường niên, chiết khấu 2 tháng',
+  },
+  {
+    id: 'tx-003',
+    code: 'TXN-SaaS-20261012-03',
+    organizationId: 'org-004',
+    organizationName: 'Hoàng Gia Luxury Apartment',
+    planName: 'Growth PRO (1 Tháng)',
+    amountVnd: 299000,
+    paymentMethod: 'VNPAY',
+    gatewayRef: 'VNP-847291',
+    status: 'PENDING',
+    createdAt: '2026-10-12 16:40:00',
+    notes: 'Tiền đã trừ phía ngân hàng, webhook IPN đang chờ đối soát khớp chữ ký',
+  },
+];
+
+export const initialPlatformSystemLogs: PlatformSystemLog[] = [
+  {
+    id: 'syslog-001',
+    timestamp: '2026-10-12 17:40:12',
+    service: 'API_GATEWAY',
+    level: 'INFO',
+    correlationId: 'req-8891-23fa-91b0',
+    httpMethod: 'GET',
+    endpoint: '/api/v1/properties',
+    httpStatus: 200,
+    durationMs: 42,
+    message: 'Tải danh sách bất động sản thành công cho org org-001',
+  },
+  {
+    id: 'syslog-002',
+    timestamp: '2026-10-12 16:45:30',
+    service: 'BILLING_ENGINE',
+    level: 'WARNING',
+    correlationId: 'req-7712-45bb-12a1',
+    httpMethod: 'POST',
+    endpoint: '/api/v1/webhooks/vnpay/ipn',
+    httpStatus: 400,
+    durationMs: 88,
+    message: 'IPN Signature Mismatch: Hash chuỗi tham số không khớp secret key của tenant',
+    stackTraceSnippet: 'ValidationError: HMAC SHA512 hash verify failed at VNPayWebhookHandler.validateSignature (vnpay.py:112)',
+  },
+  {
+    id: 'syslog-003',
+    timestamp: '2026-10-12 15:30:10',
+    service: 'AI_OCR_SVC',
+    level: 'INFO',
+    correlationId: 'req-6623-11aa-44bc',
+    httpMethod: 'POST',
+    endpoint: '/api/v1/ai/meter-read',
+    httpStatus: 200,
+    durationMs: 312,
+    message: 'Nhận diện chỉ số đồng hồ điện thành công qua Camera AI (độ tin cậy 98.4%)',
+  },
+  {
+    id: 'syslog-004',
+    timestamp: '2026-10-12 14:02:15',
+    service: 'AUTH_SVC',
+    level: 'ERROR',
+    correlationId: 'req-4412-99cc-77aa',
+    httpMethod: 'POST',
+    endpoint: '/api/v1/auth/login',
+    httpStatus: 429,
+    durationMs: 15,
+    message: 'Rate limit exceeded: IP 45.154.255.82 vượt quá 10 request/phút',
+  },
+  {
+    id: 'syslog-005',
+    timestamp: '2026-10-12 12:00:00',
+    service: 'NOTIFICATION_SVC',
+    level: 'INFO',
+    correlationId: 'cron-job-daily-billing-1200',
+    durationMs: 1240,
+    message: 'Đã hoàn thành kiểm tra và gửi thông báo nhắc nợ hóa đơn tự động cho 18 cư dân',
+  },
+];
+
+export const initialPlatformIntegrations: PlatformIntegration[] = [
+  {
+    id: 'int-001',
+    name: 'Cổng thanh toán VNPay QR Gateway',
+    provider: 'VNPAY VN',
+    category: 'PAYMENT',
+    status: 'OPERATIONAL',
+    endpoint: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+    authMode: 'HMAC_SHA256',
+    lastPingAt: '2 phút trước',
+    latencyMs: 82,
+    errorRate24h: '0.04%',
+    description: 'Thanh toán trực tuyến quét mã VNPAY QR, thẻ nội địa Napas và quốc tế Visa/Mastercard.',
+  },
+  {
+    id: 'int-002',
+    name: 'VietQR - Mã QR chuyển khoản động Napas 247',
+    provider: 'VietQR.io & NAPAS',
+    category: 'PAYMENT',
+    status: 'OPERATIONAL',
+    endpoint: 'https://api.vietqr.io/v2/generate',
+    authMode: 'API_KEY',
+    lastPingAt: '1 phút trước',
+    latencyMs: 45,
+    errorRate24h: '0.00%',
+    description: 'Sinh mã QR ngân hàng động kèm sẵn số tiền và nội dung hóa đơn để cư dân quét chuyển khoản tức thì.',
+  },
+  {
+    id: 'int-003',
+    name: 'Zalo ZNS Official Account API',
+    provider: 'VNG / Zalo Cloud',
+    category: 'ZALO_ZNS',
+    status: 'OPERATIONAL',
+    endpoint: 'https://business.openapi.zalo.me/message/template',
+    authMode: 'OAUTH2',
+    lastPingAt: '5 phút trước',
+    latencyMs: 95,
+    errorRate24h: '0.12%',
+    description: 'Gửi tin nhắn mẫu thông báo tiền phòng, chỉ số điện nước và hóa đơn trực tiếp vào tài khoản Zalo cư dân.',
+  },
+  {
+    id: 'int-004',
+    name: 'RentFlow AI Vision OCR Service',
+    provider: 'RentFlow Python AI Engine',
+    category: 'AI_SERVICE',
+    status: 'OPERATIONAL',
+    endpoint: 'http://127.0.0.1:8001/ai/v1/meter-ocr',
+    authMode: 'MUTUAL_TLS',
+    lastPingAt: 'Vừa xong',
+    latencyMs: 140,
+    errorRate24h: '0.08%',
+    description: 'Mô hình Computer Vision chuyên dụng đọc số công tơ điện cơ khí và điện tử từ ảnh chụp điện thoại.',
+  },
+  {
+    id: 'int-005',
+    name: 'Dịch vụ SMS Brandname CSKH',
+    provider: 'eSMS Telecom VN',
+    category: 'SMS_OTP',
+    status: 'OPERATIONAL',
+    endpoint: 'https://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json',
+    authMode: 'API_KEY',
+    lastPingAt: '10 phút trước',
+    latencyMs: 160,
+    errorRate24h: '0.21%',
+    description: 'Gửi mã OTP xác thực đăng nhập 2FA và thông báo khẩn cấp khi người dùng không dùng Zalo.',
+  },
+];
+
+export const initialPlatformRolePermissions: PlatformRolePermission[] = [
+  {
+    role: 'SUPERADMIN',
+    title: 'SuperAdmin Nền tảng (Platform Operator)',
+    description: 'Toàn quyền cấu hình hệ thống, quản lý tài khoản, xem audit logs, can thiệp thuê bao và hạ tầng.',
+    userCount: 1,
+    permissions: [
+      { module: 'Tài khoản người dùng', view: true, create: true, edit: true, delete: true, restrictedActions: [] },
+      { module: 'Tổ chức chủ nhà', view: true, create: true, edit: true, delete: true, restrictedActions: [] },
+      { module: 'Gói dịch vụ & Doanh thu', view: true, create: true, edit: true, delete: true, restrictedActions: [] },
+      { module: 'Audit Trail & Bảo mật', view: true, create: true, edit: true, delete: true, restrictedActions: [] },
+      { module: 'Hạ tầng & Hệ thống', view: true, create: true, edit: true, delete: true, restrictedActions: [] },
+    ],
+  },
+  {
+    role: 'SUPPORT_AGENT',
+    title: 'Hỗ trợ khách hàng (Support Ops)',
+    description: 'Tiếp nhận và phản hồi Ticket, kiểm tra trạng thái tài khoản, không thể can thiệp cài đặt thanh toán hoặc xóa dữ liệu.',
+    userCount: 2,
+    permissions: [
+      { module: 'Tài khoản người dùng', view: true, create: false, edit: false, delete: false, restrictedActions: ['Không thể reset pass', 'Không thể đổi quyền'] },
+      { module: 'Tổ chức chủ nhà', view: true, create: false, edit: false, delete: false, restrictedActions: ['Chỉ xem thông tin liên hệ'] },
+      { module: 'Ticket CSKH', view: true, create: true, edit: true, delete: false, restrictedActions: [] },
+      { module: 'Audit Trail & Bảo mật', view: false, create: false, edit: false, delete: false, restrictedActions: ['Không được phép truy cập'] },
+      { module: 'Hạ tầng & Hệ thống', view: true, create: false, edit: false, delete: false, restrictedActions: ['Chỉ xem trạng thái dịch vụ'] },
+    ],
+  },
+  {
+    role: 'BILLING_ADMIN',
+    title: 'Quản trị viên Tài chính SaaS',
+    description: 'Theo dõi doanh thu MRR, xác nhận đối soát thanh toán chuyển khoản, gia hạn thuê bao.',
+    userCount: 1,
+    permissions: [
+      { module: 'Gói dịch vụ & Doanh thu', view: true, create: true, edit: true, delete: false, restrictedActions: [] },
+      { module: 'Giao dịch đối soát', view: true, create: false, edit: true, delete: false, restrictedActions: [] },
+      { module: 'Tổ chức chủ nhà', view: true, create: false, edit: true, delete: false, restrictedActions: ['Chỉ sửa gói dịch vụ'] },
+      { module: 'Hạ tầng & Bảo mật', view: false, create: false, edit: false, delete: false, restrictedActions: ['Không được phép truy cập'] },
+    ],
+  },
+  {
+    role: 'LANDLORD',
+    title: 'Chủ sở hữu bất động sản (Chủ nhà)',
+    description: 'Quản lý toàn bộ tòa nhà, phòng trọ, cư dân, hợp đồng và thu tiền phòng trong tổ chức của riêng họ.',
+    userCount: 1420,
+    permissions: [
+      { module: 'Bất động sản & Phòng', view: true, create: true, edit: true, delete: true, restrictedActions: ['Giới hạn trong quota gói SaaS'] },
+      { module: 'Hợp đồng & Khách thuê', view: true, create: true, edit: true, delete: true, restrictedActions: [] },
+      { module: 'Hóa đơn & Tiền phòng', view: true, create: true, edit: true, delete: true, restrictedActions: [] },
+      { module: 'Cổng Admin Nền tảng', view: false, create: false, edit: false, delete: false, restrictedActions: ['Bị chặn truy cập (/platform/*)'] },
+    ],
+  },
+  {
+    role: 'TENANT',
+    title: 'Cư dân / Khách thuê',
+    description: 'Xem thông tin phòng thuê, chỉ số điện nước, nhận hóa đơn, thanh toán và gửi yêu cầu sửa chữa.',
+    userCount: 3850,
+    permissions: [
+      { module: 'Cổng cư dân (Portal)', view: true, create: true, edit: false, delete: false, restrictedActions: ['Chỉ thấy phòng của chính mình'] },
+      { module: 'Quản lý chủ nhà', view: false, create: false, edit: false, delete: false, restrictedActions: ['Bị chặn truy cập'] },
+    ],
+  },
+];
+

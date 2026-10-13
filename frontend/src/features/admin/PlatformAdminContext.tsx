@@ -7,6 +7,13 @@ import {
   PlatformSupportTicket,
   PlatformAnnouncement,
   PlatformAuditLog,
+  PlatformLoginLog,
+  PlatformActiveSession,
+  PlatformSecurityEvent,
+  PlatformTransaction,
+  PlatformSystemLog,
+  PlatformIntegration,
+  PlatformRolePermission,
   initialPlatformAccounts,
   initialPlatformOrganizations,
   initialSubscriptionPlans,
@@ -14,6 +21,13 @@ import {
   initialPlatformSupportTickets,
   initialPlatformAnnouncements,
   initialPlatformAuditLogs,
+  initialPlatformLoginLogs,
+  initialPlatformActiveSessions,
+  initialPlatformSecurityEvents,
+  initialPlatformTransactions,
+  initialPlatformSystemLogs,
+  initialPlatformIntegrations,
+  initialPlatformRolePermissions,
 } from './types/platformAdmin';
 
 interface PlatformAdminContextType {
@@ -24,6 +38,13 @@ interface PlatformAdminContextType {
   tickets: PlatformSupportTicket[];
   announcements: PlatformAnnouncement[];
   auditLogs: PlatformAuditLog[];
+  loginLogs: PlatformLoginLog[];
+  activeSessions: PlatformActiveSession[];
+  securityEvents: PlatformSecurityEvent[];
+  transactions: PlatformTransaction[];
+  systemLogs: PlatformSystemLog[];
+  integrations: PlatformIntegration[];
+  rolePermissions: PlatformRolePermission[];
   // Actions
   toggleAccountStatus: (accountId: string, reason?: string) => void;
   updateAccountRole: (accountId: string, role: PlatformAccount['role']) => void;
@@ -34,6 +55,9 @@ interface PlatformAdminContextType {
   createAnnouncement: (announcement: Omit<PlatformAnnouncement, 'id' | 'publishedAt'>) => void;
   deleteAnnouncement: (id: string) => void;
   refreshAuditLogs: () => void;
+  revokeSession: (sessionId: string, reason?: string) => void;
+  resolveSecurityEvent: (eventId: string, resolutionNote?: string) => void;
+  testIntegrationPing: (integrationId: string) => void;
   // Computed SaaS Metrics
   metrics: {
     totalAccounts: number;
@@ -44,6 +68,8 @@ interface PlatformAdminContextType {
     activeSubscriptionsCount: number;
     pendingTicketsCount: number;
     systemUptime: string;
+    securityThreatsCount: number;
+    activeSessionsCount: number;
   };
 }
 
@@ -87,6 +113,40 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
     return saved ? JSON.parse(saved) : initialPlatformAuditLogs;
   });
 
+  const [loginLogs] = useState<PlatformLoginLog[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}loginLogs`);
+    return saved ? JSON.parse(saved) : initialPlatformLoginLogs;
+  });
+
+  const [activeSessions, setActiveSessions] = useState<PlatformActiveSession[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}activeSessions`);
+    return saved ? JSON.parse(saved) : initialPlatformActiveSessions;
+  });
+
+  const [securityEvents, setSecurityEvents] = useState<PlatformSecurityEvent[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}securityEvents`);
+    return saved ? JSON.parse(saved) : initialPlatformSecurityEvents;
+  });
+
+  const [transactions] = useState<PlatformTransaction[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}transactions`);
+    return saved ? JSON.parse(saved) : initialPlatformTransactions;
+  });
+
+  const [systemLogs] = useState<PlatformSystemLog[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}systemLogs`);
+    return saved ? JSON.parse(saved) : initialPlatformSystemLogs;
+  });
+
+  const [integrations, setIntegrations] = useState<PlatformIntegration[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}integrations`);
+    return saved ? JSON.parse(saved) : initialPlatformIntegrations;
+  });
+
+  const [rolePermissions] = useState<PlatformRolePermission[]>(() => {
+    return initialPlatformRolePermissions;
+  });
+
   // Sync to LocalStorage
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY_PREFIX}accounts`, JSON.stringify(accounts));
@@ -115,6 +175,14 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY_PREFIX}auditLogs`, JSON.stringify(auditLogs));
   }, [auditLogs]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}activeSessions`, JSON.stringify(activeSessions));
+  }, [activeSessions]);
+
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}securityEvents`, JSON.stringify(securityEvents));
+  }, [securityEvents]);
 
   // Log an audit event
   const appendAuditLog = (action: string, targetType: PlatformAuditLog['targetType'], targetId: string, details: string) => {
@@ -268,6 +336,53 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
     appendAuditLog('Làm mới Audit Logs', 'SECURITY', 'System', 'Truy vấn lịch sử kiểm toán mới nhất');
   };
 
+  const revokeSession = (sessionId: string, reason?: string) => {
+    const targetSession = activeSessions.find((s) => s.id === sessionId);
+    if (!targetSession) return;
+    setActiveSessions((prev) => prev.filter((s) => s.id !== sessionId));
+    appendAuditLog(
+      'Hủy phiên đăng nhập (Revoke Session)',
+      'SECURITY',
+      sessionId,
+      `Đã thu hồi phiên của ${targetSession.email} (${targetSession.device}). ${reason ? `Lý do: ${reason}` : ''}`
+    );
+  };
+
+  const resolveSecurityEvent = (eventId: string, resolutionNote?: string) => {
+    setSecurityEvents((prev) =>
+      prev.map((e) => {
+        if (e.id === eventId) {
+          const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19);
+          appendAuditLog(
+            'Xử lý sự kiện bảo mật',
+            'SECURITY',
+            eventId,
+            `Đã đóng sự cố: ${e.title}. Ghi chú: ${resolutionNote || 'Đã kiểm tra và vô hiệu hóa mối đe dọa'}`
+          );
+          return {
+            ...e,
+            status: 'RESOLVED',
+            resolvedAt: nowStr,
+            resolvedBy: 'Admin (admin@rentflow.vn)',
+          };
+        }
+        return e;
+      })
+    );
+  };
+
+  const testIntegrationPing = (integrationId: string) => {
+    setIntegrations((prev) =>
+      prev.map((i) => {
+        if (i.id === integrationId) {
+          appendAuditLog('Kiểm tra kết nối tích hợp', 'SYSTEM', integrationId, `Ping thành công tới ${i.name}`);
+          return { ...i, lastPingAt: 'Vừa xong', status: 'OPERATIONAL' };
+        }
+        return i;
+      })
+    );
+  };
+
   // SaaS Computed Metrics
   const metrics = {
     totalAccounts: accounts.length + 1414, // Projected SaaS total
@@ -278,6 +393,8 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
     activeSubscriptionsCount: subscriptions.filter((s) => s.status === 'ACTIVE').length + 988,
     pendingTicketsCount: tickets.filter((t) => t.status === 'OPEN' || t.status === 'IN_PROGRESS').length,
     systemUptime: '99.98%',
+    securityThreatsCount: securityEvents.filter((e) => e.status === 'OPEN' || e.status === 'INVESTIGATING').length,
+    activeSessionsCount: activeSessions.length,
   };
 
   return (
@@ -290,6 +407,13 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         tickets,
         announcements,
         auditLogs,
+        loginLogs,
+        activeSessions,
+        securityEvents,
+        transactions,
+        systemLogs,
+        integrations,
+        rolePermissions,
         toggleAccountStatus,
         updateAccountRole,
         toggleOrganizationStatus,
@@ -299,6 +423,9 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         createAnnouncement,
         deleteAnnouncement,
         refreshAuditLogs,
+        revokeSession,
+        resolveSecurityEvent,
+        testIntegrationPing,
         metrics,
       }}
     >
