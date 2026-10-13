@@ -423,6 +423,23 @@ export const TenantLeasePage: React.FC = () => {
                 <div>• SĐT: {user?.phone || '0912 345 678'}</div>
                 <div>• Email: {user?.email || 'tenant@rentflow.vn'}</div>
               </div>
+
+              {room.occupants && room.occupants.length > 1 && (
+                <div style={{ marginTop: '6px', paddingTop: '10px', borderTop: '1px dashed #E5E7EB', fontSize: '12px' }}>
+                  <span style={{ fontWeight: 600, color: '#111827' }}>Thành viên cùng phòng:</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '6px' }}>
+                    {room.occupants
+                      .filter((o) => o.name !== (user?.name || 'Lê Hoàng Nam'))
+                      .map((occ, idx) => (
+                        <div key={occ.id || idx} style={{ color: '#4B5563', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span>•</span>
+                          <strong style={{ color: '#111827' }}>{occ.name}</strong>
+                          {occ.phone && <span>({occ.phone})</span>}
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

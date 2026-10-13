@@ -197,9 +197,28 @@ export const PropertyDetailPage: React.FC = () => {
                     </td>
                     <td>
                       {room.tenantName ? (
-                        <div>
-                          <div style={{ fontWeight: 600 }}>{room.tenantName}</div>
-                          <div style={{ fontSize: '11px', color: '#6B7280' }}>{room.tenantPhone}</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <div style={{ fontWeight: 600 }}>
+                            {room.tenantName}
+                            {room.tenantPhone && (
+                              <span style={{ fontSize: '11px', color: '#6B7280', fontWeight: 400, marginLeft: '6px' }}>
+                                ({room.tenantPhone})
+                              </span>
+                            )}
+                          </div>
+                          {room.occupants && room.occupants.length > 1 && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '8px', borderLeft: '2px solid #E5E7EB', marginTop: '2px' }}>
+                              {room.occupants
+                                .filter((occ) => occ.name !== room.tenantName)
+                                .map((occ, idx) => (
+                                  <div key={occ.id || idx} style={{ fontSize: '11px', color: '#4B5563', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span style={{ color: '#9CA3AF' }}>•</span>
+                                    <span style={{ fontWeight: 500 }}>{occ.name}</span>
+                                    {occ.phone && <span style={{ color: '#6B7280' }}>({occ.phone})</span>}
+                                  </div>
+                                ))}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <span style={{ color: '#9CA3AF', fontStyle: 'italic' }}>Chưa có khách</span>

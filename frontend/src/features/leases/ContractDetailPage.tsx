@@ -158,9 +158,8 @@ export const ContractDetailPage: React.FC = () => {
           >
             <strong style={{ color: '#00594C' }}>BÊN THUÊ (BÊN B):</strong>
             <div style={{ marginTop: '8px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '13px' }}>
-              <div>Họ và tên: <strong>{contract.tenantName}</strong></div>
+              <div>Họ và tên (Đại diện): <strong>{contract.tenantName}</strong></div>
               <div>Số điện thoại: <strong>{contract.tenantPhone}</strong></div>
-              <div>Số lượng người ở cùng: <strong>{room?.occupants?.length || 1} người</strong></div>
               <div>
                 Phòng thuê:{' '}
                 <strong style={{ color: '#00594C' }}>
@@ -175,7 +174,22 @@ export const ContractDetailPage: React.FC = () => {
                   )}
                 </strong>
               </div>
+              <div>Số lượng người ở cùng: <strong>{room?.occupants?.length || 1} người</strong></div>
             </div>
+            {room?.occupants && room.occupants.length > 1 && (
+              <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px dashed #E5E7EB', fontSize: '12px', color: '#4B5563' }}>
+                <span style={{ fontWeight: 600, color: '#374151' }}>Danh sách các thành viên cùng ở phòng:</span>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
+                  {room.occupants
+                    .filter((o) => o.name !== contract.tenantName)
+                    .map((occ, idx) => (
+                      <span key={occ.id || idx} className="rf-badge rf-badge-neutral" style={{ fontSize: '11px' }}>
+                        👤 {occ.name} {occ.phone ? `(${occ.phone})` : ''} - CCCD: {occ.idCard}
+                      </span>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Article 1 */}

@@ -416,11 +416,28 @@ export const RoomsPage: React.FC = () => {
                     </td>
                     <td>
                       {room.tenantName ? (
-                        <div>
-                          <div style={{ fontWeight: 600, color: '#111827' }}>{room.tenantName}</div>
-                          <div style={{ fontSize: '11px', color: '#6B7280' }}>
-                            {room.tenantPhone} {occupantsCount > 1 && `(+${occupantsCount - 1} người khác)`}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <div style={{ fontWeight: 600, color: '#111827' }}>
+                            {room.tenantName}
+                            {room.tenantPhone && (
+                              <span style={{ fontSize: '11px', color: '#6B7280', fontWeight: 400, marginLeft: '6px' }}>
+                                ({room.tenantPhone})
+                              </span>
+                            )}
                           </div>
+                          {room.occupants && room.occupants.length > 1 && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingLeft: '8px', borderLeft: '2px solid #E5E7EB' }}>
+                              {room.occupants
+                                .filter((occ) => occ.name !== room.tenantName)
+                                .map((occ, idx) => (
+                                  <div key={occ.id || idx} style={{ fontSize: '11px', color: '#4B5563', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span style={{ color: '#9CA3AF' }}>•</span>
+                                    <span style={{ fontWeight: 500 }}>{occ.name}</span>
+                                    {occ.phone && <span style={{ color: '#6B7280' }}>({occ.phone})</span>}
+                                  </div>
+                                ))}
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <span style={{ color: '#9CA3AF', fontStyle: 'italic' }}>Chưa có khách</span>
@@ -536,10 +553,21 @@ export const RoomsPage: React.FC = () => {
                           </div>
 
                           <div style={{ fontSize: '11px', color: '#4B5563', marginTop: '4px' }}>
-                            {r.tenantName ? `👤 ${r.tenantName}` : 'Chưa có người ở'}
+                            {r.tenantName ? (
+                              <div>
+                                <div style={{ fontWeight: 600 }}>👤 {r.tenantName}</div>
+                                {r.occupants && r.occupants.length > 1 && (
+                                  <div style={{ fontSize: '10px', color: '#6B7280', marginTop: '2px', lineHeight: 1.3 }}>
+                                    Cùng ở: {r.occupants.filter((o) => o.name !== r.tenantName).map((o) => o.name).join(', ')}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              'Chưa có người ở'
+                            )}
                           </div>
 
-                          <div style={{ fontSize: '10px', color: '#6B7280' }}>
+                          <div style={{ fontSize: '10px', color: '#6B7280', marginTop: '2px' }}>
                             👥 {occCount}/{r.maxOccupants || 2} người • {r.area}m²
                           </div>
                         </div>
