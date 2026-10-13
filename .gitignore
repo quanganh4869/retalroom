@@ -1,0 +1,69 @@
+# OS & System
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Environment variables & secrets (CRITICAL: never commit .env files with credentials)
+.env
+.env.local
+.env.*.local
+*.env
+!*.env.example
+
+# Version control & IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# Node / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dist/
+dist-ssr/
+build/
+*.tsbuildinfo
+.eslintcache
+
+# Playwright & Testing artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+coverage/
+.nyc_output/
+
+# Python / Backend / AI
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+htmlcov/
+.coverage
+.coverage.*
+
+# Database dumps / temp files
+*.sqlite
+*.sqlite3
+*.db
+*.log
+logs/
+tmp/
+scratch/

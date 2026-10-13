@@ -1,0 +1,17 @@
+.git
+.github
+node_modules
+dist
+build
+coverage
+playwright-report
+test-results
+__pycache__
+*.pyc
+.venv
+venv
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.env*
+!.env.example

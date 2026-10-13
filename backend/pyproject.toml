@@ -1,0 +1,70 @@
+[project]
+name = "rentflow-backend"
+version = "0.1.0"
+description = "RentFlow Backend - Enterprise Property & Rental Management API"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.31.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.5.0",
+    "sqlalchemy>=2.0.35",
+    "alembic>=1.13.3",
+    "asyncpg>=0.29.0",
+    "psycopg[binary]>=3.2.3",
+    "httpx>=0.27.2",
+    "python-multipart>=0.0.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.3",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=5.0.0",
+    "ruff>=0.6.9",
+    "mypy>=1.11.2",
+    "aiosqlite>=0.20.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rentflow_backend"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B", "C4"]
+ignore = ["B008"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-v --cov=rentflow_backend --cov-report=term-missing"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_return_any = true
+no_implicit_reexport = true
+plugins = []
+
+[dependency-groups]
+dev = [
+    "greenlet>=3.1.1",
+]
