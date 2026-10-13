@@ -187,31 +187,49 @@ export const MeterReadingsPage: React.FC = () => {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          {/* Period selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Monthly Period selector tabs */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             <Calendar size={18} color="#00594C" />
-            <span style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Chọn kỳ ghi:</span>
-            <select
-              value={periodParam}
-              onChange={(e) => updateFilters({ period: e.target.value })}
-              style={{
-                padding: '6px 12px',
-                borderRadius: '6px',
-                border: '1px solid #D1D5DB',
-                fontSize: '13px',
-                fontWeight: 600,
-                color: '#111827',
-                backgroundColor: '#F9FAFB',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="all">Tất cả các kỳ (Lịch sử tổng hợp)</option>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Kỳ ghi:</span>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => updateFilters({ period: 'all' })}
+                style={{
+                  padding: '5px 12px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  fontSize: '12px',
+                  fontWeight: periodParam === 'all' ? 600 : 500,
+                  backgroundColor: periodParam === 'all' ? '#00594C' : '#F3F4F6',
+                  color: periodParam === 'all' ? '#FFFFFF' : '#4B5563',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                Tất cả các kỳ
+              </button>
               {availablePeriods.map((p) => (
-                <option key={p.key} value={p.key}>
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={() => updateFilters({ period: p.key })}
+                  style={{
+                    padding: '5px 12px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    fontSize: '12px',
+                    fontWeight: periodParam === p.key ? 600 : 500,
+                    backgroundColor: periodParam === p.key ? '#00594C' : '#F3F4F6',
+                    color: periodParam === p.key ? '#FFFFFF' : '#4B5563',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
                   {p.label}
-                </option>
+                </button>
               ))}
-            </select>
+            </div>
           </div>
 
           {/* Property selector */}

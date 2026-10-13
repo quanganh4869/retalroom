@@ -40,6 +40,8 @@ import { MeterReadingDetailPage } from '@/features/billing/MeterReadingDetailPag
 import { PaymentDetailPage } from '@/features/payments/PaymentDetailPage';
 import { ExpensesPage } from '@/features/expenses/ExpensesPage';
 import { ContractDetailPage } from '@/features/leases/ContractDetailPage';
+import { DepositDetailPage } from '@/features/billing/DepositDetailPage';
+import { MaintenanceDetailPage } from '@/features/maintenance/MaintenanceDetailPage';
 import { ActionModalProvider } from '@/components/ui/ActionModal';
 import { TenantOverviewPage } from '@/features/tenant/TenantOverviewPage';
 import { TenantInvoicesPage } from '@/features/tenant/TenantInvoicesPage';
@@ -165,6 +167,16 @@ export const AppRouter: React.FC = () => {
                 <ProtectedRoute allowedRoles={['TENANT']}>
                   <AppShell>
                     <TenantMaintenancePage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tenant/maintenance/:id"
+              element={
+                <ProtectedRoute allowedRoles={['TENANT']}>
+                  <AppShell>
+                    <MaintenanceDetailPage />
                   </AppShell>
                 </ProtectedRoute>
               }
@@ -481,11 +493,31 @@ export const AppRouter: React.FC = () => {
               }
             />
             <Route
+              path="/deposits/:id"
+              element={
+                <ProtectedRoute allowedRoles={['LANDLORD', 'SUPERADMIN']}>
+                  <AppShell>
+                    <DepositDetailPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/maintenance"
               element={
                 <ProtectedRoute allowedRoles={['LANDLORD', 'SUPERADMIN']}>
                   <AppShell>
                     <MaintenancePage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/maintenance/:id"
+              element={
+                <ProtectedRoute allowedRoles={['LANDLORD', 'SUPERADMIN']}>
+                  <AppShell>
+                    <MaintenanceDetailPage />
                   </AppShell>
                 </ProtectedRoute>
               }

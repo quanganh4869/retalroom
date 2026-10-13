@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
-  ArrowLeft,
   Building2,
   Users,
   DollarSign,
@@ -169,14 +168,6 @@ export const RoomDetailPage: React.FC = () => {
       {/* Breadcrumb & Navigation */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button
-            type="button"
-            className="rf-btn rf-btn-secondary"
-            onClick={() => navigate('/rooms')}
-            style={{ padding: '6px 12px' }}
-          >
-            <ArrowLeft size={14} /> Quay lại danh sách phòng
-          </button>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: 0 }}>

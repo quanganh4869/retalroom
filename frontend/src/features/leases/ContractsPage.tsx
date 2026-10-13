@@ -1,37 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Plus, Search, Printer, FileCheck } from 'lucide-react';
+import { Plus, Search, FileText } from 'lucide-react';
 import { mockContracts, formatVND, ContractItem } from '@/lib/mockData';
-import { useActionModal } from '@/components/ui/ActionModal';
 
 export const ContractsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { confirmAction } = useActionModal();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [contracts] = useState<ContractItem[]>(mockContracts);
-  const [selectedContract, setSelectedContract] = useState<ContractItem | null>(() => {
-    const id = searchParams.get('id');
-    if (id) {
-      return mockContracts.find((c) => c.id === id) || mockContracts[0] || null;
-    }
-    return mockContracts[0] ?? null;
-  });
-  const [activeTab, setActiveTab] = useState<'info' | 'clauses'>('info');
   const [statusFilter, setStatusFilter] = useState<string>(searchParams.get('status') || 'all');
+  const [searchTerm, setSearchTerm] = useState<string>(searchParams.get('q') || '');
 
   useEffect(() => {
     const statusFromUrl = searchParams.get('status');
     if (statusFromUrl) setStatusFilter(statusFromUrl);
-    const idFromUrl = searchParams.get('id');
-    if (idFromUrl) {
-      const found = mockContracts.find((c) => c.id === idFromUrl);
-      if (found) setSelectedContract(found);
-    }
+    const qFromUrl = searchParams.get('q');
+    if (qFromUrl) setSearchTerm(qFromUrl);
   }, [searchParams]);
 
+  const updateFilters = (statusVal: string, searchVal: string) => {
+    const next: Record<string, string> = {};
+    if (statusVal && statusVal !== 'all') next.status = statusVal;
+    if (searchVal.trim()) next.q = searchVal.trim();
+    setSearchParams(next);
+  };
+
   const filteredContracts = contracts.filter((c) => {
-    if (statusFilter === 'all') return true;
-    return c.status === statusFilter;
+    if (statusFilter !== 'all' && c.status !== statusFilter) return false;
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      const matchId = c.id.toLowerCase().includes(q);
+      const matchTenant = c.tenantName.toLowerCase().includes(q);
+      const matchRoom = c.roomCode.toLowerCase().includes(q);
+      const matchPhone = c.tenantPhone.toLowerCase().includes(q);
+      if (!matchId && !matchTenant && !matchRoom && !matchPhone) return false;
+    }
+    return true;
   });
 
   const getStatusBadge = (status: ContractItem['status']) => {
@@ -47,6 +50,10 @@ export const ContractsPage: React.FC = () => {
     }
   };
 
+  const activeCount = contracts.filter((c) => c.status === 'active').length;
+  const expiringCount = contracts.filter((c) => c.status === 'expiring').length;
+  const totalDeposit = contracts.reduce((sum, c) => sum + (c.status === 'active' || c.status === 'expiring' ? c.depositAmount : 0), 0);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1440px', margin: '0 auto' }}>
       {/* Header */}
@@ -56,7 +63,7 @@ export const ContractsPage: React.FC = () => {
             Quản lý hợp đồng thuê
           </h1>
           <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 0 0' }}>
-            Theo dõi thời hạn, tiền cọc, điều khoản thuê và gia hạn hợp đồng tự động
+            Theo dõi thời hạn, tiền cọc, điều khoản thuê và gia hạn hợp đồng. Bấm vào từng hàng để xem chi tiết toàn văn hợp đồng.
           </p>
         </div>
         <button className="rf-btn rf-btn-primary">
@@ -65,223 +72,180 @@ export const ContractsPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Main Grid: Contracts Table & Contract Detail Preview (Screen 11.png) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: '20px' }}>
-        {/* Left Column: Contracts list */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              backgroundColor: '#FFFFFF',
-              padding: '10px 16px',
-              borderRadius: '8px',
-              border: '1px solid #E5E7EB',
-            }}
-          >
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <Search size={14} color="#9CA3AF" style={{ position: 'absolute', left: '10px' }} />
-              <input
-                type="text"
-                placeholder="Tìm mã HĐ, tên người thuê, số phòng..."
-                style={{
-                  padding: '5px 10px 5px 30px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                  fontSize: '12px',
-                  width: '260px',
-                }}
-              />
-            </div>
-            <div style={{ fontSize: '12px', color: '#6B7280' }}>
-              Hiển thị <strong>{filteredContracts.length}</strong> hợp đồng
-            </div>
+      {/* KPI Summary Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+        <div className="rf-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', color: '#6B7280' }}>Hợp đồng đang hiệu lực</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#137333', marginTop: '6px' }}>
+            {activeCount} hợp đồng
           </div>
-
-          <div className="rf-card" style={{ padding: 0, overflow: 'hidden' }}>
-            <table className="rf-table">
-              <thead>
-                <tr>
-                  <th>Mã HĐ</th>
-                  <th>Phòng / Khách thuê</th>
-                  <th>Thời hạn thuê</th>
-                  <th>Tiền thuê</th>
-                  <th>Tiền cọc</th>
-                  <th>Trạng thái</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredContracts.map((c) => (
-                  <tr
-                    key={c.id}
-                    onClick={() => setSelectedContract(c)}
-                    style={{
-                      cursor: 'pointer',
-                      backgroundColor: selectedContract?.id === c.id ? '#F0FDF4' : undefined,
-                    }}
-                  >
-                    <td style={{ fontWeight: 600, color: '#00594C' }}>{c.id}</td>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{c.roomCode}</div>
-                      <div style={{ fontSize: '11px', color: '#6B7280' }}>
-                        {c.tenantName} ({c.tenantPhone})
-                      </div>
-                    </td>
-                    <td>
-                      <div style={{ fontSize: '12px' }}>{c.startDate} → {c.endDate}</div>
-                      <div style={{ fontSize: '10px', color: '#6B7280' }}>{c.paymentCycle}</div>
-                    </td>
-                    <td style={{ fontWeight: 600 }}>{formatVND(c.monthlyRent)}</td>
-                    <td style={{ fontWeight: 500, color: '#137333' }}>{formatVND(c.depositAmount)}</td>
-                    <td>{getStatusBadge(c.status)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <div style={{ fontSize: '11px', color: '#137333', marginTop: '4px' }}>Khách đang cư trú ổn định</div>
         </div>
 
-        {/* Right Column: Contract Detail Preview (Screen 11.png CT-2023-041) */}
-        {selectedContract && (
-          <div className="rf-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E5E7EB', paddingBottom: '12px' }}>
-              <div>
-                <span style={{ fontSize: '11px', color: '#6B7280' }}>HỢP ĐỒNG THUÊ NHÀ</span>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: '2px 0 0 0' }}>
-                  {selectedContract.id}
-                </h3>
-              </div>
-              {getStatusBadge(selectedContract.status)}
-            </div>
-
-            {/* Sub-tabs */}
-            <div style={{ display: 'flex', borderBottom: '1px solid #E5E7EB', gap: '16px', fontSize: '12px' }}>
-              <button
-                onClick={() => setActiveTab('info')}
-                style={{
-                  padding: '6px 0',
-                  border: 'none',
-                  background: 'none',
-                  fontWeight: activeTab === 'info' ? 600 : 400,
-                  color: activeTab === 'info' ? '#00594C' : '#6B7280',
-                  borderBottom: activeTab === 'info' ? '2px solid #00594C' : 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                Thông tin chung
-              </button>
-              <button
-                onClick={() => setActiveTab('clauses')}
-                style={{
-                  padding: '6px 0',
-                  border: 'none',
-                  background: 'none',
-                  fontWeight: activeTab === 'clauses' ? 600 : 400,
-                  color: activeTab === 'clauses' ? '#00594C' : '#6B7280',
-                  borderBottom: activeTab === 'clauses' ? '2px solid #00594C' : 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                Điều khoản & Đơn giá
-              </button>
-            </div>
-
-            {activeTab === 'info' ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12px' }}>
-                <div style={{ backgroundColor: '#F9FAFB', padding: '12px', borderRadius: '6px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6B7280' }}>Đại diện bên thuê (Đứng tên HĐ):</span>
-                    <strong style={{ color: '#111827' }}>{selectedContract.tenantName}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6B7280' }}>Số điện thoại đại diện:</span>
-                    <span>{selectedContract.tenantPhone}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6B7280' }}>Phòng chỉ định:</span>
-                    <strong style={{ color: '#00594C' }}>{selectedContract.roomCode}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#6B7280' }}>Hình thức thuê & Cư trú:</span>
-                    <span style={{ fontWeight: 600, color: '#00594C' }}>Được phép ở 2-4 người (theo sức chứa phòng)</span>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
-                    <span style={{ color: '#6B7280' }}>Ngày bắt đầu hợp đồng:</span>
-                    <span>{selectedContract.startDate}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
-                    <span style={{ color: '#6B7280' }}>Ngày kết thúc hợp đồng:</span>
-                    <span style={{ fontWeight: 600 }}>{selectedContract.endDate}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
-                    <span style={{ color: '#6B7280' }}>Giá thuê hàng tháng:</span>
-                    <strong style={{ color: '#111827' }}>{formatVND(selectedContract.monthlyRent)}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
-                    <span style={{ color: '#6B7280' }}>Tiền cọc giữ chỗ:</span>
-                    <strong style={{ color: '#137333' }}>{formatVND(selectedContract.depositAmount)}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
-                    <span style={{ color: '#6B7280' }}>Kỳ hạn thanh toán:</span>
-                    <span>{selectedContract.paymentCycle} (vào ngày 05 hàng tháng)</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div style={{ fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '8px', color: '#374151', lineHeight: 1.5 }}>
-                <p>• Giá điện: 3.800 đ/kWh theo công tơ riêng của phòng.</p>
-                <p>• Giá nước: 20.000 đ/m³ theo đồng hồ nước.</p>
-                <p>• Số người ở: Cho phép 2-4 người ở cùng, tất cả người ở phải đăng ký CCCD tạm trú với chủ nhà.</p>
-                <p>• Tiền phòng thanh toán từ ngày 01 đến 05 hàng tháng.</p>
-                <p>• Báo trước ít nhất 30 ngày trước khi trả phòng để nhận lại tiền cọc.</p>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid #E5E7EB', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <button
-                type="button"
-                className="rf-btn rf-btn-primary"
-                style={{ width: '100%', fontSize: '12px' }}
-                onClick={() => navigate(`/contracts/${selectedContract.id}`)}
-              >
-                <FileCheck size={14} />
-                Xem toàn văn hợp đồng chính thức
-              </button>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  type="button"
-                  className="rf-btn rf-btn-secondary"
-                  style={{ flex: 1, fontSize: '12px' }}
-                  onClick={() => window.print()}
-                >
-                  <Printer size={13} /> In hợp đồng
-                </button>
-                <button
-                  type="button"
-                  className="rf-btn rf-btn-secondary"
-                  style={{ flex: 1, fontSize: '12px', color: '#C5221F' }}
-                  onClick={() => {
-                    confirmAction({
-                      title: `Xác nhận thanh lý hợp đồng ${selectedContract.id}`,
-                      description: `Bạn có chắc chắn muốn tiến hành thủ tục thanh lý hợp đồng thuê phòng ${selectedContract.roomCode} của khách thuê ${selectedContract.tenantName}? Hệ thống sẽ chuyển tiếp sang bước quyết toán hoàn trả tiền cọc.`,
-                      confirmText: 'Xác nhận thanh lý',
-                      confirmVariant: 'danger',
-                      successTitle: 'Đã thanh lý hợp đồng!',
-                      successMessage: `Hợp đồng ${selectedContract.id} đã chuyển sang trạng thái đã chấm dứt. Phiếu quyết toán cọc phòng ${selectedContract.roomCode} đã được tạo tự động.`,
-                      simulateDelayMs: 900,
-                    });
-                  }}
-                >
-                  Thanh lý HĐ
-                </button>
-              </div>
-            </div>
+        <div className="rf-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', color: '#6B7280' }}>Sắp hết hạn (dưới 30 ngày)</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#D97706', marginTop: '6px' }}>
+            {expiringCount} hợp đồng
           </div>
+          <div style={{ fontSize: '11px', color: '#D97706', marginTop: '4px' }}>Cần liên hệ gia hạn sớm</div>
+        </div>
+
+        <div className="rf-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', color: '#6B7280' }}>Tổng tiền cọc đang giữ</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#00594C', marginTop: '6px' }}>
+            {formatVND(totalDeposit)}
+          </div>
+          <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '4px' }}>Bảo chứng tài sản phòng</div>
+        </div>
+
+        <div className="rf-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', color: '#6B7280' }}>Tổng hợp đồng trong hệ thống</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginTop: '6px' }}>
+            {contracts.length} hồ sơ
+          </div>
+          <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '4px' }}>Lưu trữ đầy đủ các kỳ</div>
+        </div>
+      </div>
+
+      {/* Filter and Search Bar */}
+      <div
+        className="rf-card"
+        style={{
+          padding: '14px 20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}
+      >
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {[
+            { key: 'all', label: 'Tất cả trạng thái' },
+            { key: 'active', label: 'Đang hiệu lực' },
+            { key: 'expiring', label: 'Sắp hết hạn' },
+            { key: 'expired', label: 'Đã hết hạn' },
+            { key: 'terminated', label: 'Đã thanh lý' },
+          ].map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => {
+                setStatusFilter(item.key);
+                updateFilters(item.key, searchTerm);
+              }}
+              style={{
+                padding: '6px 14px',
+                fontSize: '12px',
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: statusFilter === item.key ? 600 : 500,
+                backgroundColor: statusFilter === item.key ? '#00594C' : '#F3F4F6',
+                color: statusFilter === item.key ? '#FFFFFF' : '#4B5563',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minWidth: '280px' }}>
+          <Search size={14} color="#9CA3AF" style={{ position: 'absolute', left: '10px' }} />
+          <input
+            type="text"
+            placeholder="Tìm mã HĐ, người thuê, phòng, SĐT..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              updateFilters(statusFilter, e.target.value);
+            }}
+            style={{
+              padding: '6px 12px 6px 32px',
+              borderRadius: '6px',
+              border: '1px solid #D1D5DB',
+              fontSize: '13px',
+              width: '100%',
+              outline: 'none',
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Main Full Width Table */}
+      <div className="rf-card" style={{ padding: 0, overflow: 'hidden' }}>
+        {filteredContracts.length === 0 ? (
+          <div style={{ padding: '48px 24px', textAlign: 'center', color: '#6B7280' }}>
+            <FileText size={36} color="#9CA3AF" style={{ margin: '0 auto 12px auto' }} />
+            <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#374151', margin: 0 }}>
+              Không tìm thấy hợp đồng nào
+            </h4>
+            <p style={{ fontSize: '13px', margin: '6px 0 16px 0' }}>
+              Không có hồ sơ hợp đồng nào phù hợp với bộ lọc hiện tại.
+            </p>
+            <button
+              type="button"
+              className="rf-btn rf-btn-secondary"
+              onClick={() => {
+                setStatusFilter('all');
+                setSearchTerm('');
+                setSearchParams({});
+              }}
+            >
+              Xem tất cả hợp đồng
+            </button>
+          </div>
+        ) : (
+          <table className="rf-table">
+            <thead>
+              <tr>
+                <th>Mã HĐ</th>
+                <th>Phòng / Cơ sở</th>
+                <th>Khách thuê đại diện</th>
+                <th>Thời hạn thuê</th>
+                <th>Tiền thuê hàng tháng</th>
+                <th>Tiền cọc giữ chỗ</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredContracts.map((c) => (
+                <tr
+                  key={c.id}
+                  onClick={() => navigate(`/contracts/${c.id}`)}
+                  style={{
+                    cursor: 'pointer',
+                    transition: 'background-color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  title={`Bấm để xem chi tiết toàn văn hợp đồng ${c.id}`}
+                >
+                  <td style={{ fontWeight: 700, color: '#00594C' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      {c.id} →
+                    </span>
+                  </td>
+                  <td>
+                    <div style={{ fontWeight: 600, color: '#111827' }}>Phòng {c.roomCode}</div>
+                    <div style={{ fontSize: '11px', color: '#6B7280' }}>Tòa nhà Hưng Phát</div>
+                  </td>
+                  <td>
+                    <div style={{ fontWeight: 600 }}>{c.tenantName}</div>
+                    <div style={{ fontSize: '11px', color: '#6B7280' }}>{c.tenantPhone}</div>
+                  </td>
+                  <td>
+                    <div style={{ fontSize: '12px', fontWeight: 500 }}>{c.startDate} → {c.endDate}</div>
+                    <div style={{ fontSize: '11px', color: '#6B7280' }}>{c.paymentCycle} (ngày 05 hàng tháng)</div>
+                  </td>
+                  <td style={{ fontWeight: 700, color: '#111827' }}>{formatVND(c.monthlyRent)}</td>
+                  <td style={{ fontWeight: 600, color: '#137333' }}>{formatVND(c.depositAmount)}</td>
+                  <td>{getStatusBadge(c.status)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
     </div>

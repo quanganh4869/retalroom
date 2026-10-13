@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Plus, CheckCircle2, Clock } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Plus, Wrench } from 'lucide-react';
 import { useAuth } from '@/features/auth/AuthContext';
 import { mockMaintenance, MaintenanceItem } from '@/lib/mockData';
 import { useToast } from '@/components/feedback/ToastSystem';
@@ -9,12 +9,12 @@ import { Modal } from '@/components/ui/Modal';
 export const TenantMaintenancePage: React.FC = () => {
   const { user } = useAuth();
   const toast = useToast();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const [tickets, setTickets] = useState<MaintenanceItem[]>(
     mockMaintenance.filter((m) => m.roomCode === (user?.roomCode || 'P.101'))
   );
-  const [selectedTicket, setSelectedTicket] = useState<MaintenanceItem | null>(tickets[0] || null);
 
   // Form State
   const [showCreateModal, setShowCreateModal] = useState<boolean>(searchParams.get('new') === 'true');
@@ -51,7 +51,6 @@ export const TenantMaintenancePage: React.FC = () => {
     };
 
     setTickets([newTicket, ...tickets]);
-    setSelectedTicket(newTicket);
     setShowCreateModal(false);
     setTitle('');
     setDescription('');
@@ -90,7 +89,7 @@ export const TenantMaintenancePage: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: '1120px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
@@ -98,7 +97,7 @@ export const TenantMaintenancePage: React.FC = () => {
             Báo hỏng & Sửa chữa thiết bị
           </h1>
           <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 0 0' }}>
-            Gửi yêu cầu hỗ trợ kỹ thuật, kiểm tra tiến độ điều phối thợ và lịch sử khắc phục sự cố tại phòng {user?.roomCode || 'P.101'}.
+            Gửi yêu cầu hỗ trợ kỹ thuật, kiểm tra tiến độ điều phối thợ tại phòng {user?.roomCode || 'P.101'}. Bấm vào từng hàng để xem chi tiết.
           </p>
         </div>
 
@@ -113,122 +112,78 @@ export const TenantMaintenancePage: React.FC = () => {
         </button>
       </div>
 
-      {/* Main Grid: Ticket List on Left, Ticket Detail on Right */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '20px' }}>
-        {/* Left Column: Tickets List */}
-        <div className="rf-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0 }}>
-              Danh sách các yêu cầu của phòng ({tickets.length})
-            </h3>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>
-              Cập nhật thời gian thực
-            </span>
+      {/* Main Full Width Table */}
+      <div className="rf-card" style={{ padding: 0, overflow: 'hidden' }}>
+        {tickets.length === 0 ? (
+          <div style={{ padding: '48px 24px', textAlign: 'center', color: '#6B7280' }}>
+            <Wrench size={36} color="#9CA3AF" style={{ margin: '0 auto 12px auto' }} />
+            <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#374151', margin: 0 }}>
+              Chưa có yêu cầu sửa chữa nào
+            </h4>
+            <p style={{ fontSize: '13px', margin: '6px 0 16px 0' }}>
+              Mọi thiết bị trong phòng hoạt động bình thường.
+            </p>
+            <button
+              type="button"
+              className="rf-btn rf-btn-primary"
+              onClick={() => setShowCreateModal(true)}
+            >
+              Tạo yêu cầu báo hỏng mới
+            </button>
           </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {tickets.map((t) => {
-              const isSelected = selectedTicket?.id === t.id;
-              return (
-                <div
+        ) : (
+          <table className="rf-table">
+            <thead>
+              <tr>
+                <th>Mã yêu cầu</th>
+                <th>Sự cố / Vấn đề</th>
+                <th>Danh mục</th>
+                <th>Mức độ</th>
+                <th>Thợ phụ trách</th>
+                <th>Ngày gửi</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tickets.map((t) => (
+                <tr
                   key={t.id}
-                  onClick={() => setSelectedTicket(t)}
+                  onClick={() => navigate(`/tenant/maintenance/${t.id}`)}
                   style={{
-                    padding: '14px 16px',
-                    borderRadius: '8px',
-                    border: isSelected ? '1px solid #00594C' : '1px solid #E5E7EB',
-                    backgroundColor: isSelected ? '#F0FDF4' : '#FFFFFF',
                     cursor: 'pointer',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '6px',
-                    transition: 'all 0.15s ease',
+                    transition: 'background-color 0.15s ease',
                   }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  title={`Bấm để xem chi tiết tiến độ xử lý yêu cầu ${t.id}`}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <strong style={{ color: isSelected ? '#00594C' : '#111827', fontSize: '14px' }}>
-                        {t.title}
-                      </strong>
-                      <span style={{ fontSize: '11px', color: '#6B7280' }}>#{t.id}</span>
+                  <td style={{ fontWeight: 700, color: '#00594C' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      {t.id} →
+                    </span>
+                  </td>
+                  <td>
+                    <div style={{ fontWeight: 600, color: '#111827' }}>{t.title}</div>
+                    <div style={{ fontSize: '11px', color: '#6B7280', maxWidth: '400px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {t.description}
                     </div>
-                    {getStatusBadge(t.status)}
-                  </div>
-
-                  <p style={{ fontSize: '12px', color: '#4B5563', margin: 0, lineHeight: 1.4 }}>
-                    {t.description}
-                  </p>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#6B7280', marginTop: '4px' }}>
-                    <span>Danh mục: <strong>{t.category}</strong> • {getPriorityBadge(t.priority)}</span>
-                    <span>Ngày gửi: {t.createdAt}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Right Column: Selected Ticket Details & Timeline */}
-        {selectedTicket ? (
-          <div className="rf-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ borderBottom: '1px solid #E5E7EB', paddingBottom: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', color: '#6B7280' }}>MÃ PHIẾU: #{selectedTicket.id}</span>
-                {getStatusBadge(selectedTicket.status)}
-              </div>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', margin: '4px 0 0 0' }}>
-                {selectedTicket.title}
-              </h3>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-              <div>
-                <span style={{ color: '#6B7280', fontSize: '12px' }}>Mô tả sự cố từ cư dân:</span>
-                <div style={{ padding: '10px 12px', backgroundColor: '#F9FAFB', borderRadius: '6px', marginTop: '4px', lineHeight: 1.5 }}>
-                  {selectedTicket.description}
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div style={{ padding: '8px 12px', backgroundColor: '#F9FAFB', borderRadius: '6px' }}>
-                  <span style={{ color: '#6B7280', fontSize: '11px' }}>Danh mục</span>
-                  <div style={{ fontWeight: 600 }}>{selectedTicket.category}</div>
-                </div>
-                <div style={{ padding: '8px 12px', backgroundColor: '#F9FAFB', borderRadius: '6px' }}>
-                  <span style={{ color: '#6B7280', fontSize: '11px' }}>Mức độ</span>
-                  <div>{getPriorityBadge(selectedTicket.priority)}</div>
-                </div>
-              </div>
-
-              <div>
-                <span style={{ color: '#6B7280', fontSize: '12px' }}>Thợ kỹ thuật phụ trách:</span>
-                <div style={{ fontWeight: 600, color: '#111827', marginTop: '2px' }}>
-                  {selectedTicket.assignee || 'Đang điều phối thợ đến kiểm tra...'}
-                </div>
-              </div>
-            </div>
-
-            {/* Timeline Progress */}
-            <div style={{ borderTop: '1px solid #E5E7EB', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <span style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>Tiến độ xử lý:</span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#15803D' }}>
-                  <CheckCircle2 size={15} />
-                  <span>Đã tiếp nhận yêu cầu ({selectedTicket.createdAt})</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: selectedTicket.assignee ? '#15803D' : '#6B7280' }}>
-                  {selectedTicket.assignee ? <CheckCircle2 size={15} /> : <Clock size={15} />}
-                  <span>{selectedTicket.assignee ? `Đã cử thợ: ${selectedTicket.assignee}` : 'Chờ chủ nhà điều phối thợ'}</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: selectedTicket.status === 'completed' ? '#15803D' : '#6B7280' }}>
-                  {selectedTicket.status === 'completed' ? <CheckCircle2 size={15} /> : <Clock size={15} />}
-                  <span>{selectedTicket.status === 'completed' ? 'Đã hoàn thành sửa chữa' : 'Chờ nghiệm thu hoàn tất'}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : null}
+                  </td>
+                  <td>
+                    <span className="rf-badge rf-badge-neutral">{t.category}</span>
+                  </td>
+                  <td>{getPriorityBadge(t.priority)}</td>
+                  <td>
+                    <span style={{ fontSize: '12px', color: t.assignee ? '#111827' : '#9CA3AF' }}>
+                      {t.assignee || 'Đang điều phối thợ...'}
+                    </span>
+                  </td>
+                  <td style={{ fontSize: '12px', color: '#6B7280' }}>{t.createdAt}</td>
+                  <td>{getStatusBadge(t.status)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Modal: Create Maintenance Request */}

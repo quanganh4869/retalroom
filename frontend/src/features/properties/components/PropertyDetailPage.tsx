@@ -1,7 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
-  ArrowLeft,
   MapPin,
   TrendingUp,
   DoorOpen,
@@ -42,18 +41,9 @@ export const PropertyDetailPage: React.FC = () => {
 
   return (
     <div style={{ maxWidth: '1440px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Top Navigation & Back */}
+      {/* Top Navigation & Info */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button
-            type="button"
-            className="rf-btn rf-btn-secondary"
-            onClick={() => navigate('/properties')}
-            style={{ padding: '6px 12px' }}
-          >
-            <ArrowLeft size={15} />
-            <span>Quay lại danh sách</span>
-          </button>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: 0 }}>

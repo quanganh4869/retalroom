@@ -1,15 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Plus,
   CheckCircle2,
   Search,
   Calendar,
   CreditCard,
-  Eye,
 } from 'lucide-react';
 import { mockPayments, mockInvoices, formatVND, PaymentItem } from '@/lib/mockData';
 import { useActionModal } from '@/components/ui/ActionModal';
+import { Modal } from '@/components/ui/Modal';
 
 export const PaymentsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -21,6 +21,7 @@ export const PaymentsPage: React.FC = () => {
   const searchParam = searchParams.get('q') || '';
 
   const [payments, setPayments] = useState<PaymentItem[]>(mockPayments);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [selectedInvoiceKey, setSelectedInvoiceKey] = useState('inv-2');
   const [paymentAmount, setPaymentAmount] = useState('4,900,000');
   const [paymentMethod, setPaymentMethod] = useState<'Chuyển khoản' | 'Tiền mặt' | 'VNPay' | 'MoMo'>('Chuyển khoản');
@@ -99,6 +100,7 @@ export const PaymentsPage: React.FC = () => {
         };
         setPayments([newPayment, ...payments]);
         setPaymentNote('');
+        setShowAddModal(false);
       },
     });
   };
@@ -114,16 +116,13 @@ export const PaymentsPage: React.FC = () => {
             Lịch sử Giao dịch & Thanh toán
           </h1>
           <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 0 0' }}>
-            Theo dõi dòng tiền thu, lịch sử gạch nợ theo từng kỳ tháng và tra cứu giao dịch chi tiết
+            Theo dõi dòng tiền thu, lịch sử gạch nợ theo từng kỳ tháng và tra cứu giao dịch chi tiết. Bấm vào từng hàng để mở trang chi tiết giao dịch.
           </p>
         </div>
         <button
           type="button"
           className="rf-btn rf-btn-primary"
-          onClick={() => {
-            const formElem = document.getElementById('payment-record-form');
-            formElem?.scrollIntoView({ behavior: 'smooth' });
-          }}
+          onClick={() => setShowAddModal(true)}
         >
           <Plus size={15} />
           <span>Ghi nhận thanh toán mới</span>
@@ -160,10 +159,10 @@ export const PaymentsPage: React.FC = () => {
                 cursor: 'pointer',
               }}
             >
-              <option value="all">Tất cả các tháng ({payments.length} GD)</option>
-              {availablePeriods.map((period) => (
-                <option key={period} value={period}>
-                  {period}
+              <option value="all">Tất cả các kỳ ({availablePeriods.length} kỳ)</option>
+              {availablePeriods.map((p) => (
+                <option key={p} value={p}>
+                  {p}
                 </option>
               ))}
             </select>
@@ -184,11 +183,11 @@ export const PaymentsPage: React.FC = () => {
                 cursor: 'pointer',
               }}
             >
-              <option value="all">Tất cả hình thức</option>
-              <option value="Chuyển khoản">Chuyển khoản</option>
+              <option value="all">Tất cả phương thức</option>
+              <option value="Chuyển khoản">Chuyển khoản VietQR</option>
               <option value="Tiền mặt">Tiền mặt</option>
               <option value="VNPay">VNPay</option>
-              <option value="MoMo">MoMo</option>
+              <option value="MoMo">Ví MoMo</option>
             </select>
           </div>
         </div>
@@ -240,152 +239,135 @@ export const PaymentsPage: React.FC = () => {
             VietQR / Chuyển khoản (85%)
           </div>
           <div style={{ fontSize: '11px', color: '#1E40AF', marginTop: '4px' }}>
-            Tự động thông báo email cho chủ trọ
+            Tự động gạch nợ thông minh
           </div>
         </div>
       </div>
 
-      {/* Main Grid: Payments Table & Form */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '20px' }}>
-        {/* Table of Payments */}
-        <div className="rf-card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ padding: '14px 20px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: 0 }}>
-              Nhật ký giao dịch ({filteredPayments.length})
-            </h3>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>Mới nhất xếp trước</span>
-          </div>
-
-          <table className="rf-table">
-            <thead>
-              <tr>
-                <th>Mã GD</th>
-                <th>Hóa đơn / Kỳ</th>
-                <th>Phòng & Khách</th>
-                <th>Số tiền thu</th>
-                <th>Phương thức</th>
-                <th>Thời gian</th>
-                <th>Thao tác</th>
+      {/* Full Width Table of Payments */}
+      <div className="rf-card" style={{ padding: 0, overflow: 'hidden' }}>
+        <table className="rf-table">
+          <thead>
+            <tr>
+              <th>Mã GD</th>
+              <th>Hóa đơn / Kỳ</th>
+              <th>Phòng & Khách</th>
+              <th>Số tiền thu</th>
+              <th>Phương thức</th>
+              <th>Thời gian</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredPayments.map((p) => (
+              <tr
+                key={p.id}
+                onClick={() => navigate(`/landlord/payments/${p.id}`)}
+                style={{
+                  cursor: 'pointer',
+                  transition: 'background-color 0.15s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
+                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                title={`Bấm để xem chi tiết phiếu thu ${p.code}`}
+              >
+                <td>
+                  <strong style={{ color: '#00594C' }}>{p.code} →</strong>
+                </td>
+                <td>
+                  <span style={{ fontWeight: 600, color: '#2563EB' }}>
+                    {p.invoiceCode}
+                  </span>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>{p.period || 'Tháng 03/2024'}</div>
+                </td>
+                <td>
+                  <div style={{ fontWeight: 600 }}>{p.roomCode}</div>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>{p.tenantName}</div>
+                </td>
+                <td>
+                  <strong style={{ color: '#137333' }}>{formatVND(p.amount)}</strong>
+                </td>
+                <td>
+                  <span className="rf-badge rf-badge-active">{p.method}</span>
+                </td>
+                <td style={{ fontSize: '12px', color: '#6B7280' }}>{p.date}</td>
               </tr>
-            </thead>
-            <tbody>
-              {filteredPayments.map((p) => (
-                <tr key={p.id}>
-                  <td>
-                    <strong style={{ color: '#00594C' }}>{p.code}</strong>
-                  </td>
-                  <td>
-                    <Link
-                      to={`/invoices`}
-                      style={{ fontWeight: 600, color: '#2563EB', textDecoration: 'none' }}
-                    >
-                      {p.invoiceCode}
-                    </Link>
-                    <div style={{ fontSize: '11px', color: '#6B7280' }}>{p.period || 'Tháng 03/2024'}</div>
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{p.roomCode}</div>
-                    <div style={{ fontSize: '11px', color: '#6B7280' }}>{p.tenantName}</div>
-                  </td>
-                  <td>
-                    <strong style={{ color: '#137333' }}>{formatVND(p.amount)}</strong>
-                  </td>
-                  <td>
-                    <span className="rf-badge rf-badge-active">{p.method}</span>
-                  </td>
-                  <td style={{ fontSize: '12px', color: '#6B7280' }}>{p.date}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className="rf-btn rf-btn-secondary"
-                      style={{ padding: '4px 8px', fontSize: '11px' }}
-                      onClick={() => navigate(`/landlord/payments/${p.id}`)}
-                    >
-                      <Eye size={12} /> Chi tiết
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Quick Record Form */}
-        <div id="payment-record-form" className="rf-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', height: 'fit-content' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0 }}>
-            Ghi nhận phiếu thu tiền mặt / ngoài hệ thống
-          </h3>
-          <p style={{ fontSize: '12px', color: '#6B7280', margin: 0 }}>
-            Dành cho trường hợp khách nộp tiền mặt trực tiếp hoặc chuyển khoản không qua QR
-          </p>
-
-          <form onSubmit={handleRecordPayment} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
-                Hóa đơn cần gạch nợ:
-              </label>
-              <select
-                value={selectedInvoiceKey}
-                onChange={(e) => setSelectedInvoiceKey(e.target.value)}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '13px' }}
-              >
-                {mockInvoices.filter((i) => i.status !== 'paid').map((inv) => (
-                  <option key={inv.id} value={inv.id}>
-                    {inv.code} — {inv.roomCode} ({inv.tenantName}) — Nợ {formatVND(inv.debtAmount)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
-                Số tiền thực thu (VNĐ):
-              </label>
-              <input
-                type="text"
-                value={paymentAmount}
-                onChange={(e) => setPaymentAmount(e.target.value)}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '13px', fontWeight: 600 }}
-                required
-              />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
-                Phương thức nhận tiền:
-              </label>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value as any)}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '13px' }}
-              >
-                <option value="Chuyển khoản">Chuyển khoản ngân hàng</option>
-                <option value="Tiền mặt">Tiền mặt tại nhà</option>
-                <option value="VNPay">VNPay QR</option>
-                <option value="MoMo">Ví MoMo</option>
-              </select>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
-                Ghi chú đối soát:
-              </label>
-              <input
-                type="text"
-                placeholder="VD: Thu tiền mặt tại quầy lễ tân"
-                value={paymentNote}
-                onChange={(e) => setPaymentNote(e.target.value)}
-                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '13px' }}
-              />
-            </div>
-
-            <button type="submit" className="rf-btn rf-btn-primary" style={{ marginTop: '6px' }}>
-              <CheckCircle2 size={14} />
-              <span>Ghi nhận & Khấu trừ công nợ</span>
-            </button>
-          </form>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
+
+      {/* Quick Record Modal */}
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Ghi nhận phiếu thu tiền mặt / ngoài hệ thống"
+      >
+        <form onSubmit={handleRecordPayment} style={{ display: 'flex', flexDirection: 'column', gap: '14px', minWidth: '420px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+              Hóa đơn cần gạch nợ:
+            </label>
+            <select
+              value={selectedInvoiceKey}
+              onChange={(e) => setSelectedInvoiceKey(e.target.value)}
+              style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '13px' }}
+            >
+              {mockInvoices.filter((i) => i.status !== 'paid').map((inv) => (
+                <option key={inv.id} value={inv.id}>
+                  {inv.code} — {inv.roomCode} ({inv.tenantName}) — Nợ {formatVND(inv.debtAmount)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+              Số tiền thực thu (VNĐ):
+            </label>
+            <input
+              type="text"
+              value={paymentAmount}
+              onChange={(e) => setPaymentAmount(e.target.value)}
+              style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '13px', fontWeight: 600 }}
+              required
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+              Phương thức nhận tiền:
+            </label>
+            <select
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value as any)}
+              style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '13px' }}
+            >
+              <option value="Chuyển khoản">Chuyển khoản ngân hàng</option>
+              <option value="Tiền mặt">Tiền mặt tại nhà</option>
+              <option value="VNPay">VNPay QR</option>
+              <option value="MoMo">Ví MoMo</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+              Ghi chú đối soát:
+            </label>
+            <input
+              type="text"
+              placeholder="VD: Thu tiền mặt tại quầy lễ tân"
+              value={paymentNote}
+              onChange={(e) => setPaymentNote(e.target.value)}
+              style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '13px' }}
+            />
+          </div>
+
+          <button type="submit" className="rf-btn rf-btn-primary" style={{ marginTop: '8px' }}>
+            <CheckCircle2 size={14} />
+            <span>Xác nhận gạch nợ & Hoàn tất</span>
+          </button>
+        </form>
+      </Modal>
     </div>
   );
 };
