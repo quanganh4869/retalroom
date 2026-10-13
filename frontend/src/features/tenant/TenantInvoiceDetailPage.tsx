@@ -121,16 +121,7 @@ export const TenantInvoiceDetailPage: React.FC = () => {
   return (
     <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Top Navigation */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <button
-          type="button"
-          className="rf-btn rf-btn-secondary"
-          onClick={() => navigate('/tenant/invoices')}
-          style={{ padding: '6px 12px' }}
-        >
-          <ArrowLeft size={14} /> Quay lại danh sách hóa đơn
-        </button>
-
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
             type="button"

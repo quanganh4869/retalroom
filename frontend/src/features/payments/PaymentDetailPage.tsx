@@ -48,15 +48,7 @@ export const PaymentDetailPage: React.FC = () => {
   return (
     <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Top Bar Navigation */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <button
-          type="button"
-          className="rf-btn rf-btn-secondary"
-          onClick={() => navigate(-1)}
-          style={{ padding: '6px 12px' }}
-        >
-          <ArrowLeft size={14} /> Quay lại sổ quỹ thanh toán
-        </button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
 
         <div style={{ display: 'flex', gap: '8px' }}>
           <button

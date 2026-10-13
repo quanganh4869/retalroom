@@ -1,22 +1,17 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Download,
   ChevronRight,
-  Send,
-  Printer,
   FileText,
   Search,
   Calendar,
   Building2,
-  ArrowRight,
 } from 'lucide-react';
 import { mockInvoices, mockProperties, formatVND, InvoiceItem } from '@/lib/mockData';
-import { useToast } from '@/components/feedback/ToastSystem';
 import { useActionModal } from '@/components/ui/ActionModal';
 
 export const InvoicesPage: React.FC = () => {
-  const toast = useToast();
   const { confirmAction } = useActionModal();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -28,7 +23,6 @@ export const InvoicesPage: React.FC = () => {
   const searchParam = searchParams.get('q') || '';
 
   const [invoices] = useState<InvoiceItem[]>(mockInvoices);
-  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceItem | null>(null);
 
   // Available unique periods sorted descending
   const availablePeriods = useMemo(() => {
@@ -83,17 +77,6 @@ export const InvoicesPage: React.FC = () => {
       return true;
     });
   }, [invoices, periodParam, propertyParam, statusParam, searchParam]);
-
-  // Set default selected preview invoice
-  useEffect(() => {
-    if (filteredInvoices.length > 0) {
-      if (!selectedInvoice || !filteredInvoices.find((i) => i.id === selectedInvoice.id)) {
-        setSelectedInvoice(filteredInvoices[0] || null);
-      }
-    } else {
-      setSelectedInvoice(null);
-    }
-  }, [filteredInvoices, selectedInvoice]);
 
   // Period metrics
   const totalBilled = filteredInvoices.reduce((sum, i) => sum + i.totalAmount, 0);
@@ -364,212 +347,75 @@ export const InvoicesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Grid: Invoice List & Preview Drawer */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 420px', gap: '20px' }}>
-        {/* Invoice List Table */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div className="rf-card" style={{ padding: 0, overflow: 'hidden' }}>
-            {filteredInvoices.length === 0 ? (
-              <div style={{ padding: '48px 24px', textAlign: 'center', color: '#6B7280' }}>
-                <FileText size={36} color="#9CA3AF" style={{ margin: '0 auto 12px auto' }} />
-                <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#374151', margin: 0 }}>
-                  Không tìm thấy hóa đơn nào
-                </h4>
-                <p style={{ fontSize: '13px', margin: '6px 0 16px 0' }}>
-                  Không có hóa đơn nào phù hợp với bộ lọc kỳ hoặc tìm kiếm hiện tại.
-                </p>
-                <button
-                  type="button"
-                  className="rf-btn rf-btn-secondary"
-                  onClick={() => setSearchParams({})}
-                >
-                  Đặt lại bộ lọc
-                </button>
-              </div>
-            ) : (
-              <table className="rf-table">
-                <thead>
-                  <tr>
-                    <th>Mã HĐ</th>
-                    <th>Phòng / Khách thuê</th>
-                    <th>Kỳ thu</th>
-                    <th>Tổng tiền</th>
-                    <th>Đã trả</th>
-                    <th>Còn nợ</th>
-                    <th>Trạng thái</th>
-                    <th>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredInvoices.map((inv) => {
-                    const isSelected = selectedInvoice?.id === inv.id;
-                    return (
-                      <tr
-                        key={inv.id}
-                        onClick={() => setSelectedInvoice(inv)}
-                        style={{
-                          cursor: 'pointer',
-                          backgroundColor: isSelected ? '#F0FDF4' : undefined,
-                        }}
-                      >
-                        <td style={{ fontWeight: 600, color: '#00594C' }}>
-                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                            {inv.code}
-                          </span>
-                        </td>
-                        <td>
-                          <div style={{ fontWeight: 600 }}>{inv.roomCode}</div>
-                          <div style={{ fontSize: '11px', color: '#6B7280' }}>{inv.tenantName}</div>
-                        </td>
-                        <td>
-                          <span style={{ fontSize: '12px', fontWeight: 500, color: '#111827' }}>
-                            {inv.period}
-                          </span>
-                        </td>
-                        <td style={{ fontWeight: 700 }}>{formatVND(inv.totalAmount)}</td>
-                        <td style={{ color: '#137333', fontWeight: 500 }}>{formatVND(inv.paidAmount)}</td>
-                        <td style={{ color: inv.debtAmount > 0 ? '#C5221F' : '#6B7280', fontWeight: 600 }}>
-                          {formatVND(inv.debtAmount)}
-                        </td>
-                        <td>{getStatusBadge(inv.status)}</td>
-                        <td>
-                          <button
-                            type="button"
-                            className="rf-btn rf-btn-secondary"
-                            style={{ padding: '4px 8px', fontSize: '11px' }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/invoices/${inv.id}`);
-                            }}
-                            title="Xem trang chi tiết hóa đơn"
-                          >
-                            Chi tiết <ArrowRight size={12} />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </div>
-        </div>
-
-        {/* Invoice Detail Preview Drawer */}
-        {selectedInvoice ? (
-          <div className="rf-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E5E7EB', paddingBottom: '12px' }}>
-              <div>
-                <span style={{ fontSize: '11px', color: '#6B7280' }}>CHI TIẾT HÓA ĐƠN</span>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: '2px 0 0 0' }}>
-                  {selectedInvoice.code}
-                </h3>
-              </div>
-              {getStatusBadge(selectedInvoice.status)}
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px', backgroundColor: '#F9FAFB', padding: '12px', borderRadius: '6px' }}>
-              <div>
-                <span style={{ color: '#6B7280' }}>Phòng:</span>
-                <div style={{ fontWeight: 600 }}>{selectedInvoice.roomCode}</div>
-              </div>
-              <div>
-                <span style={{ color: '#6B7280' }}>Khách thuê:</span>
-                <div style={{ fontWeight: 600 }}>{selectedInvoice.tenantName}</div>
-              </div>
-              <div>
-                <span style={{ color: '#6B7280' }}>Kỳ hóa đơn:</span>
-                <div style={{ fontWeight: 600, color: '#00594C' }}>{selectedInvoice.period}</div>
-              </div>
-              <div>
-                <span style={{ color: '#6B7280' }}>Hạn thanh toán:</span>
-                <div style={{ fontWeight: 600 }}>{selectedInvoice.dueDate}</div>
-              </div>
-            </div>
-
-            {/* Line items summary */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px dashed #E5E7EB' }}>
-                <span style={{ color: '#6B7280' }}>Tiền thuê phòng:</span>
-                <span>{formatVND(selectedInvoice.roomFee)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px dashed #E5E7EB' }}>
-                <span style={{ color: '#6B7280' }}>Tiền điện sinh hoạt:</span>
-                <span>{formatVND(selectedInvoice.electricFee)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px dashed #E5E7EB' }}>
-                <span style={{ color: '#6B7280' }}>Tiền nước sinh hoạt:</span>
-                <span>{formatVND(selectedInvoice.waterFee)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px dashed #E5E7EB' }}>
-                <span style={{ color: '#6B7280' }}>Phí dịch vụ & wifi:</span>
-                <span>{formatVND(selectedInvoice.serviceFee)}</span>
-              </div>
-
-              <div style={{ borderTop: '2px solid #E5E7EB', paddingTop: '8px', marginTop: '4px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', fontWeight: 700 }}>
-                  <span>Tổng cộng:</span>
-                  <span style={{ color: '#111827' }}>{formatVND(selectedInvoice.totalAmount)}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', marginTop: '4px', color: '#137333' }}>
-                  <span>Đã thanh toán:</span>
-                  <span>{formatVND(selectedInvoice.paidAmount)}</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, marginTop: '4px', color: '#C5221F' }}>
-                  <span>Còn nợ:</span>
-                  <span>{formatVND(selectedInvoice.debtAmount)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: 'auto', paddingTop: '12px' }}>
-              <button
-                type="button"
-                className="rf-btn rf-btn-primary"
-                style={{ width: '100%', fontSize: '12px' }}
-                onClick={() => navigate(`/invoices/${selectedInvoice.id}`)}
-              >
-                <FileText size={14} />
-                <span>Mở trang chi tiết hóa đơn (Dedicated Page)</span>
-              </button>
-
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  type="button"
-                  className="rf-btn rf-btn-secondary"
-                  style={{ flex: 1, fontSize: '12px' }}
-                  onClick={() => {
-                    confirmAction({
-                      title: `Gửi phiếu thu ${selectedInvoice.code}`,
-                      description: `Gửi thông báo hóa đơn kỳ ${selectedInvoice.period} tới ${selectedInvoice.tenantName} qua Zalo & SMS.`,
-                      confirmText: 'Gửi ngay',
-                      successTitle: 'Đã gửi hóa đơn!',
-                      successMessage: `Khách thuê ${selectedInvoice.tenantName} đã nhận được liên kết thanh toán.`,
-                      simulateDelayMs: 600,
-                    });
-                  }}
-                >
-                  <Send size={13} /> Gửi Zalo/SMS
-                </button>
-                <button
-                  type="button"
-                  className="rf-btn rf-btn-secondary"
-                  style={{ flex: 1, fontSize: '12px' }}
-                  onClick={() => {
-                    toast.info('Đang chuẩn bị bản in', `Mở hộp thoại in phiếu thu ${selectedInvoice.code}`);
-                    window.print();
-                  }}
-                >
-                  <Printer size={13} /> In phiếu thu
-                </button>
-              </div>
-            </div>
+      {/* Main Grid: Full Width Invoice Table */}
+      <div className="rf-card" style={{ padding: 0, overflow: 'hidden' }}>
+        {filteredInvoices.length === 0 ? (
+          <div style={{ padding: '48px 24px', textAlign: 'center', color: '#6B7280' }}>
+            <FileText size={36} color="#9CA3AF" style={{ margin: '0 auto 12px auto' }} />
+            <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#374151', margin: 0 }}>
+              Không tìm thấy hóa đơn nào
+            </h4>
+            <p style={{ fontSize: '13px', margin: '6px 0 16px 0' }}>
+              Không có hóa đơn nào phù hợp với bộ lọc kỳ hoặc tìm kiếm hiện tại.
+            </p>
+            <button
+              type="button"
+              className="rf-btn rf-btn-secondary"
+              onClick={() => setSearchParams({})}
+            >
+              Đặt lại bộ lọc
+            </button>
           </div>
         ) : (
-          <div className="rf-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px', color: '#9CA3AF', fontSize: '13px' }}>
-            Chọn một hóa đơn từ danh sách để xem nhanh
-          </div>
+          <table className="rf-table">
+            <thead>
+              <tr>
+                <th>Mã HĐ</th>
+                <th>Phòng / Khách thuê</th>
+                <th>Kỳ thu</th>
+                <th>Tổng tiền</th>
+                <th>Đã trả</th>
+                <th>Còn nợ</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredInvoices.map((inv) => (
+                <tr
+                  key={inv.id}
+                  onClick={() => navigate(`/invoices/${inv.id}`)}
+                  style={{
+                    cursor: 'pointer',
+                    transition: 'background-color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  title={`Bấm để xem chi tiết hóa đơn ${inv.code}`}
+                >
+                  <td style={{ fontWeight: 600, color: '#00594C' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      {inv.code} →
+                    </span>
+                  </td>
+                  <td>
+                    <div style={{ fontWeight: 600 }}>{inv.roomCode}</div>
+                    <div style={{ fontSize: '11px', color: '#6B7280' }}>{inv.tenantName}</div>
+                  </td>
+                  <td>
+                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#111827' }}>
+                      {inv.period}
+                    </span>
+                  </td>
+                  <td style={{ fontWeight: 700 }}>{formatVND(inv.totalAmount)}</td>
+                  <td style={{ color: '#137333', fontWeight: 500 }}>{formatVND(inv.paidAmount)}</td>
+                  <td style={{ color: inv.debtAmount > 0 ? '#C5221F' : '#6B7280', fontWeight: 600 }}>
+                    {formatVND(inv.debtAmount)}
+                  </td>
+                  <td>{getStatusBadge(inv.status)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
     </div>

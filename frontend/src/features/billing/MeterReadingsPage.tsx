@@ -8,7 +8,6 @@ import {
   Calendar,
   Building2,
   Search,
-  Eye,
 } from 'lucide-react';
 import { mockMeterReadings, mockProperties, formatVND, MeterReadingItem } from '@/lib/mockData';
 import { Modal } from '@/components/ui/Modal';
@@ -337,7 +336,6 @@ export const MeterReadingsPage: React.FC = () => {
                 <th>Tiêu thụ Nước</th>
                 <th>Thành tiền</th>
                 <th>Hóa đơn liên quan</th>
-                <th>Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -348,19 +346,29 @@ export const MeterReadingsPage: React.FC = () => {
                 const isInvalidReading = r.currElectric < r.prevElectric || r.currWater < r.prevWater;
 
                 return (
-                  <tr key={r.id}>
+                  <tr
+                    key={r.id}
+                    onClick={() => navigate(`/landlord/utilities/readings/${r.id}`)}
+                    style={{
+                      cursor: 'pointer',
+                      transition: 'background-color 0.15s ease',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                    title={`Bấm để xem chi tiết chỉ số phòng ${r.roomCode} kỳ ${r.period}`}
+                  >
                     <td>
-                      <div style={{ fontWeight: 700, color: '#111827' }}>{r.roomCode}</div>
+                      <div style={{ fontWeight: 700, color: '#00594C' }}>{r.roomCode} →</div>
                       <div style={{ fontSize: '11px', color: '#6B7280' }}>{r.tenantName}</div>
                     </td>
                     <td>
-                      <span style={{ fontSize: '12px', fontWeight: 600, color: '#00594C' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: '#111827' }}>
                         {r.period || 'Tháng 03/2024'}
                       </span>
                       <div style={{ fontSize: '10px', color: '#9CA3AF' }}>{r.updatedAt}</div>
                     </td>
                     <td style={{ color: '#6B7280' }}>{r.prevElectric}</td>
-                    <td>
+                    <td onClick={(e) => e.stopPropagation()}>
                       <input
                         type="number"
                         value={r.currElectric}
@@ -381,7 +389,7 @@ export const MeterReadingsPage: React.FC = () => {
                       <strong style={{ color: '#D97706' }}>{usedElectric} kWh</strong>
                     </td>
                     <td style={{ color: '#6B7280' }}>{r.prevWater}</td>
-                    <td>
+                    <td onClick={(e) => e.stopPropagation()}>
                       <input
                         type="number"
                         value={r.currWater}
@@ -404,7 +412,7 @@ export const MeterReadingsPage: React.FC = () => {
                     <td style={{ fontWeight: 700, color: '#00594C' }}>
                       {formatVND(roomCost)}
                     </td>
-                    <td>
+                    <td onClick={(e) => e.stopPropagation()}>
                       {r.invoiceCode ? (
                         <Link
                           to={`/invoices`}
@@ -420,17 +428,6 @@ export const MeterReadingsPage: React.FC = () => {
                       ) : (
                         <span style={{ fontSize: '11px', color: '#9CA3AF' }}>Chưa xuất HĐ</span>
                       )}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="rf-btn rf-btn-secondary"
-                        style={{ padding: '4px 8px', fontSize: '11px' }}
-                        onClick={() => navigate(`/landlord/utilities/readings/${r.id}`)}
-                        title="Xem trang chi tiết chỉ số công tơ"
-                      >
-                        <Eye size={12} /> Chi tiết
-                      </button>
                     </td>
                   </tr>
                 );

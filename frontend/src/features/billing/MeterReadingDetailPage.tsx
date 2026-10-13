@@ -57,27 +57,16 @@ export const MeterReadingDetailPage: React.FC = () => {
   return (
     <div style={{ maxWidth: '960px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Top Bar Navigation */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <button
-          type="button"
-          className="rf-btn rf-btn-secondary"
-          onClick={() => navigate(-1)}
-          style={{ padding: '6px 12px' }}
-        >
-          <ArrowLeft size={14} /> Quay lại danh sách chỉ số
-        </button>
-
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {relatedInvoice && (
-            <Link
-              to={`/invoices/${relatedInvoice.id}`}
-              className="rf-btn rf-btn-primary"
-              style={{ textDecoration: 'none' }}
-            >
-              <FileText size={14} /> Xem hóa đơn liên quan ({relatedInvoice.code})
-            </Link>
-          )}
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+        {relatedInvoice && (
+          <Link
+            to={`/invoices/${relatedInvoice.id}`}
+            className="rf-btn rf-btn-primary"
+            style={{ textDecoration: 'none' }}
+          >
+            <FileText size={14} /> Xem hóa đơn liên quan ({relatedInvoice.code})
+          </Link>
+        )}
       </div>
 
       {/* Main Content Card */}

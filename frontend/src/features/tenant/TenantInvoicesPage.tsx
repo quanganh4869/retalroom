@@ -2,12 +2,9 @@ import React, { useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Download,
-  QrCode,
   CheckCircle2,
   Mail,
   Calendar,
-  FileText,
-  ArrowRight,
   AlertCircle,
 } from 'lucide-react';
 import { useAuth } from '@/features/auth/AuthContext';
@@ -239,181 +236,70 @@ export const TenantInvoicesPage: React.FC = () => {
         </span>
       </div>
 
-      {/* Main Grid: History Table & Selected Invoice Breakdown */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '20px' }}>
-        {/* Invoices History Table */}
-        <div className="rf-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* Main Grid: Full Width History Table */}
+      <div className="rf-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
             <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0 }}>
               Bảng lịch sử hóa đơn phòng {userRoomCode}
             </h3>
             <span style={{ fontSize: '12px', color: '#6B7280' }}>
-              Bấm vào từng dòng để xem chi tiết
+              Danh sách chi tiết hóa đơn theo từng tháng, bấm vào từng dòng để mở trang chi tiết
             </span>
           </div>
+        </div>
 
-          {filteredInvoices.length === 0 ? (
-            <div style={{ padding: '36px', textAlign: 'center', color: '#6B7280' }}>
-              <AlertCircle size={32} color="#9CA3AF" style={{ margin: '0 auto 8px auto' }} />
-              <p style={{ margin: 0, fontSize: '14px', fontWeight: 500 }}>Không có hóa đơn trong kỳ này.</p>
-            </div>
-          ) : (
-            <table className="rf-table">
-              <thead>
-                <tr>
-                  <th>Mã HĐ</th>
-                  <th>Kỳ hóa đơn</th>
-                  <th>Tổng tiền</th>
-                  <th>Còn nợ</th>
-                  <th>Hạn đóng</th>
-                  <th>Trạng thái</th>
-                  <th>Chi tiết</th>
+        {filteredInvoices.length === 0 ? (
+          <div style={{ padding: '36px', textAlign: 'center', color: '#6B7280' }}>
+            <AlertCircle size={32} color="#9CA3AF" style={{ margin: '0 auto 8px auto' }} />
+            <p style={{ margin: 0, fontSize: '14px', fontWeight: 500 }}>Không có hóa đơn trong kỳ này.</p>
+          </div>
+        ) : (
+          <table className="rf-table">
+            <thead>
+              <tr>
+                <th>Mã HĐ</th>
+                <th>Kỳ hóa đơn</th>
+                <th>Tổng tiền</th>
+                <th>Còn nợ</th>
+                <th>Hạn đóng</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredInvoices.map((inv) => (
+                <tr
+                  key={inv.id}
+                  onClick={() => navigate(`/tenant/invoices/${inv.id}`)}
+                  style={{
+                    cursor: 'pointer',
+                    transition: 'background-color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  title={`Bấm để xem chi tiết hóa đơn ${inv.code}`}
+                >
+                  <td>
+                    <strong style={{ color: '#00594C' }}>
+                      {inv.code} →
+                    </strong>
+                  </td>
+                  <td>{inv.period}</td>
+                  <td style={{ fontWeight: 600 }}>{formatVND(inv.totalAmount)}</td>
+                  <td style={{ color: inv.debtAmount > 0 ? '#DC2626' : '#059669', fontWeight: 600 }}>
+                    {formatVND(inv.debtAmount)}
+                  </td>
+                  <td style={{ fontSize: '12px', color: '#6B7280' }}>{inv.dueDate}</td>
+                  <td>
+                    <span className={`rf-badge ${inv.status === 'paid' ? 'rf-badge-active' : 'rf-badge-warning'}`}>
+                      {inv.status === 'paid' ? 'Đã thanh toán' : 'Chờ nộp'}
+                    </span>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredInvoices.map((inv) => {
-                  const isSelected = inv.id === selectedInvoice.id;
-                  return (
-                    <tr
-                      key={inv.id}
-                      onClick={() => setSelectedInvoice(inv)}
-                      style={{
-                        cursor: 'pointer',
-                        backgroundColor: isSelected ? '#F0FDF4' : 'transparent',
-                      }}
-                    >
-                      <td>
-                        <strong style={{ color: isSelected ? '#00594C' : '#111827' }}>
-                          {inv.code}
-                        </strong>
-                      </td>
-                      <td>{inv.period}</td>
-                      <td style={{ fontWeight: 600 }}>{formatVND(inv.totalAmount)}</td>
-                      <td style={{ color: inv.debtAmount > 0 ? '#DC2626' : '#059669', fontWeight: 600 }}>
-                        {formatVND(inv.debtAmount)}
-                      </td>
-                      <td style={{ fontSize: '12px', color: '#6B7280' }}>{inv.dueDate}</td>
-                      <td>
-                        <span className={`rf-badge ${inv.status === 'paid' ? 'rf-badge-active' : 'rf-badge-warning'}`}>
-                          {inv.status === 'paid' ? 'Đã thanh toán' : 'Chờ nộp'}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="rf-btn rf-btn-secondary"
-                          style={{ padding: '4px 8px', fontSize: '11px' }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/tenant/invoices/${inv.id}`);
-                          }}
-                        >
-                          Trang riêng <ArrowRight size={12} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        {/* Right Column: Selected Invoice Detail Breakdown & VietQR Button */}
-        <div className="rf-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E5E7EB', paddingBottom: '12px' }}>
-            <div>
-              <span style={{ fontSize: '12px', color: '#6B7280' }}>CHI TIẾT {selectedInvoice.period.toUpperCase()}</span>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', margin: 0 }}>
-                {selectedInvoice.code}
-              </h3>
-            </div>
-            <span className={`rf-badge ${selectedInvoice.status === 'paid' ? 'rf-badge-active' : 'rf-badge-warning'}`}>
-              {selectedInvoice.status === 'paid' ? 'ĐÃ THANH TOÁN' : 'CHỜ THANH TOÁN'}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
-              <span style={{ color: '#4B5563' }}>Tiền thuê phòng:</span>
-              <span style={{ fontWeight: 600 }}>{formatVND(selectedInvoice.roomFee)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
-              <span style={{ color: '#4B5563' }}>Tiền điện sinh hoạt:</span>
-              <span>{formatVND(selectedInvoice.electricFee)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
-              <span style={{ color: '#4B5563' }}>Tiền nước sinh hoạt:</span>
-              <span>{formatVND(selectedInvoice.waterFee)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
-              <span style={{ color: '#4B5563' }}>Phí dịch vụ & rác:</span>
-              <span>{formatVND(selectedInvoice.serviceFee)}</span>
-            </div>
-          </div>
-
-          <div style={{ borderTop: '2px solid #E5E7EB', paddingTop: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontWeight: 600 }}>
-              {selectedInvoice.status === 'paid' ? 'Tổng tiền đã thanh toán:' : 'Số tiền cần thanh toán:'}
-            </span>
-            <strong style={{ fontSize: '20px', color: selectedInvoice.status === 'paid' ? '#137333' : '#DC2626' }}>
-              {formatVND(selectedInvoice.debtAmount > 0 ? selectedInvoice.debtAmount : selectedInvoice.totalAmount)}
-            </strong>
-          </div>
-
-          {selectedInvoice.status === 'paid' ? (
-            <div
-              style={{
-                padding: '12px 14px',
-                backgroundColor: '#F0FDF4',
-                borderRadius: '6px',
-                border: '1px solid #BBF7D0',
-                color: '#166534',
-                fontSize: '13px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              <CheckCircle2 size={18} />
-              <span>Hóa đơn kỳ này đã được thanh toán hoàn tất!</span>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '6px' }}>
-              <button
-                type="button"
-                className="rf-btn rf-btn-primary"
-                style={{ width: '100%', padding: '10px 16px', fontSize: '13px', fontWeight: 600 }}
-                onClick={() => {
-                  setPaymentSuccess(false);
-                  setShowQRModal(true);
-                }}
-              >
-                <QrCode size={16} />
-                <span>Quét mã VietQR thanh toán ngay</span>
-              </button>
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-            <button
-              type="button"
-              className="rf-btn rf-btn-secondary"
-              style={{ flex: 1, fontSize: '12px' }}
-              onClick={() => navigate(`/tenant/invoices/${selectedInvoice.id}`)}
-            >
-              <FileText size={13} /> Trang chi tiết HĐ
-            </button>
-            <button
-              type="button"
-              className="rf-btn rf-btn-secondary"
-              style={{ flex: 1, fontSize: '12px' }}
-              onClick={() => toast.info('In hóa đơn', 'Đang mở hộp thoại in phiếu thu...')}
-            >
-              <Download size={13} /> In biên lai
-            </button>
-          </div>
-        </div>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* VietQR Payment Modal */}
