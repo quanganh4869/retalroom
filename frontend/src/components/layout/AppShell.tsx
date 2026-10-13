@@ -90,6 +90,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     { name: 'Cổng cư dân (Tổng quan)', path: '/tenant/dashboard', icon: LayoutDashboard },
     { name: 'Hóa đơn & Tiền phòng', path: '/tenant/invoices', icon: Receipt },
     { name: 'Lịch sử Điện & Nước', path: '/tenant/utilities', icon: Zap },
+    { name: 'Lịch sử thanh toán', path: '/tenant/payments', icon: CreditCard },
     { name: 'Báo hỏng & Sửa chữa', path: '/tenant/maintenance', icon: Wrench },
     { name: 'Hợp đồng & Tiền cọc', path: '/tenant/lease', icon: FileText },
   ];
@@ -396,8 +397,11 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 if (p.includes('/platform/system-health')) return 'Sức khỏe hệ thống';
                 if (p.includes('/platform/settings')) return 'Cài đặt nền tảng';
                 if (p === '/tenant/dashboard' || p === '/tenant') return 'Tổng quan';
+                if (p.includes('/tenant/invoices/')) return 'Chi tiết hóa đơn';
                 if (p.includes('/tenant/invoices')) return 'Hóa đơn & Tiền phòng';
+                if (p.includes('/tenant/utilities/')) return 'Chi tiết chỉ số điện nước';
                 if (p.includes('/tenant/utilities')) return 'Lịch sử Điện & Nước';
+                if (p.includes('/tenant/payments')) return 'Lịch sử thanh toán';
                 if (p.includes('/tenant/maintenance')) return 'Báo hỏng & Sửa chữa';
                 if (p.includes('/tenant/lease')) return 'Hợp đồng & Tiền cọc';
                 if (p.includes('/dashboard')) return isTenant ? 'Cổng Cư Dân' : isSuperAdmin ? 'Chỉ số Nền tảng' : 'Tổng quan';
@@ -406,9 +410,13 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 if (p.includes('/rooms')) return 'Phòng & Sơ đồ';
                 if (p.includes('/tenants')) return 'Hồ sơ người thuê';
                 if (p.includes('/contracts')) return 'Hợp đồng';
+                if (p.includes('/invoices/')) return 'Chi tiết phiếu thu';
                 if (p.includes('/invoices')) return 'Hóa đơn';
+                if (p.includes('/utilities/readings')) return 'Chi tiết chỉ số công tơ';
                 if (p.includes('/meter-readings')) return 'Chỉ số điện nước';
+                if (p.includes('/payments/')) return 'Chi tiết giao dịch';
                 if (p.includes('/payments')) return 'Thanh toán & Công nợ';
+                if (p.includes('/expenses')) return 'Chi phí vận hành';
                 if (p.includes('/deposits')) return 'Tiền cọc & Quyết toán';
                 if (p.includes('/maintenance')) return 'Bảo trì & Sửa chữa';
                 if (p.includes('/handover')) return 'Bàn giao phòng';

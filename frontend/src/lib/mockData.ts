@@ -40,11 +40,16 @@ export interface RoomItem {
 }
 
 export interface InvoiceItem {
-  id: string; // "INV-2403-02"
-  code: string;
+  id: string; // "inv-1"
+  code: string; // "INV-2403-01"
   roomCode: string;
+  propertyId?: string;
+  propertyName?: string;
   tenantName: string;
+  tenantPhone?: string;
   period: string; // "Tháng 03/2024"
+  periodKey?: string; // "2024-03"
+  issueDate?: string;
   roomFee: number;
   electricFee: number;
   waterFee: number;
@@ -61,12 +66,30 @@ export interface PaymentItem {
   code: string;
   invoiceCode: string;
   roomCode: string;
+  propertyId?: string;
+  propertyName?: string;
   tenantName: string;
   amount: number;
   method: 'Chuyển khoản' | 'Tiền mặt' | 'VNPay' | 'MoMo';
   date: string;
+  period?: string;
+  status?: 'confirmed' | 'pending' | 'rejected';
   recordedBy: string;
   note?: string;
+}
+
+export interface ExpenseItem {
+  id: string;
+  code: string;
+  date: string;
+  propertyId: string;
+  propertyName: string;
+  category: 'Sửa chữa điện nước' | 'Vệ sinh môi trường' | 'Bảo trì thang máy' | 'Internet & Truyền hình' | 'An ninh & PCCC' | 'Khác';
+  description: string;
+  amount: number;
+  status: 'paid' | 'pending';
+  payer: string;
+  relatedMaintenanceId?: string;
 }
 
 export interface MaintenanceItem {
@@ -101,7 +124,11 @@ export interface ContractItem {
 export interface MeterReadingItem {
   id: string;
   roomCode: string;
+  propertyId?: string;
+  propertyName?: string;
   tenantName: string;
+  period?: string;
+  periodKey?: string;
   prevElectric: number;
   currElectric: number;
   prevWater: number;
@@ -109,6 +136,10 @@ export interface MeterReadingItem {
   electricUnitPrice: number;
   waterUnitPrice: number;
   updatedAt: string;
+  status?: 'confirmed' | 'pending' | 'disputed';
+  invoiceCode?: string;
+  meterPhoto?: string;
+  note?: string;
 }
 
 export interface DepositItem {
@@ -403,16 +434,44 @@ export const mockRooms: RoomItem[] = [
 ];
 
 export const mockInvoices: InvoiceItem[] = [
-  { id: 'inv-1', code: 'INV-2403-01', roomCode: 'P.101', tenantName: 'Lê Hoàng Nam', period: 'Tháng 03/2024', roomFee: 4200000, electricFee: 360000, waterFee: 120000, serviceFee: 150000, totalAmount: 4830000, paidAmount: 4830000, debtAmount: 0, status: 'paid', dueDate: '2024-03-05' },
-  { id: 'inv-2', code: 'INV-2403-02', roomCode: 'P.201', tenantName: 'Nguyễn Văn Đạt', period: 'Tháng 03/2024', roomFee: 4200000, electricFee: 410000, waterFee: 140000, serviceFee: 150000, totalAmount: 4900000, paidAmount: 0, debtAmount: 4900000, status: 'overdue', dueDate: '2024-03-05' },
-  { id: 'inv-3', code: 'INV-2403-03', roomCode: 'P.301', tenantName: 'Võ Thanh Tùng', period: 'Tháng 03/2024', roomFee: 7500000, electricFee: 620000, waterFee: 200000, serviceFee: 200000, totalAmount: 8520000, paidAmount: 4000000, debtAmount: 4520000, status: 'partial', dueDate: '2024-03-05' },
-  { id: 'inv-4', code: 'INV-2403-04', roomCode: 'P.302', tenantName: 'Bùi Lan Anh', period: 'Tháng 03/2024', roomFee: 5000000, electricFee: 280000, waterFee: 100000, serviceFee: 150000, totalAmount: 5530000, paidAmount: 0, debtAmount: 5530000, status: 'pending', dueDate: '2024-03-10' },
+  // Tháng 03/2024 (2024-03)
+  { id: 'inv-1', code: 'INV-2403-01', roomCode: 'P.101', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Lê Hoàng Nam', tenantPhone: '0901234567', period: 'Tháng 03/2024', periodKey: '2024-03', issueDate: '01/03/2024', roomFee: 4200000, electricFee: 342000, waterFee: 120000, serviceFee: 150000, totalAmount: 4812000, paidAmount: 4812000, debtAmount: 0, status: 'paid', dueDate: '05/03/2024' },
+  { id: 'inv-2', code: 'INV-2403-02', roomCode: 'P.201', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Nguyễn Văn Đạt', tenantPhone: '0933445566', period: 'Tháng 03/2024', periodKey: '2024-03', issueDate: '01/03/2024', roomFee: 4200000, electricFee: 410400, waterFee: 140000, serviceFee: 150000, totalAmount: 4900400, paidAmount: 0, debtAmount: 4900400, status: 'overdue', dueDate: '05/03/2024' },
+  { id: 'inv-3', code: 'INV-2403-03', roomCode: 'P.301', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Võ Thanh Tùng', tenantPhone: '0977112233', period: 'Tháng 03/2024', periodKey: '2024-03', issueDate: '01/03/2024', roomFee: 7500000, electricFee: 619400, waterFee: 200000, serviceFee: 200000, totalAmount: 8519400, paidAmount: 4000000, debtAmount: 4519400, status: 'partial', dueDate: '05/03/2024' },
+  { id: 'inv-4', code: 'INV-2403-04', roomCode: 'P.302', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Bùi Lan Anh', tenantPhone: '0944556677', period: 'Tháng 03/2024', periodKey: '2024-03', issueDate: '01/03/2024', roomFee: 5000000, electricFee: 285000, waterFee: 100000, serviceFee: 150000, totalAmount: 5535000, paidAmount: 0, debtAmount: 5535000, status: 'pending', dueDate: '10/03/2024' },
+
+  // Tháng 02/2024 (2024-02)
+  { id: 'inv-5', code: 'INV-2402-01', roomCode: 'P.101', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Lê Hoàng Nam', tenantPhone: '0901234567', period: 'Tháng 02/2024', periodKey: '2024-02', issueDate: '01/02/2024', roomFee: 4200000, electricFee: 323000, waterFee: 100000, serviceFee: 150000, totalAmount: 4773000, paidAmount: 4773000, debtAmount: 0, status: 'paid', dueDate: '05/02/2024' },
+  { id: 'inv-6', code: 'INV-2402-02', roomCode: 'P.102', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Trần Thị Mai', tenantPhone: '0912345678', period: 'Tháng 02/2024', periodKey: '2024-02', issueDate: '01/02/2024', roomFee: 4500000, electricFee: 342000, waterFee: 120000, serviceFee: 150000, totalAmount: 5112000, paidAmount: 5112000, debtAmount: 0, status: 'paid', dueDate: '05/02/2024' },
+  { id: 'inv-7', code: 'INV-2402-03', roomCode: 'P.201', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Nguyễn Văn Đạt', tenantPhone: '0933445566', period: 'Tháng 02/2024', periodKey: '2024-02', issueDate: '01/02/2024', roomFee: 4200000, electricFee: 380000, waterFee: 120000, serviceFee: 150000, totalAmount: 4850000, paidAmount: 4850000, debtAmount: 0, status: 'paid', dueDate: '05/02/2024' },
+  { id: 'inv-8', code: 'INV-2402-04', roomCode: 'P.301', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Võ Thanh Tùng', tenantPhone: '0977112233', period: 'Tháng 02/2024', periodKey: '2024-02', issueDate: '01/02/2024', roomFee: 7500000, electricFee: 570000, waterFee: 180000, serviceFee: 200000, totalAmount: 8450000, paidAmount: 8450000, debtAmount: 0, status: 'paid', dueDate: '05/02/2024' },
+
+  // Tháng 01/2024 (2024-01)
+  { id: 'inv-9', code: 'INV-2401-01', roomCode: 'P.101', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Lê Hoàng Nam', tenantPhone: '0901234567', period: 'Tháng 01/2024', periodKey: '2024-01', issueDate: '01/01/2024', roomFee: 4200000, electricFee: 361000, waterFee: 120000, serviceFee: 150000, totalAmount: 4831000, paidAmount: 4831000, debtAmount: 0, status: 'paid', dueDate: '05/01/2024' },
+  { id: 'inv-10', code: 'INV-2401-02', roomCode: 'P.102', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Trần Thị Mai', tenantPhone: '0912345678', period: 'Tháng 01/2024', periodKey: '2024-01', issueDate: '01/01/2024', roomFee: 4500000, electricFee: 323000, waterFee: 100000, serviceFee: 150000, totalAmount: 5073000, paidAmount: 5073000, debtAmount: 0, status: 'paid', dueDate: '05/01/2024' },
+  { id: 'inv-11', code: 'INV-2401-03', roomCode: 'P.201', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Nguyễn Văn Đạt', tenantPhone: '0933445566', period: 'Tháng 01/2024', periodKey: '2024-01', issueDate: '01/01/2024', roomFee: 4200000, electricFee: 399000, waterFee: 140000, serviceFee: 150000, totalAmount: 4889000, paidAmount: 4889000, debtAmount: 0, status: 'paid', dueDate: '05/01/2024' },
+
+  // Tháng 12/2023 (2023-12)
+  { id: 'inv-12', code: 'INV-2312-01', roomCode: 'P.101', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Lê Hoàng Nam', tenantPhone: '0901234567', period: 'Tháng 12/2023', periodKey: '2023-12', issueDate: '01/12/2023', roomFee: 4200000, electricFee: 323000, waterFee: 100000, serviceFee: 150000, totalAmount: 4773000, paidAmount: 4773000, debtAmount: 0, status: 'paid', dueDate: '05/12/2023' },
 ];
 
 export const mockPayments: PaymentItem[] = [
-  { id: 'pay-1', code: 'PAY-2403-01', invoiceCode: 'INV-2403-01', roomCode: 'P.101', tenantName: 'Lê Hoàng Nam', amount: 4830000, method: 'Chuyển khoản', date: '2024-03-03 14:20', recordedBy: 'Nguyễn An', note: 'Chuyển khoản qua Techcombank' },
-  { id: 'pay-2', code: 'PAY-2403-02', invoiceCode: 'INV-2403-03', roomCode: 'P.301', tenantName: 'Võ Thanh Tùng', amount: 4000000, method: 'Tiền mặt', date: '2024-03-04 18:30', recordedBy: 'Nguyễn An', note: 'Trả trước một nửa tiền phòng' },
-  { id: 'pay-3', code: 'PAY-2402-19', invoiceCode: 'INV-2402-08', roomCode: 'P.102', tenantName: 'Trần Thị Mai', amount: 4950000, method: 'VNPay', date: '2024-02-05 09:12', recordedBy: 'Tự động' },
+  { id: 'pay-1', code: 'PAY-2403-01', invoiceCode: 'INV-2403-01', roomCode: 'P.101', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Lê Hoàng Nam', amount: 4812000, method: 'Chuyển khoản', date: '03/03/2024 14:20', period: 'Tháng 03/2024', status: 'confirmed', recordedBy: 'Nguyễn An', note: 'Chuyển khoản qua Techcombank VietQR' },
+  { id: 'pay-2', code: 'PAY-2403-02', invoiceCode: 'INV-2403-03', roomCode: 'P.301', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Võ Thanh Tùng', amount: 4000000, method: 'Tiền mặt', date: '04/03/2024 18:30', period: 'Tháng 03/2024', status: 'confirmed', recordedBy: 'Nguyễn An', note: 'Nộp tiền mặt đợt 1' },
+  { id: 'pay-3', code: 'PAY-2402-01', invoiceCode: 'INV-2402-01', roomCode: 'P.101', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Lê Hoàng Nam', amount: 4773000, method: 'Chuyển khoản', date: '03/02/2024 11:15', period: 'Tháng 02/2024', status: 'confirmed', recordedBy: 'Nguyễn An', note: 'Thanh toán tiền phòng T2' },
+  { id: 'pay-4', code: 'PAY-2402-02', invoiceCode: 'INV-2402-02', roomCode: 'P.102', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Trần Thị Mai', amount: 5112000, method: 'VNPay', date: '04/02/2024 09:12', period: 'Tháng 02/2024', status: 'confirmed', recordedBy: 'Tự động', note: 'Cổng VNPay' },
+  { id: 'pay-5', code: 'PAY-2402-03', invoiceCode: 'INV-2402-03', roomCode: 'P.201', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Nguyễn Văn Đạt', amount: 4850000, method: 'Chuyển khoản', date: '05/02/2024 16:40', period: 'Tháng 02/2024', status: 'confirmed', recordedBy: 'Nguyễn An', note: 'Chuyển khoản ngân hàng' },
+  { id: 'pay-6', code: 'PAY-2401-01', invoiceCode: 'INV-2401-01', roomCode: 'P.101', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Lê Hoàng Nam', amount: 4831000, method: 'Chuyển khoản', date: '04/01/2024 10:05', period: 'Tháng 01/2024', status: 'confirmed', recordedBy: 'Nguyễn An', note: 'Thanh toán tiền phòng T1' },
+  { id: 'pay-7', code: 'PAY-2312-01', invoiceCode: 'INV-2312-01', roomCode: 'P.101', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Lê Hoàng Nam', amount: 4773000, method: 'Chuyển khoản', date: '03/12/2023 15:30', period: 'Tháng 12/2023', status: 'confirmed', recordedBy: 'Nguyễn An', note: 'Thanh toán tiền phòng T12' },
+];
+
+export const mockExpenses: ExpenseItem[] = [
+  { id: 'exp-1', code: 'EXP-2403-01', date: '08/03/2024', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', category: 'Sửa chữa điện nước', description: 'Thay cụm van vòi sen phòng 203 (Thợ Anh Hùng)', amount: 150000, status: 'paid', payer: 'Nguyễn An', relatedMaintenanceId: 'REQ-0241' },
+  { id: 'exp-2', code: 'EXP-2403-02', date: '05/03/2024', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', category: 'Sửa chữa điện nước', description: 'Thay bóng led tuýp hành lang tầng 3', amount: 65000, status: 'paid', payer: 'Nguyễn An', relatedMaintenanceId: 'REQ-0238' },
+  { id: 'exp-3', code: 'EXP-2403-03', date: '02/03/2024', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', category: 'Internet & Truyền hình', description: 'Gói cáp quang Viettel F90N khu trọ', amount: 440000, status: 'paid', payer: 'Nguyễn An' },
+  { id: 'exp-4', code: 'EXP-2403-04', date: '01/03/2024', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', category: 'Vệ sinh môi trường', description: 'Phí thu gom rác sinh hoạt tháng 3/2024', amount: 350000, status: 'paid', payer: 'Nguyễn An' },
+  { id: 'exp-5', code: 'EXP-2402-01', date: '15/02/2024', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', category: 'Bảo trì thang máy', description: 'Bảo dưỡng định kỳ thang máy Fuji', amount: 800000, status: 'paid', payer: 'Nguyễn An' },
+  { id: 'exp-6', code: 'EXP-2402-02', date: '01/02/2024', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', category: 'Vệ sinh môi trường', description: 'Phí thu gom rác sinh hoạt tháng 2/2024', amount: 350000, status: 'paid', payer: 'Nguyễn An' },
 ];
 
 export const mockMaintenance: MaintenanceItem[] = [
@@ -429,11 +488,26 @@ export const mockContracts: ContractItem[] = [
 ];
 
 export const mockMeterReadings: MeterReadingItem[] = [
-  { id: 'm-1', roomCode: 'P.101', tenantName: 'Lê Hoàng Nam', prevElectric: 1240, currElectric: 1330, prevWater: 42, currWater: 48, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '2024-03-01' },
-  { id: 'm-2', roomCode: 'P.102', tenantName: 'Trần Thị Mai', prevElectric: 890, currElectric: 975, prevWater: 35, currWater: 40, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '2024-03-01' },
-  { id: 'm-3', roomCode: 'P.201', tenantName: 'Nguyễn Văn Đạt', prevElectric: 1510, currElectric: 1618, prevWater: 58, currWater: 65, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '2024-03-01' },
-  { id: 'm-4', roomCode: 'P.301', tenantName: 'Võ Thanh Tùng', prevElectric: 2150, currElectric: 2313, prevWater: 80, currWater: 90, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '2024-03-01' },
-  { id: 'm-5', roomCode: 'P.302', tenantName: 'Bùi Lan Anh', prevElectric: 760, currElectric: 835, prevWater: 24, currWater: 29, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '2024-03-01' },
+  // Tháng 03/2024
+  { id: 'm-2403-1', roomCode: 'P.101', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Lê Hoàng Nam', period: 'Tháng 03/2024', periodKey: '2024-03', prevElectric: 1240, currElectric: 1330, prevWater: 42, currWater: 48, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '01/03/2024', status: 'confirmed', invoiceCode: 'INV-2403-01' },
+  { id: 'm-2403-2', roomCode: 'P.102', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Trần Thị Mai', period: 'Tháng 03/2024', periodKey: '2024-03', prevElectric: 890, currElectric: 975, prevWater: 35, currWater: 40, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '01/03/2024', status: 'confirmed' },
+  { id: 'm-2403-3', roomCode: 'P.201', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Nguyễn Văn Đạt', period: 'Tháng 03/2024', periodKey: '2024-03', prevElectric: 1510, currElectric: 1618, prevWater: 58, currWater: 65, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '01/03/2024', status: 'confirmed', invoiceCode: 'INV-2403-02' },
+  { id: 'm-2403-4', roomCode: 'P.301', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Võ Thanh Tùng', period: 'Tháng 03/2024', periodKey: '2024-03', prevElectric: 2150, currElectric: 2313, prevWater: 80, currWater: 90, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '01/03/2024', status: 'confirmed', invoiceCode: 'INV-2403-03' },
+  { id: 'm-2403-5', roomCode: 'P.302', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Bùi Lan Anh', period: 'Tháng 03/2024', periodKey: '2024-03', prevElectric: 760, currElectric: 835, prevWater: 24, currWater: 29, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '01/03/2024', status: 'confirmed', invoiceCode: 'INV-2403-04' },
+
+  // Tháng 02/2024
+  { id: 'm-2402-1', roomCode: 'P.101', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Lê Hoàng Nam', period: 'Tháng 02/2024', periodKey: '2024-02', prevElectric: 1155, currElectric: 1240, prevWater: 37, currWater: 42, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '01/02/2024', status: 'confirmed', invoiceCode: 'INV-2402-01' },
+  { id: 'm-2402-2', roomCode: 'P.102', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Trần Thị Mai', period: 'Tháng 02/2024', periodKey: '2024-02', prevElectric: 800, currElectric: 890, prevWater: 29, currWater: 35, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '01/02/2024', status: 'confirmed', invoiceCode: 'INV-2402-02' },
+  { id: 'm-2402-3', roomCode: 'P.201', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Nguyễn Văn Đạt', period: 'Tháng 02/2024', periodKey: '2024-02', prevElectric: 1410, currElectric: 1510, prevWater: 52, currWater: 58, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '01/02/2024', status: 'confirmed', invoiceCode: 'INV-2402-03' },
+  { id: 'm-2402-4', roomCode: 'P.301', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Võ Thanh Tùng', period: 'Tháng 02/2024', periodKey: '2024-02', prevElectric: 2000, currElectric: 2150, prevWater: 71, currWater: 80, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '01/02/2024', status: 'confirmed', invoiceCode: 'INV-2402-04' },
+
+  // Tháng 01/2024
+  { id: 'm-2401-1', roomCode: 'P.101', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Lê Hoàng Nam', period: 'Tháng 01/2024', periodKey: '2024-01', prevElectric: 1060, currElectric: 1155, prevWater: 31, currWater: 37, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '01/01/2024', status: 'confirmed', invoiceCode: 'INV-2401-01' },
+  { id: 'm-2401-2', roomCode: 'P.102', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Trần Thị Mai', period: 'Tháng 01/2024', periodKey: '2024-01', prevElectric: 715, currElectric: 800, prevWater: 24, currWater: 29, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '01/01/2024', status: 'confirmed', invoiceCode: 'INV-2401-02' },
+  { id: 'm-2401-3', roomCode: 'P.201', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Nguyễn Văn Đạt', period: 'Tháng 01/2024', periodKey: '2024-01', prevElectric: 1305, currElectric: 1410, prevWater: 45, currWater: 52, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '01/01/2024', status: 'confirmed', invoiceCode: 'INV-2401-03' },
+
+  // Tháng 12/2023
+  { id: 'm-2312-1', roomCode: 'P.101', propertyId: '1', propertyName: 'Nhà trọ Hưng Phát', tenantName: 'Lê Hoàng Nam', period: 'Tháng 12/2023', periodKey: '2023-12', prevElectric: 975, currElectric: 1060, prevWater: 26, currWater: 31, electricUnitPrice: 3800, waterUnitPrice: 20000, updatedAt: '01/12/2023', status: 'confirmed', invoiceCode: 'INV-2312-01' },
 ];
 
 export const mockDeposits: DepositItem[] = [

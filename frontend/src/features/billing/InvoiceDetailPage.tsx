@@ -5,8 +5,20 @@ import {
   Printer,
   CreditCard,
   Send,
+  Building2,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
-import { mockInvoices, mockRooms, mockProperties, formatVND, InvoiceItem } from '@/lib/mockData';
+import {
+  mockInvoices,
+  mockRooms,
+  mockProperties,
+  mockMeterReadings,
+  mockPayments,
+  formatVND,
+  InvoiceItem,
+} from '@/lib/mockData';
 import { useActionModal } from '@/components/ui/ActionModal';
 
 export const InvoiceDetailPage: React.FC = () => {
@@ -15,10 +27,44 @@ export const InvoiceDetailPage: React.FC = () => {
   const { confirmAction } = useActionModal();
 
   const foundInvoice = mockInvoices.find((i) => i.id === id || i.code === id);
-  const initialInvoice: InvoiceItem = foundInvoice || mockInvoices[0]!;
-  const [invoice, setInvoice] = useState<InvoiceItem>(initialInvoice);
+  const [invoice, setInvoice] = useState<InvoiceItem | null>(foundInvoice || null);
+
+  // If invoice not found, show appropriate not-found state
+  if (!invoice) {
+    return (
+      <div style={{ maxWidth: '800px', margin: '40px auto', textAlign: 'center', padding: '40px' }} className="rf-card">
+        <AlertCircle size={48} color="#DC2626" style={{ margin: '0 auto 16px auto' }} />
+        <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', margin: 0 }}>
+          Không tìm thấy hóa đơn
+        </h2>
+        <p style={{ fontSize: '13px', color: '#6B7280', margin: '8px 0 20px 0' }}>
+          Hóa đơn với mã <strong>{id}</strong> không tồn tại hoặc đã bị xóa khỏi hệ thống.
+        </p>
+        <button
+          type="button"
+          className="rf-btn rf-btn-primary"
+          onClick={() => navigate('/invoices')}
+        >
+          <ArrowLeft size={14} /> Quay lại danh sách hóa đơn
+        </button>
+      </div>
+    );
+  }
+
   const room = mockRooms.find((r) => r.code === invoice.roomCode);
   const property = room ? mockProperties.find((p) => p.id === room.propertyId) : mockProperties[0];
+
+  // Related utility reading for this invoice
+  const relatedReading = mockMeterReadings.find(
+    (m) =>
+      (m.invoiceCode && m.invoiceCode === invoice.code) ||
+      (m.roomCode === invoice.roomCode && m.period === invoice.period)
+  );
+
+  // Related payments for this invoice
+  const relatedPayments = mockPayments.filter(
+    (p) => p.invoiceCode === invoice.code || (p.roomCode === invoice.roomCode && p.period === invoice.period)
+  );
 
   const savedLandlordBank = (() => {
     try {
@@ -47,7 +93,9 @@ export const InvoiceDetailPage: React.FC = () => {
   const handleMarkAsPaid = () => {
     confirmAction({
       title: `Xác nhận thu tiền phiếu ${invoice.code}`,
-      description: `Ghi nhận người thuê ${invoice.tenantName} đã thanh toán toàn bộ số tiền ${formatVND(invoice.debtAmount > 0 ? invoice.debtAmount : invoice.totalAmount)} cho phòng ${invoice.roomCode}.`,
+      description: `Ghi nhận người thuê ${invoice.tenantName} đã thanh toán toàn bộ số tiền ${formatVND(
+        invoice.debtAmount > 0 ? invoice.debtAmount : invoice.totalAmount
+      )} cho phòng ${invoice.roomCode}.`,
       confirmText: 'Xác nhận đã thu',
       successTitle: 'Đã cập nhật trạng thái thanh toán!',
       successMessage: `Phiếu thu ${invoice.code} đã được chuyển sang trạng thái ĐÃ THANH TOÁN (công nợ về 0đ).`,
@@ -74,9 +122,9 @@ export const InvoiceDetailPage: React.FC = () => {
       case 'partial':
         return <span className="rf-badge rf-badge-warning">THANH TOÁN 1 PHẦN</span>;
       case 'pending':
-        return <span className="rf-badge rf-badge-pending">CHỜ THANH TOÁN</span>;
+        return <span className="rf-badge rf-badge-neutral">CHỜ THANH TOÁN</span>;
       case 'overdue':
-        return <span className="rf-badge rf-badge-overdue">QUÁ HẠN</span>;
+        return <span className="rf-badge rf-badge-danger">QUÁ HẠN</span>;
       default:
         return <span className="rf-badge">{status}</span>;
     }
@@ -138,65 +186,49 @@ export const InvoiceDetailPage: React.FC = () => {
           padding: '40px',
           backgroundColor: '#FFFFFF',
           borderRadius: '12px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
           display: 'flex',
           flexDirection: 'column',
           gap: '28px',
         }}
       >
-        {/* Header: Company & Invoice Info */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #00594C', paddingBottom: '20px' }}>
+        {/* Header Invoice Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #E5E7EB', paddingBottom: '20px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '6px',
-                  backgroundColor: '#00594C',
-                  color: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 800,
-                  fontSize: '16px',
-                }}
-              >
-                RF
-              </div>
-              <span style={{ fontSize: '20px', fontWeight: 800, color: '#00594C', letterSpacing: '-0.5px' }}>
-                RentFlow
-              </span>
+              <Building2 size={24} color="#00594C" />
+              <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#111827', margin: 0 }}>
+                {property?.name || 'Nhà trọ Hưng Phát'}
+              </h2>
             </div>
-            <div style={{ marginTop: '8px', fontSize: '13px', color: '#4B5563', lineHeight: 1.5 }}>
-              <strong>{property?.name || 'Hệ thống Quản lý Nhà trọ RentFlow'}</strong>
-              <div>Địa chỉ: {property?.address || '123/4 Lê Văn Sỹ, P.13, Q.3, TP.HCM'}</div>
-              <div>Hotline / Quản lý: {property?.manager || 'Nguyễn An'} (0909.123.456)</div>
+            <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>
+              {property?.address || '123/4 Lê Văn Sỹ, P.13, Q.3, TP.HCM'}
+            </div>
+            <div style={{ fontSize: '12px', color: '#6B7280' }}>
+              Quản lý: {property?.manager || 'Nguyễn An'} • Hotline: 0988 123 456
             </div>
           </div>
 
           <div style={{ textAlign: 'right' }}>
-            <h1 style={{ fontSize: '22px', fontWeight: 800, color: '#111827', margin: 0 }}>
-              PHIẾU THU TIỀN PHÒNG
+            <span style={{ fontSize: '12px', color: '#6B7280', fontWeight: 600 }}>PHIẾU THU TIỀN PHÒNG</span>
+            <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#00594C', margin: '2px 0 4px 0' }}>
+              {invoice.code}
             </h1>
-            <div style={{ fontSize: '14px', fontWeight: 700, color: '#00594C', marginTop: '4px' }}>
-              Số phiếu: {invoice.code}
-            </div>
-            <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>
+            <div style={{ fontSize: '12px', color: '#6B7280' }}>
               Kỳ thanh toán: <strong>{invoice.period}</strong>
             </div>
-            <div style={{ marginTop: '8px' }}>{getStatusBadge(invoice.status)}</div>
+            <div style={{ marginTop: '6px' }}>{getStatusBadge(invoice.status)}</div>
           </div>
         </div>
 
-        {/* Customer & Room Details */}
+        {/* Tenant & Room Details Grid */}
         <div
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
             gap: '24px',
-            backgroundColor: '#F9FAFB',
             padding: '16px 20px',
+            backgroundColor: '#F9FAFB',
             borderRadius: '8px',
             border: '1px solid #E5E7EB',
           }}
@@ -209,7 +241,7 @@ export const InvoiceDetailPage: React.FC = () => {
               {invoice.tenantName}
             </div>
             <div style={{ fontSize: '13px', color: '#4B5563', marginTop: '2px' }}>
-              Số điện thoại: {room?.tenantPhone || '0901234567'}
+              Số điện thoại: {invoice.tenantPhone || room?.tenantPhone || '0901234567'}
             </div>
           </div>
 
@@ -260,14 +292,31 @@ export const InvoiceDetailPage: React.FC = () => {
 
               <tr>
                 <td style={{ padding: '12px 16px' }}>
-                  <strong>Tiền điện sinh hoạt</strong>
-                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Theo chỉ số công tơ điện riêng</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <strong>Tiền điện sinh hoạt</strong>
+                    {relatedReading && (
+                      <Link
+                        to={`/meter-readings`}
+                        style={{ fontSize: '11px', color: '#2563EB', textDecoration: 'none' }}
+                        title="Xem chỉ số công tơ điện nước kỳ này"
+                      >
+                        [Chi tiết số điện]
+                      </Link>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>
+                    {relatedReading
+                      ? `Chỉ số: ${relatedReading.prevElectric} → ${relatedReading.currElectric} kWh`
+                      : 'Theo chỉ số công tơ điện riêng'}
+                  </div>
                 </td>
                 <td style={{ textAlign: 'center', padding: '12px 16px' }}>
-                  {Math.round(invoice.electricFee / (room?.electricUnitPrice || 3800))} kWh
+                  {relatedReading
+                    ? `${relatedReading.currElectric - relatedReading.prevElectric} kWh`
+                    : `${Math.round(invoice.electricFee / 3800)} kWh`}
                 </td>
                 <td style={{ textAlign: 'right', padding: '12px 16px' }}>
-                  {(room?.electricUnitPrice || 3800).toLocaleString('vi-VN')} đ/kWh
+                  {relatedReading ? relatedReading.electricUnitPrice.toLocaleString('vi-VN') : '3.800'} đ/kWh
                 </td>
                 <td style={{ textAlign: 'right', fontWeight: 600, padding: '12px 16px' }}>
                   {formatVND(invoice.electricFee)}
@@ -276,14 +325,30 @@ export const InvoiceDetailPage: React.FC = () => {
 
               <tr>
                 <td style={{ padding: '12px 16px' }}>
-                  <strong>Tiền nước sinh hoạt</strong>
-                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Theo đồng hồ nước</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <strong>Tiền nước sinh hoạt</strong>
+                    {relatedReading && (
+                      <Link
+                        to={`/meter-readings`}
+                        style={{ fontSize: '11px', color: '#2563EB', textDecoration: 'none' }}
+                      >
+                        [Chi tiết số nước]
+                      </Link>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#6B7280' }}>
+                    {relatedReading
+                      ? `Chỉ số: ${relatedReading.prevWater} → ${relatedReading.currWater} m³`
+                      : 'Theo đồng hồ nước'}
+                  </div>
                 </td>
                 <td style={{ textAlign: 'center', padding: '12px 16px' }}>
-                  {Math.round(invoice.waterFee / (room?.waterUnitPrice || 20000))} m³
+                  {relatedReading
+                    ? `${relatedReading.currWater - relatedReading.prevWater} m³`
+                    : `${Math.round(invoice.waterFee / 20000)} m³`}
                 </td>
                 <td style={{ textAlign: 'right', padding: '12px 16px' }}>
-                  {(room?.waterUnitPrice || 20000).toLocaleString('vi-VN')} đ/m³
+                  {relatedReading ? relatedReading.waterUnitPrice.toLocaleString('vi-VN') : '20.000'} đ/m³
                 </td>
                 <td style={{ textAlign: 'right', fontWeight: 600, padding: '12px 16px' }}>
                   {formatVND(invoice.waterFee)}
@@ -307,7 +372,7 @@ export const InvoiceDetailPage: React.FC = () => {
 
         {/* Totals & Payment Status Calculation */}
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <div style={{ width: '360px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ width: '380px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
               <span style={{ color: '#4B5563' }}>Tổng cộng thành tiền:</span>
               <strong style={{ fontSize: '16px' }}>{formatVND(invoice.totalAmount)}</strong>
@@ -332,6 +397,55 @@ export const InvoiceDetailPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Related Payments History Section */}
+        {relatedPayments.length > 0 && (
+          <div
+            style={{
+              padding: '16px 20px',
+              backgroundColor: '#F8FAFC',
+              borderRadius: '8px',
+              border: '1px solid #E2E8F0',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 700, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Clock size={16} color="#00594C" />
+                <span>Lịch sử các giao dịch thanh toán cho hóa đơn này ({relatedPayments.length})</span>
+              </h4>
+              <Link to="/payments" style={{ fontSize: '12px', color: '#2563EB', textDecoration: 'none' }}>
+                Xem sổ quỹ thu chi →
+              </Link>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {relatedPayments.map((p) => (
+                <div
+                  key={p.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '8px 12px',
+                    backgroundColor: '#FFFFFF',
+                    borderRadius: '6px',
+                    border: '1px solid #E5E7EB',
+                    fontSize: '12px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <CheckCircle2 size={15} color="#16A34A" />
+                    <strong>{p.code}</strong>
+                    <span style={{ color: '#6B7280' }}>• {p.date} • {p.method}</span>
+                    <span style={{ color: '#4B5563' }}>({p.note})</span>
+                  </div>
+                  <strong style={{ color: '#15803D', fontSize: '13px' }}>
+                    +{formatVND(p.amount)}
+                  </strong>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Bank Transfer QR info */}
         <div
@@ -374,7 +488,11 @@ export const InvoiceDetailPage: React.FC = () => {
               alt="VietQR Invoice"
               style={{ width: '100px', height: '100px', display: 'block', objectFit: 'contain' }}
               onError={(e) => {
-                e.currentTarget.src = 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' + encodeURIComponent(`2|99|${savedLandlordBank.accountNumber}|${savedLandlordBank.accountHolder}|${savedLandlordBank.bankName}|0|0|${invoiceAmount}|${qrTransferContent}`);
+                e.currentTarget.src =
+                  'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=' +
+                  encodeURIComponent(
+                    `2|99|${savedLandlordBank.accountNumber}|${savedLandlordBank.accountHolder}|${savedLandlordBank.bankName}|0|0|${invoiceAmount}|${qrTransferContent}`
+                  );
               }}
             />
             <div style={{ fontSize: '10px', color: '#6B7280', marginTop: '4px' }}>Quét mã chuyển tiền</div>

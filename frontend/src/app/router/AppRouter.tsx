@@ -36,13 +36,19 @@ import { PropertyDetailPage } from '@/features/properties/components/PropertyDet
 import { RoomDetailPage } from '@/features/rooms/RoomDetailPage';
 import { CreateRoomPage } from '@/features/rooms/CreateRoomPage';
 import { InvoiceDetailPage } from '@/features/billing/InvoiceDetailPage';
+import { MeterReadingDetailPage } from '@/features/billing/MeterReadingDetailPage';
+import { PaymentDetailPage } from '@/features/payments/PaymentDetailPage';
+import { ExpensesPage } from '@/features/expenses/ExpensesPage';
 import { ContractDetailPage } from '@/features/leases/ContractDetailPage';
 import { ActionModalProvider } from '@/components/ui/ActionModal';
 import { TenantOverviewPage } from '@/features/tenant/TenantOverviewPage';
 import { TenantInvoicesPage } from '@/features/tenant/TenantInvoicesPage';
+import { TenantInvoiceDetailPage } from '@/features/tenant/TenantInvoiceDetailPage';
 import { TenantUtilitiesPage } from '@/features/tenant/TenantUtilitiesPage';
+import { TenantUtilityDetailPage } from '@/features/tenant/TenantUtilityDetailPage';
 import { TenantMaintenancePage } from '@/features/tenant/TenantMaintenancePage';
 import { TenantLeasePage } from '@/features/tenant/TenantLeasePage';
+import { TenantPaymentsPage } from '@/features/tenant/TenantPaymentsPage';
 import { AccessDeniedPage, NotFoundPage } from '@/features/feedback/ErrorPages';
 
 // Role-Protected Guard Route
@@ -114,11 +120,41 @@ export const AppRouter: React.FC = () => {
               }
             />
             <Route
+              path="/tenant/invoices/:invoiceId"
+              element={
+                <ProtectedRoute allowedRoles={['TENANT']}>
+                  <AppShell>
+                    <TenantInvoiceDetailPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/tenant/utilities"
               element={
                 <ProtectedRoute allowedRoles={['TENANT']}>
                   <AppShell>
                     <TenantUtilitiesPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tenant/utilities/:readingId"
+              element={
+                <ProtectedRoute allowedRoles={['TENANT']}>
+                  <AppShell>
+                    <TenantUtilityDetailPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tenant/payments"
+              element={
+                <ProtectedRoute allowedRoles={['TENANT']}>
+                  <AppShell>
+                    <TenantPaymentsPage />
                   </AppShell>
                 </ProtectedRoute>
               }
@@ -375,11 +411,61 @@ export const AppRouter: React.FC = () => {
               }
             />
             <Route
+              path="/landlord/utilities/readings/:readingId"
+              element={
+                <ProtectedRoute allowedRoles={['LANDLORD', 'SUPERADMIN']}>
+                  <AppShell>
+                    <MeterReadingDetailPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/payments"
               element={
                 <ProtectedRoute allowedRoles={['LANDLORD', 'SUPERADMIN']}>
                   <AppShell>
                     <PaymentsPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/landlord/payments/:paymentId"
+              element={
+                <ProtectedRoute allowedRoles={['LANDLORD', 'SUPERADMIN']}>
+                  <AppShell>
+                    <PaymentDetailPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/payments/:paymentId"
+              element={
+                <ProtectedRoute allowedRoles={['LANDLORD', 'SUPERADMIN']}>
+                  <AppShell>
+                    <PaymentDetailPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/landlord/expenses"
+              element={
+                <ProtectedRoute allowedRoles={['LANDLORD', 'SUPERADMIN']}>
+                  <AppShell>
+                    <ExpensesPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/expenses"
+              element={
+                <ProtectedRoute allowedRoles={['LANDLORD', 'SUPERADMIN']}>
+                  <AppShell>
+                    <ExpensesPage />
                   </AppShell>
                 </ProtectedRoute>
               }

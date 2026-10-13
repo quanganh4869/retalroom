@@ -1,24 +1,29 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useMemo } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import {
   Save,
   CheckCircle2,
   AlertTriangle,
-  ArrowRight,
   Settings,
+  Calendar,
+  Building2,
+  Search,
+  Eye,
 } from 'lucide-react';
-import { mockMeterReadings, formatVND, MeterReadingItem } from '@/lib/mockData';
-import { ButtonSpinner } from '@/components/ui/LoadingSystem';
+import { mockMeterReadings, mockProperties, formatVND, MeterReadingItem } from '@/lib/mockData';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/feedback/ToastSystem';
-import { useActionModal } from '@/components/ui/ActionModal';
 
 export const MeterReadingsPage: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToast();
-  const { confirmAction } = useActionModal();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [readings, setReadings] = useState<MeterReadingItem[]>(mockMeterReadings);
+  const periodParam = searchParams.get('period') || '2024-03';
+  const propertyParam = searchParams.get('propertyId') || 'all';
+  const searchParam = searchParams.get('q') || '';
+
+  const [allReadings, setAllReadings] = useState<MeterReadingItem[]>(mockMeterReadings);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
@@ -27,19 +32,64 @@ export const MeterReadingsPage: React.FC = () => {
   const [globalElectricRate, setGlobalElectricRate] = useState<number>(3800);
   const [globalWaterRate, setGlobalWaterRate] = useState<number>(20000);
 
+  // Available unique periods
+  const availablePeriods = useMemo(() => {
+    const map = new Map<string, string>();
+    mockMeterReadings.forEach((r) => {
+      const key = r.periodKey || (r.period?.includes('03/2024') ? '2024-03' : r.period?.includes('02/2024') ? '2024-02' : r.period?.includes('01/2024') ? '2024-01' : '2023-12');
+      if (!map.has(key)) {
+        map.set(key, r.period || key);
+      }
+    });
+    return Array.from(map.entries())
+      .map(([key, label]) => ({ key, label }))
+      .sort((a, b) => b.key.localeCompare(a.key));
+  }, []);
+
+  const updateFilters = (updates: Record<string, string>) => {
+    const current = Object.fromEntries(searchParams.entries());
+    const next = { ...current, ...updates };
+    Object.keys(next).forEach((k) => {
+      if (next[k] === 'all' || next[k] === '') {
+        delete next[k];
+      }
+    });
+    setSearchParams(next);
+  };
+
+  // Filtered readings for active period & property
+  const filteredReadings = useMemo(() => {
+    return allReadings.filter((r) => {
+      if (periodParam !== 'all') {
+        const key = r.periodKey || (r.period?.includes('03/2024') ? '2024-03' : r.period?.includes('02/2024') ? '2024-02' : r.period?.includes('01/2024') ? '2024-01' : '2023-12');
+        if (key !== periodParam) return false;
+      }
+      if (propertyParam !== 'all' && r.propertyId && r.propertyId !== propertyParam) {
+        return false;
+      }
+      if (searchParam) {
+        const q = searchParam.toLowerCase();
+        const matchRoom = r.roomCode.toLowerCase().includes(q);
+        const matchTenant = r.tenantName.toLowerCase().includes(q);
+        if (!matchRoom && !matchTenant) return false;
+      }
+      return true;
+    });
+  }, [allReadings, periodParam, propertyParam, searchParam]);
+
   const handleReadingChange = (
     id: string,
     field: 'currElectric' | 'currWater',
     value: number
   ) => {
-    setReadings((prev) =>
+    setAllReadings((prev) =>
       prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
     );
   };
 
   const handleApplyGlobalRates = (e: React.FormEvent) => {
     e.preventDefault();
-    setReadings((prev) =>
+    setAllReadings((prev) =>
       prev.map((item) => ({
         ...item,
         electricUnitPrice: globalElectricRate,
@@ -49,7 +99,7 @@ export const MeterReadingsPage: React.FC = () => {
     setShowRateModal(false);
     toast.success(
       'Đã cập nhật giá điện nước!',
-      `Áp dụng: Điện ${globalElectricRate.toLocaleString('vi-VN')} đ/kWh • Nước ${globalWaterRate.toLocaleString('vi-VN')} đ/m³ cho tất cả phòng.`
+      `Áp dụng: Điện ${globalElectricRate.toLocaleString('vi-VN')} đ/kWh • Nước ${globalWaterRate.toLocaleString('vi-VN')} đ/m³.`
     );
   };
 
@@ -57,30 +107,26 @@ export const MeterReadingsPage: React.FC = () => {
     setIsSaving(true);
     setTimeout(() => {
       setIsSaving(false);
-      toast.success('Đã lưu chỉ số điện nước', 'Dữ liệu chỉ số 5 phòng đã được cập nhật.');
+      toast.success('Đã lưu chỉ số điện nước', `Dữ liệu kỳ ${periodParam} đã được lưu an toàn.`);
     }, 400);
-  };
-
-  const handleFinalizeAndInvoice = () => {
-    setShowConfirmModal(true);
   };
 
   const handleConfirmFinalize = () => {
     setShowConfirmModal(false);
-    toast.success('Đã chốt kỳ điện nước!', 'Hệ thống đã tự động tính tiền và phát hành hóa đơn.');
-    navigate('/invoices');
+    toast.success('Đã chốt kỳ điện nước!', `Kỳ ${periodParam} đã chốt. Hệ thống đã tính tiền và tạo hóa đơn.`);
+    navigate(`/invoices?period=${periodParam}`);
   };
 
   // Recalculate dynamic totals
-  const totalElectricKwh = readings.reduce(
+  const totalElectricKwh = filteredReadings.reduce(
     (sum, r) => sum + Math.max(0, r.currElectric - r.prevElectric),
     0
   );
-  const totalWaterM3 = readings.reduce(
+  const totalWaterM3 = filteredReadings.reduce(
     (sum, r) => sum + Math.max(0, r.currWater - r.prevWater),
     0
   );
-  const totalUtilityCost = readings.reduce(
+  const totalUtilityCost = filteredReadings.reduce(
     (sum, r) =>
       sum +
       Math.max(0, r.currElectric - r.prevElectric) * r.electricUnitPrice +
@@ -94,10 +140,10 @@ export const MeterReadingsPage: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', margin: 0 }}>
-            Ghi chỉ số Điện & Nước
+            Lịch sử & Ghi chỉ số Điện & Nước
           </h1>
           <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 0 0' }}>
-            Kỳ ghi: Tháng 03/2024 • Ngày chốt số: 01/03/2024 • Đơn giá hiện tại: Điện {globalElectricRate.toLocaleString('vi-VN')}đ/kWh, Nước {globalWaterRate.toLocaleString('vi-VN')}đ/m³
+            Quản lý chỉ số công tơ điện và đồng hồ nước qua các tháng, chống ghi đè lịch sử cũ
           </p>
         </div>
         <div style={{ display: 'flex', gap: '10px' }}>
@@ -106,325 +152,310 @@ export const MeterReadingsPage: React.FC = () => {
             className="rf-btn rf-btn-secondary"
             onClick={() => setShowRateModal(true)}
           >
-            <Settings size={14} />
-            <span>Cài đặt giá Điện / Nước</span>
+            <Settings size={15} />
+            <span>Cài đặt đơn giá</span>
           </button>
           <button
             type="button"
             className="rf-btn rf-btn-secondary"
-            onClick={() => {
-              confirmAction({
-                title: 'Tải biểu mẫu nhập liệu Excel',
-                description: 'Tải file mẫu Excel chuẩn "Mau_Nhap_Chi_So_Dien_Nuoc_RentFlow.xlsx" để nhập số công tơ điện nước ngoại tuyến.',
-                confirmText: 'Tải xuống',
-                successTitle: 'Đã tải mẫu Excel!',
-                successMessage: 'Biểu mẫu đã được lưu về máy tính. Bạn có thể mở bằng Microsoft Excel hoặc Google Sheets.',
-                simulateDelayMs: 600,
-              });
-            }}
+            onClick={handleSaveAll}
+            disabled={isSaving}
           >
-            <span>Tải mẫu Excel</span>
+            <Save size={15} />
+            <span>{isSaving ? 'Đang lưu...' : 'Lưu chỉ số kỳ này'}</span>
           </button>
           <button
             type="button"
             className="rf-btn rf-btn-primary"
-            onClick={() => {
-              confirmAction({
-                title: 'Lưu toàn bộ chỉ số điện nước',
-                description: 'Cập nhật chỉ số công tơ mới cho tất cả các phòng trong danh sách. Dữ liệu này sẽ làm căn cứ tính tiền hóa đơn.',
-                confirmText: 'Lưu chỉ số',
-                successTitle: 'Lưu chỉ số thành công!',
-                successMessage: 'Dữ liệu chỉ số điện nước của tất cả các phòng đã được lưu an toàn.',
-                simulateDelayMs: 700,
-                onSuccess: handleSaveAll,
-              });
-            }}
-            disabled={isSaving}
+            onClick={() => setShowConfirmModal(true)}
           >
-            {isSaving ? (
-              <>
-                <ButtonSpinner />
-                <span>Đang lưu...</span>
-              </>
-            ) : (
-              <>
-                <Save size={15} />
-                <span>Lưu tất cả chỉ số</span>
-              </>
-            )}
+            <CheckCircle2 size={15} />
+            <span>Chốt số & Phát hành hóa đơn</span>
           </button>
         </div>
       </div>
 
-      {/* Warning Box */}
+      {/* Period Selection & Filter Bar */}
       <div
+        className="rf-card"
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          backgroundColor: '#FEF7E0',
-          border: '1px solid #FEE2B3',
-          borderRadius: '8px',
-          padding: '12px 18px',
-        }}
-      >
-        <AlertTriangle size={18} color="#B06000" />
-        <div style={{ fontSize: '13px', color: '#B06000', flex: 1 }}>
-          <strong>Lưu ý kiểm tra chỉ số bất thường:</strong> Hệ thống tự động phát hiện nếu số mới tăng &gt; 50% hoặc nhỏ hơn số cũ để tránh sai sót trước khi lập hóa đơn.
-        </div>
-      </div>
-
-      {/* Table with Inline Editing Inputs */}
-      <div className="rf-card" style={{ padding: 0, overflow: 'hidden' }}>
-        <table className="rf-table">
-          <thead>
-            <tr>
-              <th style={{ width: '120px' }}>Số phòng</th>
-              <th style={{ width: '160px' }}>Người thuê</th>
-              <th style={{ textAlign: 'center', backgroundColor: '#FEF3C7', color: '#92400E' }}>
-                Điện cũ (kWh)
-              </th>
-              <th style={{ textAlign: 'center', backgroundColor: '#FEF3C7', color: '#92400E' }}>
-                Điện mới (kWh)
-              </th>
-              <th style={{ textAlign: 'center', backgroundColor: '#FEF3C7', color: '#92400E' }}>
-                Tiêu thụ Điện
-              </th>
-              <th style={{ textAlign: 'center', backgroundColor: '#E0F2FE', color: '#075985' }}>
-                Nước cũ (m³)
-              </th>
-              <th style={{ textAlign: 'center', backgroundColor: '#E0F2FE', color: '#075985' }}>
-                Nước mới (m³)
-              </th>
-              <th style={{ textAlign: 'center', backgroundColor: '#E0F2FE', color: '#075985' }}>
-                Tiêu thụ Nước
-              </th>
-              <th style={{ textAlign: 'right' }}>Thành tiền ước tính</th>
-            </tr>
-          </thead>
-          <tbody>
-            {readings.map((r) => {
-              const diffElectric = Math.max(0, r.currElectric - r.prevElectric);
-              const diffWater = Math.max(0, r.currWater - r.prevWater);
-              const estimatedCost =
-                diffElectric * r.electricUnitPrice + diffWater * r.waterUnitPrice;
-
-              return (
-                <tr key={r.id}>
-                  <td>
-                    <div style={{ fontWeight: 700, color: '#00594C' }}>{r.roomCode}</div>
-                  </td>
-                  <td>
-                    <div style={{ fontWeight: 500 }}>{r.tenantName}</div>
-                  </td>
-                  {/* Electric prev */}
-                  <td style={{ textAlign: 'center', color: '#6B7280', fontWeight: 500 }}>
-                    {r.prevElectric}
-                  </td>
-                  {/* Electric curr input */}
-                  <td style={{ textAlign: 'center' }}>
-                    <input
-                      type="number"
-                      value={r.currElectric}
-                      onChange={(e) =>
-                        handleReadingChange(r.id, 'currElectric', Number(e.target.value))
-                      }
-                      style={{
-                        width: '80px',
-                        padding: '4px 6px',
-                        textAlign: 'center',
-                        borderRadius: '4px',
-                        border: '1px solid #D1D5DB',
-                        fontWeight: 600,
-                        fontSize: '13px',
-                      }}
-                    />
-                  </td>
-                  {/* Electric diff */}
-                  <td style={{ textAlign: 'center', fontWeight: 600, color: '#D97706' }}>
-                    +{diffElectric} kWh
-                  </td>
-
-                  {/* Water prev */}
-                  <td style={{ textAlign: 'center', color: '#6B7280', fontWeight: 500 }}>
-                    {r.prevWater}
-                  </td>
-                  {/* Water curr input */}
-                  <td style={{ textAlign: 'center' }}>
-                    <input
-                      type="number"
-                      value={r.currWater}
-                      onChange={(e) =>
-                        handleReadingChange(r.id, 'currWater', Number(e.target.value))
-                      }
-                      style={{
-                        width: '70px',
-                        padding: '4px 6px',
-                        textAlign: 'center',
-                        borderRadius: '4px',
-                        border: '1px solid #D1D5DB',
-                        fontWeight: 600,
-                        fontSize: '13px',
-                      }}
-                    />
-                  </td>
-                  {/* Water diff */}
-                  <td style={{ textAlign: 'center', fontWeight: 600, color: '#0284C7' }}>
-                    +{diffWater} m³
-                  </td>
-
-                  {/* Total */}
-                  <td style={{ textAlign: 'right', fontWeight: 700, color: '#111827' }}>
-                    {formatVND(estimatedCost)}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Sticky Bottom Summary Bar */}
-      <div
-        style={{
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #E5E7EB',
-          borderRadius: '8px',
-          padding: '16px 24px',
+          padding: '16px 20px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '12px',
         }}
       >
-        <div style={{ display: 'flex', gap: '32px', fontSize: '13px' }}>
-          <div>
-            <span style={{ color: '#6B7280' }}>Tổng tiêu thụ điện kỳ này:</span>
-            <div style={{ fontWeight: 700, color: '#D97706', fontSize: '16px' }}>
-              {totalElectricKwh.toLocaleString('vi-VN')} kWh
-            </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          {/* Period selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Calendar size={18} color="#00594C" />
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Chọn kỳ ghi:</span>
+            <select
+              value={periodParam}
+              onChange={(e) => updateFilters({ period: e.target.value })}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: '1px solid #D1D5DB',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: '#111827',
+                backgroundColor: '#F9FAFB',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="all">Tất cả các kỳ (Lịch sử tổng hợp)</option>
+              {availablePeriods.map((p) => (
+                <option key={p.key} value={p.key}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
           </div>
-          <div>
-            <span style={{ color: '#6B7280' }}>Tổng tiêu thụ nước:</span>
-            <div style={{ fontWeight: 700, color: '#0284C7', fontSize: '16px' }}>
-              {totalWaterM3.toLocaleString('vi-VN')} m³
-            </div>
-          </div>
-          <div>
-            <span style={{ color: '#6B7280' }}>Tổng tiền dịch vụ điện nước:</span>
-            <div style={{ fontWeight: 700, color: '#00594C', fontSize: '16px' }}>
-              {formatVND(totalUtilityCost)}
-            </div>
+
+          {/* Property selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Building2 size={16} color="#6B7280" />
+            <span style={{ fontSize: '13px', color: '#374151' }}>Tòa nhà:</span>
+            <select
+              value={propertyParam}
+              onChange={(e) => updateFilters({ propertyId: e.target.value })}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: '1px solid #D1D5DB',
+                fontSize: '13px',
+                backgroundColor: '#FFFFFF',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="all">Tất cả cơ sở ({mockProperties.length})</option>
+              {mockProperties.map((prop) => (
+                <option key={prop.id} value={prop.id}>
+                  {prop.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        <button
-          type="button"
-          className="rf-btn rf-btn-primary"
-          onClick={handleFinalizeAndInvoice}
-        >
-          <CheckCircle2 size={16} />
-          <span>Chốt số & Lập hóa đơn tự động</span>
-          <ArrowRight size={14} />
-        </button>
+        {/* Search */}
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minWidth: '240px' }}>
+          <Search size={15} color="#9CA3AF" style={{ position: 'absolute', left: '10px' }} />
+          <input
+            type="text"
+            placeholder="Tìm theo phòng, tên khách..."
+            value={searchParam}
+            onChange={(e) => updateFilters({ q: e.target.value })}
+            style={{
+              width: '100%',
+              padding: '6px 12px 6px 32px',
+              borderRadius: '6px',
+              border: '1px solid #D1D5DB',
+              fontSize: '13px',
+              outline: 'none',
+            }}
+          />
+        </div>
       </div>
 
-      {/* Utility Rate Settings Modal */}
-      <Modal
-        isOpen={showRateModal}
-        onClose={() => setShowRateModal(false)}
-        title="Cài đặt đơn giá Điện & Nước"
-        description="Thay đổi đơn giá dịch vụ điện và nước áp dụng cho tất cả các phòng hoặc kỳ tính tiền này."
-      >
-        <form onSubmit={handleApplyGlobalRates} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
-              ⚡ Giá điện (VNĐ / kWh)
-            </label>
-            <input
-              type="number"
-              value={globalElectricRate}
-              onChange={(e) => setGlobalElectricRate(Number(e.target.value))}
-              min={0}
-              step={100}
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                borderRadius: '6px',
-                border: '1px solid #D1D5DB',
-                fontSize: '14px',
-                fontWeight: 600,
-                color: '#111827',
-              }}
-              required
-            />
-            <span style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px', display: 'block' }}>
-              Mức hiện tại: {globalElectricRate.toLocaleString('vi-VN')} đ/kWh
-            </span>
+      {/* KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+        <div className="rf-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', color: '#6B7280' }}>Tổng điện tiêu thụ</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#D97706', marginTop: '6px' }}>
+            {totalElectricKwh.toLocaleString('vi-VN')} kWh
           </div>
-
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
-              💧 Giá nước (VNĐ / m³)
-            </label>
-            <input
-              type="number"
-              value={globalWaterRate}
-              onChange={(e) => setGlobalWaterRate(Number(e.target.value))}
-              min={0}
-              step={500}
-              style={{
-                width: '100%',
-                padding: '8px 12px',
-                borderRadius: '6px',
-                border: '1px solid #D1D5DB',
-                fontSize: '14px',
-                fontWeight: 600,
-                color: '#111827',
-              }}
-              required
-            />
-            <span style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px', display: 'block' }}>
-              Mức hiện tại: {globalWaterRate.toLocaleString('vi-VN')} đ/m³
-            </span>
+          <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '4px' }}>
+            Đơn giá: {globalElectricRate.toLocaleString('vi-VN')} đ/kWh
           </div>
+        </div>
 
-          <div
-            style={{
-              padding: '12px',
-              backgroundColor: '#F0FDF4',
-              borderRadius: '6px',
-              border: '1px solid #BBF7D0',
-              fontSize: '12px',
-              color: '#166534',
-              lineHeight: 1.5,
-            }}
-          >
-            💡 Đơn giá mới sẽ được cập nhật ngay lập tức vào bảng tính tiền của tất cả các phòng trong đợt ghi số này.
+        <div className="rf-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', color: '#6B7280' }}>Tổng nước tiêu thụ</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#2563EB', marginTop: '6px' }}>
+            {totalWaterM3.toLocaleString('vi-VN')} m³
           </div>
+          <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '4px' }}>
+            Đơn giá: {globalWaterRate.toLocaleString('vi-VN')} đ/m³
+          </div>
+        </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>
+        <div className="rf-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', color: '#6B7280' }}>Tổng tiền dịch vụ tính toán</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#00594C', marginTop: '6px' }}>
+            {formatVND(totalUtilityCost)}
+          </div>
+          <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '4px' }}>
+            {filteredReadings.length} phòng trong kỳ
+          </div>
+        </div>
+
+        <div className="rf-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', color: '#6B7280' }}>Tiến độ chốt số</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#137333', marginTop: '6px' }}>
+            {filteredReadings.length}/{filteredReadings.length} phòng
+          </div>
+          <div style={{ fontSize: '11px', color: '#137333', marginTop: '4px' }}>
+            ✓ Đầy đủ số liệu công tơ
+          </div>
+        </div>
+      </div>
+
+      {/* Main Table */}
+      <div className="rf-card" style={{ padding: 0, overflow: 'hidden' }}>
+        {filteredReadings.length === 0 ? (
+          <div style={{ padding: '40px', textAlign: 'center', color: '#6B7280' }}>
+            <AlertTriangle size={36} color="#D97706" style={{ margin: '0 auto 12px auto' }} />
+            <h4 style={{ margin: 0, fontSize: '15px', color: '#374151' }}>
+              Không có chỉ số điện nước trong kỳ này
+            </h4>
+            <p style={{ fontSize: '13px', margin: '6px 0 16px 0' }}>
+              Chưa có số liệu ghi chép cho bộ lọc đang chọn.
+            </p>
             <button
               type="button"
               className="rf-btn rf-btn-secondary"
-              onClick={() => setShowRateModal(false)}
+              onClick={() => setSearchParams({ period: '2024-03' })}
             >
-              Hủy
-            </button>
-            <button type="submit" className="rf-btn rf-btn-primary">
-              Lưu & Áp dụng cho tất cả các phòng
+              Xem kỳ Tháng 03/2024
             </button>
           </div>
-        </form>
-      </Modal>
+        ) : (
+          <table className="rf-table">
+            <thead>
+              <tr>
+                <th>Phòng / Khách thuê</th>
+                <th>Kỳ chốt số</th>
+                <th>Điện cũ (kWh)</th>
+                <th>Điện mới (kWh)</th>
+                <th>Tiêu thụ Điện</th>
+                <th>Nước cũ (m³)</th>
+                <th>Nước mới (m³)</th>
+                <th>Tiêu thụ Nước</th>
+                <th>Thành tiền</th>
+                <th>Hóa đơn liên quan</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredReadings.map((r) => {
+                const usedElectric = Math.max(0, r.currElectric - r.prevElectric);
+                const usedWater = Math.max(0, r.currWater - r.prevWater);
+                const roomCost = usedElectric * r.electricUnitPrice + usedWater * r.waterUnitPrice;
+                const isInvalidReading = r.currElectric < r.prevElectric || r.currWater < r.prevWater;
+
+                return (
+                  <tr key={r.id}>
+                    <td>
+                      <div style={{ fontWeight: 700, color: '#111827' }}>{r.roomCode}</div>
+                      <div style={{ fontSize: '11px', color: '#6B7280' }}>{r.tenantName}</div>
+                    </td>
+                    <td>
+                      <span style={{ fontSize: '12px', fontWeight: 600, color: '#00594C' }}>
+                        {r.period || 'Tháng 03/2024'}
+                      </span>
+                      <div style={{ fontSize: '10px', color: '#9CA3AF' }}>{r.updatedAt}</div>
+                    </td>
+                    <td style={{ color: '#6B7280' }}>{r.prevElectric}</td>
+                    <td>
+                      <input
+                        type="number"
+                        value={r.currElectric}
+                        onChange={(e) =>
+                          handleReadingChange(r.id, 'currElectric', parseInt(e.target.value, 10) || 0)
+                        }
+                        style={{
+                          width: '80px',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          border: isInvalidReading ? '1px solid #DC2626' : '1px solid #D1D5DB',
+                          fontSize: '13px',
+                          fontWeight: 600,
+                        }}
+                      />
+                    </td>
+                    <td>
+                      <strong style={{ color: '#D97706' }}>{usedElectric} kWh</strong>
+                    </td>
+                    <td style={{ color: '#6B7280' }}>{r.prevWater}</td>
+                    <td>
+                      <input
+                        type="number"
+                        value={r.currWater}
+                        onChange={(e) =>
+                          handleReadingChange(r.id, 'currWater', parseInt(e.target.value, 10) || 0)
+                        }
+                        style={{
+                          width: '70px',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          border: isInvalidReading ? '1px solid #DC2626' : '1px solid #D1D5DB',
+                          fontSize: '13px',
+                          fontWeight: 600,
+                        }}
+                      />
+                    </td>
+                    <td>
+                      <strong style={{ color: '#2563EB' }}>{usedWater} m³</strong>
+                    </td>
+                    <td style={{ fontWeight: 700, color: '#00594C' }}>
+                      {formatVND(roomCost)}
+                    </td>
+                    <td>
+                      {r.invoiceCode ? (
+                        <Link
+                          to={`/invoices`}
+                          style={{
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            color: '#2563EB',
+                            textDecoration: 'none',
+                          }}
+                        >
+                          {r.invoiceCode} →
+                        </Link>
+                      ) : (
+                        <span style={{ fontSize: '11px', color: '#9CA3AF' }}>Chưa xuất HĐ</span>
+                      )}
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="rf-btn rf-btn-secondary"
+                        style={{ padding: '4px 8px', fontSize: '11px' }}
+                        onClick={() => navigate(`/landlord/utilities/readings/${r.id}`)}
+                        title="Xem trang chi tiết chỉ số công tơ"
+                      >
+                        <Eye size={12} /> Chi tiết
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
 
       {/* Confirmation Modal */}
       <Modal
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
-        title="Xác nhận chốt chỉ số và phát hành hóa đơn?"
-        description="Hệ thống sẽ khóa chỉ số tháng 03/2024 và tự động tính vào hóa đơn của từng phòng."
-        footer={
-          <>
+        title="Xác nhận chốt chỉ số & Tạo hóa đơn"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <p style={{ fontSize: '13px', color: '#4B5563', margin: 0, lineHeight: 1.5 }}>
+            Bạn đang chuẩn bị chốt số điện nước kỳ <strong>{availablePeriods.find((p) => p.key === periodParam)?.label || periodParam}</strong> cho{' '}
+            <strong>{filteredReadings.length} phòng</strong>. Tổng tiền điện nước tính toán là{' '}
+            <strong>{formatVND(totalUtilityCost)}</strong>.
+          </p>
+          <div style={{ padding: '12px', backgroundColor: '#FEF3C7', borderRadius: '6px', border: '1px solid #FDE68A', fontSize: '12px', color: '#92400E' }}>
+            ⚠️ Sau khi phát hành, hóa đơn sẽ được gửi đến cổng cư dân của khách thuê. Dữ liệu chỉ số các tháng trước sẽ được lưu trữ nguyên vẹn trong lịch sử.
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
             <button
               type="button"
               className="rf-btn rf-btn-secondary"
@@ -437,16 +468,56 @@ export const MeterReadingsPage: React.FC = () => {
               className="rf-btn rf-btn-primary"
               onClick={handleConfirmFinalize}
             >
-              Xác nhận & Chuyển sang Hóa đơn
+              Xác nhận chốt & Xem hóa đơn
             </button>
-          </>
-        }
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '13px' }}>
-          <div>• Tổng số phòng chốt số: <strong>{readings.length} phòng</strong></div>
-          <div>• Tổng tiền dịch vụ điện nước: <strong style={{ color: '#00594C' }}>{formatVND(totalUtilityCost)}</strong></div>
-          <p style={{ color: '#6B7280', margin: '4px 0 0 0' }}>Sau khi chốt, bạn có thể gửi thông báo tiền phòng hàng loạt qua Zalo ZNS cho khách thuê.</p>
+          </div>
         </div>
+      </Modal>
+
+      {/* Rate Settings Modal */}
+      <Modal
+        isOpen={showRateModal}
+        onClose={() => setShowRateModal(false)}
+        title="Cài đặt đơn giá Điện & Nước"
+      >
+        <form onSubmit={handleApplyGlobalRates} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+              Đơn giá Điện (đ / kWh):
+            </label>
+            <input
+              type="number"
+              value={globalElectricRate}
+              onChange={(e) => setGlobalElectricRate(parseInt(e.target.value, 10) || 0)}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #D1D5DB' }}
+              required
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' }}>
+              Đơn giá Nước (đ / m³):
+            </label>
+            <input
+              type="number"
+              value={globalWaterRate}
+              onChange={(e) => setGlobalWaterRate(parseInt(e.target.value, 10) || 0)}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #D1D5DB' }}
+              required
+            />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '8px' }}>
+            <button
+              type="button"
+              className="rf-btn rf-btn-secondary"
+              onClick={() => setShowRateModal(false)}
+            >
+              Hủy
+            </button>
+            <button type="submit" className="rf-btn rf-btn-primary">
+              Lưu thay đổi
+            </button>
+          </div>
+        </form>
       </Modal>
     </div>
   );

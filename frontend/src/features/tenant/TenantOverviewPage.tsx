@@ -159,10 +159,10 @@ export const TenantOverviewPage: React.FC = () => {
                 <span style={{ fontSize: '12px', color: '#6B7280' }}>Mã phiếu thu: {tenantInvoice?.code}</span>
               </div>
               <Link
-                to="/tenant/invoices"
+                to={tenantInvoice ? `/tenant/invoices/${tenantInvoice.id}` : "/tenant/invoices"}
                 style={{ fontSize: '13px', fontWeight: 600, color: '#00594C', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
               >
-                <span>Xem chi tiết & thanh toán</span>
+                <span>Xem chi tiết hóa đơn</span>
                 <ArrowRight size={14} />
               </Link>
             </div>
@@ -204,7 +204,7 @@ export const TenantOverviewPage: React.FC = () => {
               <button
                 type="button"
                 className="rf-btn rf-btn-primary"
-                onClick={() => navigate('/tenant/invoices')}
+                onClick={() => navigate(tenantInvoice ? `/tenant/invoices/${tenantInvoice.id}` : '/tenant/invoices')}
                 style={{ padding: '8px 16px', fontSize: '13px' }}
               >
                 Mở hóa đơn & Quét VietQR

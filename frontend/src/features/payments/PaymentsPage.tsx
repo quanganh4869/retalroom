@@ -1,22 +1,77 @@
-import React, { useState } from 'react';
-import { Plus, CheckCircle2, Search } from 'lucide-react';
-import { mockPayments, formatVND, PaymentItem } from '@/lib/mockData';
+import React, { useState, useMemo } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import {
+  Plus,
+  CheckCircle2,
+  Search,
+  Calendar,
+  CreditCard,
+  Eye,
+} from 'lucide-react';
+import { mockPayments, mockInvoices, formatVND, PaymentItem } from '@/lib/mockData';
 import { useActionModal } from '@/components/ui/ActionModal';
 
 export const PaymentsPage: React.FC = () => {
+  const navigate = useNavigate();
   const { confirmAction } = useActionModal();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const periodParam = searchParams.get('period') || 'all';
+  const methodParam = searchParams.get('method') || 'all';
+  const searchParam = searchParams.get('q') || '';
+
   const [payments, setPayments] = useState<PaymentItem[]>(mockPayments);
   const [selectedInvoiceKey, setSelectedInvoiceKey] = useState('inv-2');
   const [paymentAmount, setPaymentAmount] = useState('4,900,000');
   const [paymentMethod, setPaymentMethod] = useState<'Chuyển khoản' | 'Tiền mặt' | 'VNPay' | 'MoMo'>('Chuyển khoản');
   const [paymentNote, setPaymentNote] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+
+  // Available unique periods
+  const availablePeriods = useMemo(() => {
+    const set = new Set<string>();
+    mockPayments.forEach((p) => {
+      if (p.period) set.add(p.period);
+    });
+    return Array.from(set);
+  }, []);
+
+  const updateFilters = (updates: Record<string, string>) => {
+    const current = Object.fromEntries(searchParams.entries());
+    const next = { ...current, ...updates };
+    Object.keys(next).forEach((k) => {
+      if (next[k] === 'all' || next[k] === '') {
+        delete next[k];
+      }
+    });
+    setSearchParams(next);
+  };
+
+  const filteredPayments = useMemo(() => {
+    return payments.filter((p) => {
+      if (periodParam !== 'all' && p.period && p.period !== periodParam) {
+        return false;
+      }
+      if (methodParam !== 'all' && p.method !== methodParam) {
+        return false;
+      }
+      if (searchParam) {
+        const q = searchParam.toLowerCase();
+        const matchCode = p.code.toLowerCase().includes(q);
+        const matchRoom = p.roomCode.toLowerCase().includes(q);
+        const matchTenant = p.tenantName.toLowerCase().includes(q);
+        const matchInv = p.invoiceCode.toLowerCase().includes(q);
+        if (!matchCode && !matchRoom && !matchTenant && !matchInv) return false;
+      }
+      return true;
+    });
+  }, [payments, periodParam, methodParam, searchParam]);
 
   const handleRecordPayment = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanAmount = parseInt(paymentAmount.replace(/\D/g, ''), 10) || 4900000;
-    const roomCode = selectedInvoiceKey === 'inv-2' ? 'P.201' : selectedInvoiceKey === 'inv-3' ? 'P.301' : 'P.302';
-    const tenantName = selectedInvoiceKey === 'inv-2' ? 'Nguyễn Văn Đạt' : selectedInvoiceKey === 'inv-3' ? 'Võ Thanh Tùng' : 'Bùi Lan Anh';
+    const inv = mockInvoices.find((i) => i.id === selectedInvoiceKey) || mockInvoices[0];
+    const roomCode = inv ? inv.roomCode : 'P.101';
+    const tenantName = inv ? inv.tenantName : 'Lê Hoàng Nam';
 
     confirmAction({
       title: 'Xác nhận gạch nợ thanh toán',
@@ -29,13 +84,17 @@ export const PaymentsPage: React.FC = () => {
         const newPayment: PaymentItem = {
           id: `pay-${Date.now()}`,
           code: `PAY-2403-0${payments.length + 1}`,
-          invoiceCode: selectedInvoiceKey === 'inv-2' ? 'INV-2403-02' : selectedInvoiceKey === 'inv-3' ? 'INV-2403-03' : 'INV-2403-04',
+          invoiceCode: inv ? inv.code : 'INV-2403-001',
           roomCode,
+          propertyId: (inv && inv.propertyId) || '1',
+          propertyName: (inv && inv.propertyName) || 'Nhà trọ Hưng Phát',
           tenantName,
           amount: cleanAmount,
           method: paymentMethod,
-          date: new Date().toLocaleDateString('vi-VN'),
-          recordedBy: 'Chủ nhà',
+          date: new Date().toLocaleDateString('vi-VN') + ' 10:00',
+          period: (inv && inv.period) || 'Tháng 03/2024',
+          status: 'confirmed',
+          recordedBy: 'Nguyễn An (Chủ nhà)',
           note: paymentNote || 'Gạch nợ đối soát',
         };
         setPayments([newPayment, ...payments]);
@@ -44,22 +103,18 @@ export const PaymentsPage: React.FC = () => {
     });
   };
 
-  const filteredPayments = payments.filter((p) =>
-    p.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.roomCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.tenantName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const totalCollectedInView = filteredPayments.reduce((sum, p) => sum + p.amount, 0);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1400px', margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1440px', margin: '0 auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', margin: 0 }}>
-            Thanh toán & Quản lý công nợ
+            Lịch sử Giao dịch & Thanh toán
           </h1>
           <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 0 0' }}>
-            Theo dõi dòng tiền vào, lịch sử thanh toán hóa đơn và quản lý công nợ người thuê
+            Theo dõi dòng tiền thu, lịch sử gạch nợ theo từng kỳ tháng và tra cứu giao dịch chi tiết
           </p>
         </div>
         <button
@@ -71,232 +126,265 @@ export const PaymentsPage: React.FC = () => {
           }}
         >
           <Plus size={15} />
-          <span>Ghi nhận thanh toán</span>
+          <span>Ghi nhận thanh toán mới</span>
         </button>
       </div>
 
-      {/* Debt Aging Analysis Bar (Screen 5.png) */}
-      <div className="rf-card" style={{ padding: '16px 20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <div>
-            <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#111827', margin: 0 }}>
-              Phân tích tuổi nợ (Debt Aging)
-            </h3>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>
-              Tổng công nợ chưa thu: <strong style={{ color: '#C5221F' }}>{formatVND(14920000)}</strong>
-            </span>
+      {/* Filter Toolbar: Month, Method, Search */}
+      <div
+        className="rf-card"
+        style={{
+          padding: '16px 20px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Calendar size={16} color="#00594C" />
+            <span style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Kỳ thu:</span>
+            <select
+              value={periodParam}
+              onChange={(e) => updateFilters({ period: e.target.value })}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: '1px solid #D1D5DB',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: '#111827',
+                backgroundColor: '#F9FAFB',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="all">Tất cả các tháng ({payments.length} GD)</option>
+              {availablePeriods.map((period) => (
+                <option key={period} value={period}>
+                  {period}
+                </option>
+              ))}
+            </select>
           </div>
-          <span style={{ fontSize: '12px', color: '#00594C', fontWeight: 500 }}>3 phòng đang còn nợ</span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <CreditCard size={16} color="#6B7280" />
+            <span style={{ fontSize: '13px', color: '#374151' }}>Phương thức:</span>
+            <select
+              value={methodParam}
+              onChange={(e) => updateFilters({ method: e.target.value })}
+              style={{
+                padding: '6px 12px',
+                borderRadius: '6px',
+                border: '1px solid #D1D5DB',
+                fontSize: '13px',
+                backgroundColor: '#FFFFFF',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="all">Tất cả hình thức</option>
+              <option value="Chuyển khoản">Chuyển khoản</option>
+              <option value="Tiền mặt">Tiền mặt</option>
+              <option value="VNPay">VNPay</option>
+              <option value="MoMo">MoMo</option>
+            </select>
+          </div>
         </div>
 
-        {/* Visual aging bar */}
-        <div style={{ display: 'flex', height: '14px', borderRadius: '6px', overflow: 'hidden', gap: '2px', backgroundColor: '#F3F4F6' }}>
-          <div style={{ width: '40%', backgroundColor: '#FEF7E0' }} title="Quá hạn 1-7 ngày: 4.900.000đ" />
-          <div style={{ width: '35%', backgroundColor: '#FCE8E6' }} title="Quá hạn 8-15 ngày: 4.520.000đ" />
-          <div style={{ width: '25%', backgroundColor: '#FEE2E2' }} title="Quá hạn > 15 ngày: 5.500.000đ" />
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', fontSize: '11px', color: '#6B7280' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#FEF7E0' }} />
-            1 - 7 ngày: 4.900.000đ (P.201)
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#FCE8E6' }} />
-            8 - 15 ngày: 4.520.000đ (P.301)
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#FEE2E2' }} />
-            &gt; 15 ngày: 5.500.000đ (P.302)
-          </span>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', minWidth: '240px' }}>
+          <Search size={15} color="#9CA3AF" style={{ position: 'absolute', left: '10px' }} />
+          <input
+            type="text"
+            placeholder="Tìm mã GD, mã HĐ, tên khách..."
+            value={searchParam}
+            onChange={(e) => updateFilters({ q: e.target.value })}
+            style={{
+              width: '100%',
+              padding: '6px 12px 6px 32px',
+              borderRadius: '6px',
+              border: '1px solid #D1D5DB',
+              fontSize: '13px',
+              outline: 'none',
+            }}
+          />
         </div>
       </div>
 
-      {/* 2-Column: Transaction list & Quick Record Form */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '20px' }}>
-        {/* Transaction History Table */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              backgroundColor: '#FFFFFF',
-              padding: '10px 16px',
-              borderRadius: '8px',
-              border: '1px solid #E5E7EB',
-            }}
-          >
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <Search size={14} color="#9CA3AF" style={{ position: 'absolute', left: '10px' }} />
-              <input
-                type="text"
-                placeholder="Tìm mã thanh toán, tên khách..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  padding: '5px 10px 5px 30px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                  fontSize: '12px',
-                  width: '240px',
-                }}
-              />
-            </div>
-            <div style={{ fontSize: '12px', color: '#6B7280' }}>
-              Tổng thu tuần này: <strong style={{ color: '#137333' }}>{formatVND(13780000)}</strong>
-            </div>
+      {/* KPI Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+        <div className="rf-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', color: '#6B7280' }}>Tổng thu trong bộ lọc</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, color: '#137333', marginTop: '6px' }}>
+            {formatVND(totalCollectedInView)}
           </div>
-
-          <div className="rf-card" style={{ padding: 0, overflow: 'hidden' }}>
-            <table className="rf-table">
-              <thead>
-                <tr>
-                  <th>Mã giao dịch</th>
-                  <th>Phòng / Khách thanh toán</th>
-                  <th>Hóa đơn gạch nợ</th>
-                  <th>Số tiền</th>
-                  <th>Phương thức</th>
-                  <th>Thời gian ghi nhận</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPayments.map((p) => (
-                  <tr key={p.id}>
-                    <td style={{ fontWeight: 600, color: '#00594C' }}>{p.code}</td>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{p.roomCode}</div>
-                      <div style={{ fontSize: '11px', color: '#6B7280' }}>{p.tenantName}</div>
-                    </td>
-                    <td>
-                      <span style={{ fontSize: '12px', color: '#4B5563' }}>{p.invoiceCode || 'INV-2403-02'}</span>
-                    </td>
-                    <td style={{ fontWeight: 700, color: '#137333', fontSize: '14px' }}>
-                      +{formatVND(p.amount)}
-                    </td>
-                    <td>
-                      <span className="rf-badge rf-badge-neutral">{p.method}</span>
-                    </td>
-                    <td>
-                      <div style={{ fontSize: '12px' }}>{p.date}</div>
-                      <div style={{ fontSize: '10px', color: '#9CA3AF' }}>Bởi {p.recordedBy || 'Chủ nhà'}</div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '4px' }}>
+            {filteredPayments.length} giao dịch đã hoàn tất
           </div>
         </div>
 
-        {/* Ghi nhận thanh toán Form Card */}
-        <form id="payment-record-form" onSubmit={handleRecordPayment} className="rf-card" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <div style={{ borderBottom: '1px solid #E5E7EB', paddingBottom: '10px' }}>
+        <div className="rf-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', color: '#6B7280' }}>Kỳ giao dịch</div>
+          <div style={{ fontSize: '18px', fontWeight: 700, color: '#00594C', marginTop: '6px' }}>
+            {periodParam === 'all' ? 'Toàn bộ lịch sử' : periodParam}
+          </div>
+          <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '4px' }}>
+            Dữ liệu ghi sổ tiền vào tài khoản
+          </div>
+        </div>
+
+        <div className="rf-card" style={{ padding: '16px 20px' }}>
+          <div style={{ fontSize: '12px', color: '#6B7280' }}>Hình thức chủ đạo</div>
+          <div style={{ fontSize: '18px', fontWeight: 700, color: '#1E40AF', marginTop: '6px' }}>
+            VietQR / Chuyển khoản (85%)
+          </div>
+          <div style={{ fontSize: '11px', color: '#1E40AF', marginTop: '4px' }}>
+            Tự động thông báo email cho chủ trọ
+          </div>
+        </div>
+      </div>
+
+      {/* Main Grid: Payments Table & Form */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '20px' }}>
+        {/* Table of Payments */}
+        <div className="rf-card" style={{ padding: 0, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: 0 }}>
-              Ghi nhận thanh toán nhanh
+              Nhật ký giao dịch ({filteredPayments.length})
             </h3>
-            <p style={{ fontSize: '11px', color: '#6B7280', margin: '2px 0 0 0' }}>
-              Xác nhận tiền về và tự động gạch nợ hóa đơn tương ứng
-            </p>
+            <span style={{ fontSize: '12px', color: '#6B7280' }}>Mới nhất xếp trước</span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12px' }}>
+          <table className="rf-table">
+            <thead>
+              <tr>
+                <th>Mã GD</th>
+                <th>Hóa đơn / Kỳ</th>
+                <th>Phòng & Khách</th>
+                <th>Số tiền thu</th>
+                <th>Phương thức</th>
+                <th>Thời gian</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredPayments.map((p) => (
+                <tr key={p.id}>
+                  <td>
+                    <strong style={{ color: '#00594C' }}>{p.code}</strong>
+                  </td>
+                  <td>
+                    <Link
+                      to={`/invoices`}
+                      style={{ fontWeight: 600, color: '#2563EB', textDecoration: 'none' }}
+                    >
+                      {p.invoiceCode}
+                    </Link>
+                    <div style={{ fontSize: '11px', color: '#6B7280' }}>{p.period || 'Tháng 03/2024'}</div>
+                  </td>
+                  <td>
+                    <div style={{ fontWeight: 600 }}>{p.roomCode}</div>
+                    <div style={{ fontSize: '11px', color: '#6B7280' }}>{p.tenantName}</div>
+                  </td>
+                  <td>
+                    <strong style={{ color: '#137333' }}>{formatVND(p.amount)}</strong>
+                  </td>
+                  <td>
+                    <span className="rf-badge rf-badge-active">{p.method}</span>
+                  </td>
+                  <td style={{ fontSize: '12px', color: '#6B7280' }}>{p.date}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className="rf-btn rf-btn-secondary"
+                      style={{ padding: '4px 8px', fontSize: '11px' }}
+                      onClick={() => navigate(`/landlord/payments/${p.id}`)}
+                    >
+                      <Eye size={12} /> Chi tiết
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Quick Record Form */}
+        <div id="payment-record-form" className="rf-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px', height: 'fit-content' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0 }}>
+            Ghi nhận phiếu thu tiền mặt / ngoài hệ thống
+          </h3>
+          <p style={{ fontSize: '12px', color: '#6B7280', margin: 0 }}>
+            Dành cho trường hợp khách nộp tiền mặt trực tiếp hoặc chuyển khoản không qua QR
+          </p>
+
+          <form onSubmit={handleRecordPayment} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div>
-              <label style={{ display: 'block', fontWeight: 500, color: '#374151', marginBottom: '4px' }}>
-                Chọn hóa đơn cần gạch nợ *
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+                Hóa đơn cần gạch nợ:
               </label>
               <select
                 value={selectedInvoiceKey}
                 onChange={(e) => setSelectedInvoiceKey(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '7px 10px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                  fontSize: '12px',
-                  backgroundColor: '#FFFFFF',
-                }}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '13px' }}
               >
-                <option value="inv-2">INV-2403-02 - P.201 - Nguyễn Văn Đạt (Còn nợ: 4.900.000đ)</option>
-                <option value="inv-3">INV-2403-03 - P.301 - Võ Thanh Tùng (Còn nợ: 4.520.000đ)</option>
-                <option value="inv-4">INV-2403-04 - P.302 - Bùi Lan Anh (Còn nợ: 5.530.000đ)</option>
+                {mockInvoices.filter((i) => i.status !== 'paid').map((inv) => (
+                  <option key={inv.id} value={inv.id}>
+                    {inv.code} — {inv.roomCode} ({inv.tenantName}) — Nợ {formatVND(inv.debtAmount)}
+                  </option>
+                ))}
               </select>
             </div>
 
             <div>
-              <label style={{ display: 'block', fontWeight: 500, color: '#374151', marginBottom: '4px' }}>
-                Số tiền thực nhận (VNĐ) *
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+                Số tiền thực thu (VNĐ):
               </label>
               <input
                 type="text"
                 value={paymentAmount}
                 onChange={(e) => setPaymentAmount(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '7px 10px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                  color: '#137333',
-                }}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '13px', fontWeight: 600 }}
+                required
               />
             </div>
 
             <div>
-              <label style={{ display: 'block', fontWeight: 500, color: '#374151', marginBottom: '4px' }}>
-                Phương thức thanh toán *
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+                Phương thức nhận tiền:
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                {(['Chuyển khoản', 'Tiền mặt', 'VNPay', 'MoMo'] as const).map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setPaymentMethod(m)}
-                    style={{
-                      padding: '7px',
-                      borderRadius: '5px',
-                      border: paymentMethod === m ? '1px solid #00594C' : '1px solid #E5E7EB',
-                      backgroundColor: paymentMethod === m ? '#E6F0EE' : '#FFFFFF',
-                      color: paymentMethod === m ? '#00594C' : '#374151',
-                      fontSize: '11px',
-                      fontWeight: paymentMethod === m ? 600 : 400,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {m}
-                  </button>
-                ))}
-              </div>
+              <select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value as any)}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '13px' }}
+              >
+                <option value="Chuyển khoản">Chuyển khoản ngân hàng</option>
+                <option value="Tiền mặt">Tiền mặt tại nhà</option>
+                <option value="VNPay">VNPay QR</option>
+                <option value="MoMo">Ví MoMo</option>
+              </select>
             </div>
 
             <div>
-              <label style={{ display: 'block', fontWeight: 500, color: '#374151', marginBottom: '4px' }}>
-                Ghi chú nội dung chuyển tiền
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '4px' }}>
+                Ghi chú đối soát:
               </label>
-              <textarea
-                rows={2}
-                placeholder="VD: Khách ck qua Techcombank số đuôi ...98"
+              <input
+                type="text"
+                placeholder="VD: Thu tiền mặt tại quầy lễ tân"
                 value={paymentNote}
                 onChange={(e) => setPaymentNote(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '6px 10px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                  fontSize: '12px',
-                  resize: 'none',
-                }}
+                style={{ width: '100%', padding: '8px 10px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '13px' }}
               />
             </div>
-          </div>
 
-          <div style={{ marginTop: 'auto', paddingTop: '10px' }}>
-            <button type="submit" className="rf-btn rf-btn-primary" style={{ width: '100%' }}>
-              <CheckCircle2 size={15} />
-              Xác nhận & Gạch nợ hóa đơn
+            <button type="submit" className="rf-btn rf-btn-primary" style={{ marginTop: '6px' }}>
+              <CheckCircle2 size={14} />
+              <span>Ghi nhận & Khấu trừ công nợ</span>
             </button>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   );
