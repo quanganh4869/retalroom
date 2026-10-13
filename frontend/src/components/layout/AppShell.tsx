@@ -16,7 +16,6 @@ import {
   Search,
   ShieldAlert,
   LogOut,
-  ArrowLeft,
   LifeBuoy,
   Layers,
   Activity,
@@ -339,41 +338,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             flexShrink: 0,
           }}
         >
-          {/* Back Button & Dynamic Breadcrumbs */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px' }}>
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 10px',
-                fontSize: '12px',
-                fontWeight: 500,
-                color: '#374151',
-                backgroundColor: '#F3F4F6',
-                border: '1px solid #E5E7EB',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                transition: 'all 0.15s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#E5E7EB';
-                e.currentTarget.style.color = '#111827';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#F3F4F6';
-                e.currentTarget.style.color = '#374151';
-              }}
-              title="Quay lại trang trước"
-            >
-              <ArrowLeft size={14} />
-              <span>Quay lại</span>
-            </button>
-
-            <span style={{ color: '#D1D5DB' }}>|</span>
-
+          {/* Dynamic Breadcrumbs */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
             <span style={{ color: '#6B7280' }}>RentFlow</span>
             <span style={{ color: '#9CA3AF' }}>/</span>
             <span style={{ color: '#4B5563' }}>
