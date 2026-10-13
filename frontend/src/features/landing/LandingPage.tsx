@@ -105,7 +105,16 @@ export const LandingPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#FBFBF9', color: '#111827', display: 'flex', flexDirection: 'column' }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        backgroundColor: '#FBFBF9',
+        color: '#111827',
+        fontFamily: 'var(--font-landing)',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       {/* 1. STICKY HEADER */}
       <header
         className={isScrolled ? 'rf-header-scrolled' : ''}
