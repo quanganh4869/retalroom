@@ -251,38 +251,38 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             if (isSuperAdmin) {
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                  <div style={{ padding: '8px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#DC2626', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    A. Tổng quan
+                  <div style={{ padding: '8px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Tổng quan
                   </div>
                   {adminA_OverviewNav.map(renderNavLink)}
 
-                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
-                    B. Người dùng & Truy cập
+                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Người dùng & Truy cập
                   </div>
                   {adminB_UsersAccessNav.map(renderNavLink)}
 
-                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
-                    C. Thương mại & Thuê bao
+                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Thương mại & Thuê bao
                   </div>
                   {adminC_CommercialNav.map(renderNavLink)}
 
-                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
-                    D. Chăm sóc khách hàng
+                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Chăm sóc khách hàng
                   </div>
                   {adminD_CustomerOpsNav.map(renderNavLink)}
 
-                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
-                    E. Bảo mật & Kiểm toán
+                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Bảo mật & Kiểm toán
                   </div>
                   {adminE_SecurityAuditNav.map(renderNavLink)}
 
-                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
-                    F. Vận hành hệ thống
+                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Vận hành hệ thống
                   </div>
                   {adminF_SystemOpsNav.map(renderNavLink)}
 
-                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
-                    G. Cấu hình nền tảng
+                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Cấu hình nền tảng
                   </div>
                   {adminG_PlatformConfigNav.map(renderNavLink)}
                 </div>
