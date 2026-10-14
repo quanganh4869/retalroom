@@ -398,6 +398,10 @@ html {
   scroll-behavior: smooth;
 }
 
+section[id] {
+  scroll-margin-top: 80px;
+}
+
 .rf-img-container {
   overflow: hidden;
   position: relative;
@@ -563,16 +567,53 @@ html {
 }
 
 /* Responsive Grid Tweaks */
+.rf-hero-badges-wrapper {
+  position: absolute;
+  inset-inline: 0;
+  bottom: -24px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 clamp(12px, 3vw, 36px);
+  pointer-events: none;
+}
+
+.rf-hero-floating-card {
+  pointer-events: auto;
+  border-radius: 12px;
+  padding: 14px 18px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 250px;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 768px) {
+  .rf-hero-badges-wrapper {
+    position: static;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0;
+  }
+  .rf-hero-floating-card {
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+
 @media (max-width: 900px) {
   .rf-feature-grid {
     grid-template-columns: 1fr !important;
     gap: 32px !important;
   }
-  .rf-feature-grid > div:nth-child(1) {
-    order: 2 !important;
-  }
-  .rf-feature-grid > div:nth-child(2) {
+  .rf-feature-text {
     order: 1 !important;
+  }
+  .rf-feature-media {
+    order: 2 !important;
   }
   .rf-gallery-grid {
     height: auto !important;
