@@ -313,12 +313,16 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
       {/* Main Content Area */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden' }}>
-        {/* Top Header */}
+        {/* Top Header - Fixed & Sticky on scroll */}
         <header
           style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 30,
             height: '56px',
             backgroundColor: '#FFFFFF',
             borderBottom: '1px solid #E5E7EB',
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
