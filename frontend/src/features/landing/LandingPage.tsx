@@ -14,6 +14,10 @@ import {
   Sparkles,
   Menu,
   X,
+  Phone,
+  Mail,
+  MapPin,
+  ArrowUp,
 } from 'lucide-react';
 import { RentFlowLogo } from '@/components/ui/RentFlowLogo';
 
@@ -1120,52 +1124,239 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* 11. FINAL CTA SECTION — IMAGE-BACKED & COMPELLING */}
-      <section style={{ padding: '80px 24px 90px 24px', backgroundColor: '#00594C', color: '#FFFFFF', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-        <div className="rf-reveal" style={{ maxWidth: '800px', margin: '0 auto', position: 'relative', zIndex: 2 }}>
-          <h2 style={{ fontSize: 'clamp(28px, 4vw, 38px)', fontWeight: 800, margin: '0 0 16px 0', letterSpacing: '-0.02em', lineHeight: 1.25 }}>
-            Sẵn sàng chuyển đổi việc quản lý nhà trọ ngay hôm nay?
-          </h2>
-          <p style={{ fontSize: '16px', opacity: 0.9, margin: '0 0 34px 0', lineHeight: 1.65, maxWidth: '640px', marginLeft: 'auto', marginRight: 'auto' }}>
-            Bắt đầu dùng thử miễn phí 14 ngày. Không cần thẻ tín dụng, sẵn sàng tạo cơ sở đầu tiên chỉ sau 2 phút đăng ký.
-          </p>
-          <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button
-              type="button"
-              className="rf-btn"
-              style={{ backgroundColor: '#FFFFFF', color: '#00594C', fontWeight: 700, padding: '13px 30px', fontSize: '15px' }}
-              onClick={() => navigate('/auth/register')}
-            >
-              <span>Đăng ký tài khoản chủ nhà</span>
-              <ArrowRight size={16} />
-            </button>
-            <button
-              type="button"
-              className="rf-btn"
-              style={{ backgroundColor: 'transparent', border: '1px solid rgba(255,255,255,0.4)', color: '#FFFFFF', fontWeight: 600, padding: '13px 24px', fontSize: '15px' }}
-              onClick={() => navigate('/auth/roles')}
-            >
-              Cổng đăng nhập các vai trò
-            </button>
-          </div>
-        </div>
-      </section>
+      {/* FOOTER */}
+      <footer
+        style={{
+          backgroundColor: '#002B24',
+          color: '#E2E8F0',
+          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          paddingTop: '64px',
+          paddingBottom: '36px',
+        }}
+      >
+        <div style={{ maxWidth: '1240px', margin: '0 auto', padding: '0 24px' }}>
+          {/* Top Footer Banner: Brand Mission, Contact & Quick Action */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              flexWrap: 'wrap',
+              gap: '32px',
+              paddingBottom: '48px',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            <div style={{ maxWidth: '460px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <RentFlowLogo size={32} textColor="#FFFFFF" />
+                <span
+                  style={{
+                    backgroundColor: 'rgba(52, 211, 153, 0.15)',
+                    color: '#34D399',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  ENTERPRISE PLATFORM
+                </span>
+              </div>
+              <p style={{ fontSize: '14px', color: '#94A3B8', lineHeight: 1.65, margin: '0 0 20px 0' }}>
+                Nền tảng quản lý và vận hành thông minh dành cho chủ nhà trọ, căn hộ mini, serviced apartment và hệ thống bất động sản cho thuê. Tự động hóa hóa đơn, chốt điện nước, quản lý hợp đồng và theo dõi doanh thu minh bạch.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px', color: '#CBD5E1' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Phone size={15} color="#34D399" />
+                  <span>Hotline hỗ trợ: <strong style={{ color: '#FFFFFF' }}>1900 8866</strong> (8:00 – 21:00)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <Mail size={15} color="#34D399" />
+                  <span>Email: <strong style={{ color: '#FFFFFF' }}>hotro@rentflow.vn</strong></span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <MapPin size={15} color="#34D399" />
+                  <span>Văn phòng: Tòa nhà TechHub, Cầu Giấy, Hà Nội</span>
+                </div>
+              </div>
+            </div>
 
-      {/* 12. FOOTER */}
-      <footer style={{ padding: '36px 32px 28px 32px', borderTop: '1px solid #E5E7EB', backgroundColor: '#FBFBF9', fontSize: '12px', color: '#6B7280' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <RentFlowLogo size={24} textColor="#4B5563" />
-            <span>© 2026 RentFlow Platform. Nền tảng quản lý vận hành nhà trọ & căn hộ thế hệ mới.</span>
+            {/* Quick Action Box */}
+            <div
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                borderRadius: '12px',
+                padding: '24px 28px',
+                maxWidth: '420px',
+                width: '100%',
+              }}
+            >
+              <h4 style={{ fontSize: '16px', fontWeight: 700, color: '#FFFFFF', margin: '0 0 8px 0' }}>
+                Bắt đầu đơn giản hóa quản lý ngay
+              </h4>
+              <p style={{ fontSize: '13px', color: '#94A3B8', margin: '0 0 18px 0', lineHeight: 1.55 }}>
+                Tạo cơ sở đầu tiên và trải nghiệm trọn bộ tính năng chỉ sau 2 phút đăng ký.
+              </p>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="rf-btn"
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    color: '#00594C',
+                    fontWeight: 700,
+                    padding: '10px 18px',
+                    fontSize: '13px',
+                    border: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                  onClick={() => navigate('/auth/register')}
+                >
+                  <span>Đăng ký dùng thử</span>
+                  <ArrowRight size={14} />
+                </button>
+                <button
+                  type="button"
+                  className="rf-btn"
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    color: '#FFFFFF',
+                    fontWeight: 600,
+                    padding: '10px 16px',
+                    fontSize: '13px',
+                  }}
+                  onClick={() => navigate('/auth/roles')}
+                >
+                  Cổng đăng nhập
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-            <a href="#overview" style={{ color: '#6B7280', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#00594C')} onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}>Tổng quan</a>
-            <a href="#features" style={{ color: '#6B7280', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#00594C')} onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}>Tính năng</a>
-            <a href="#workflow" style={{ color: '#6B7280', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#00594C')} onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}>Quy trình</a>
-            <a href="#showcase" style={{ color: '#6B7280', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#00594C')} onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}>Giao diện</a>
-            <a href="#gallery" style={{ color: '#6B7280', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#00594C')} onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}>Không gian</a>
-            <a href="#faq" style={{ color: '#6B7280', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#00594C')} onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}>Hỏi đáp</a>
+          {/* Navigation Links Grid (4 Columns) */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '36px',
+              padding: '48px 0',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            {/* Col 1: Giải pháp & Tính năng */}
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>
+                Giải pháp & Tính năng
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px' }}>
+                <li><a href="#features" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Sơ đồ trạng thái phòng</a></li>
+                <li><a href="#features" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Ghi số điện nước & Cảnh báo lệch</a></li>
+                <li><a href="#features" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Phát hành hóa đơn & Mã QR</a></li>
+                <li><a href="#workflow" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Hợp đồng & Sổ quỹ tiền cọc</a></li>
+                <li><a href="#features" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Tiếp nhận báo hỏng & Sửa chữa</a></li>
+                <li><a href="#showcase" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Khám phá giao diện thực tế</a></li>
+              </ul>
+            </div>
+
+            {/* Col 2: Phân quyền & Mô hình */}
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>
+                Đối tượng phục vụ
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px' }}>
+                <li><a href="#overview" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Nhà trọ & Dãy phòng cho thuê</a></li>
+                <li><a href="#gallery" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Căn hộ mini & Serviced Apartments</a></li>
+                <li><a href="#gallery" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Ký túc xá & Mô hình Co-living</a></li>
+                <li><button type="button" onClick={() => navigate('/tenant/dashboard')} style={{ background: 'none', border: 'none', padding: 0, color: '#94A3B8', cursor: 'pointer', textAlign: 'left', font: 'inherit', fontSize: '13.5px' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Cổng cư dân (Tenant Portal)</button></li>
+                <li><button type="button" onClick={() => navigate('/admin')} style={{ background: 'none', border: 'none', padding: 0, color: '#94A3B8', cursor: 'pointer', textAlign: 'left', font: 'inherit', fontSize: '13.5px' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Platform Admin Control Center</button></li>
+              </ul>
+            </div>
+
+            {/* Col 3: Hướng dẫn & Hỗ trợ */}
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>
+                Hỗ trợ & Hướng dẫn
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px' }}>
+                <li><a href="#workflow" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Quy trình khởi tạo 4 bước</a></li>
+                <li><a href="#faq" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Câu hỏi thường gặp (FAQ)</a></li>
+                <li><span style={{ color: '#64748B' }}>Biểu mẫu bàn giao phòng chuẩn</span></li>
+                <li><span style={{ color: '#64748B' }}>Chính sách tính tiền điện lũy tiến</span></li>
+                <li><span style={{ color: '#64748B' }}>Tích hợp Zalo Notification Service</span></li>
+              </ul>
+            </div>
+
+            {/* Col 4: Cam kết & Bảo mật */}
+            <div>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: '#FFFFFF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>
+                Bảo mật & Pháp lý
+              </div>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px' }}>
+                <li><span style={{ color: '#94A3B8' }}>Điều khoản sử dụng dịch vụ</span></li>
+                <li><span style={{ color: '#94A3B8' }}>Chính sách bảo mật thông tin</span></li>
+                <li><span style={{ color: '#94A3B8' }}>Mã hóa dữ liệu SSL 256-bit</span></li>
+                <li><span style={{ color: '#94A3B8' }}>Sao lưu tự động nhiều vùng</span></li>
+                <li>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#34D399', fontSize: '12.5px', marginTop: '4px' }}>
+                    <ShieldCheck size={16} />
+                    <span>Cam kết bảo mật dữ liệu khách thuê</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Bar (Sub-footer) */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '16px',
+              paddingTop: '28px',
+              fontSize: '12.5px',
+              color: '#64748B',
+            }}
+          >
+            <div>
+              © 2026 RentFlow SaaS Platform. Nền tảng quản lý vận hành phòng trọ & căn hộ thế hệ mới.
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#94A3B8' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10B981', display: 'inline-block' }} />
+                <span>Hệ thống hoạt động ổn định (99.9% uptime)</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94A3B8',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '12.5px',
+                  padding: '4px 8px',
+                  borderRadius: '4px',
+                  transition: 'color 0.15s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
+              >
+                <span>Về đầu trang</span>
+                <ArrowUp size={14} />
+              </button>
+            </div>
           </div>
         </div>
       </footer>

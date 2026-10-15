@@ -36,9 +36,12 @@ describe('LandingPage Comprehensive Tests', () => {
     const loginBtn = screen.getByRole('button', { name: /^đăng nhập$/i });
     expect(loginBtn).toBeInTheDocument();
 
-    // Final CTA button
-    const finalCta = screen.getByRole('button', { name: /đăng ký tài khoản chủ nhà/i });
-    expect(finalCta).toBeInTheDocument();
+    // Footer CTA button
+    const footerCta = screen.getByRole('button', { name: /đăng ký dùng thử/i });
+    expect(footerCta).toBeInTheDocument();
+
+    // Footer contact info
+    expect(screen.getByText(/1900 8866/i)).toBeInTheDocument();
   });
 
   it('allows switching between interactive product showcase tabs', async () => {
@@ -59,7 +62,7 @@ describe('LandingPage Comprehensive Tests', () => {
     expect(screen.getByText('https://app.rentflow.vn/rooms')).toBeInTheDocument();
 
     // Click on 'Cổng cư dân' tab
-    const tenantPortalTab = screen.getByRole('button', { name: /cổng cư dân/i });
+    const tenantPortalTab = screen.getByRole('button', { name: /^cổng cư dân$/i });
     await user.click(tenantPortalTab);
     expect(screen.getByText('https://app.rentflow.vn/tenant/dashboard')).toBeInTheDocument();
   });
