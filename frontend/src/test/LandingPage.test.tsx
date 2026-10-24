@@ -3,45 +3,52 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { LandingPage } from '@/features/landing/LandingPage';
+import { AuthProvider } from '@/features/auth/AuthContext';
+import { ToastProvider } from '@/components/feedback/ToastSystem';
 
 describe('LandingPage Comprehensive Tests', () => {
   const renderLandingPage = () => {
     return render(
-      <MemoryRouter initialEntries={['/']}>
-        <LandingPage />
-      </MemoryRouter>,
+      <AuthProvider>
+        <ToastProvider>
+          <MemoryRouter initialEntries={['/']}>
+            <LandingPage />
+          </MemoryRouter>
+        </ToastProvider>
+      </AuthProvider>,
     );
   };
 
-  it('renders brand hero section, key metrics, and headlines', () => {
+  it('renders brand hero section and headlines', () => {
     renderLandingPage();
 
     // Verify main headline and description
     expect(screen.getByRole('heading', { level: 1, name: /quản lý nhà cho thuê gọn gàng hơn/i })).toBeInTheDocument();
     expect(screen.getByText(/hợp nhất quản lý danh mục phòng/i)).toBeInTheDocument();
 
-    // Verify floating operational badges
-    expect(screen.getByText(/79\.2%/i)).toBeInTheDocument();
-    expect(screen.getByText(/86\.400\.000 đ/i)).toBeInTheDocument();
+    // Verify hero apartment image
+    expect(screen.getByAltText(/căn hộ cho thuê hiện đại đầy đủ tiện nghi/i)).toBeInTheDocument();
   });
 
-  it('provides accessible primary call-to-actions linking to registration and role selection', () => {
+  it('provides accessible call-to-actions and discreet admin login modal trigger', async () => {
+    const user = userEvent.setup();
     renderLandingPage();
-
-    // Hero CTA button
-    const heroCta = screen.getByRole('button', { name: /bắt đầu quản lý/i });
-    expect(heroCta).toBeInTheDocument();
 
     // Header Login button
     const loginBtn = screen.getByRole('button', { name: /^đăng nhập$/i });
     expect(loginBtn).toBeInTheDocument();
 
-    // Footer CTA button
-    const footerCta = screen.getByRole('button', { name: /đăng ký dùng thử/i });
-    expect(footerCta).toBeInTheDocument();
-
     // Footer contact info
     expect(screen.getByText(/1900 8866/i)).toBeInTheDocument();
+
+    // Secret Admin portal via "Về đầu trang" button
+    const backToTopBtn = screen.getByRole('button', { name: /về đầu trang/i });
+    expect(backToTopBtn).toBeInTheDocument();
+
+    // Clicking it opens the admin login modal
+    await user.click(backToTopBtn);
+    expect(screen.getByRole('dialog', { name: /platform admin console/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /đăng nhập quản trị viên/i })).toBeInTheDocument();
   });
 
   it('allows switching between interactive product showcase tabs', async () => {

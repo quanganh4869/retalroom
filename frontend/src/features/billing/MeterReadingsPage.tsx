@@ -103,14 +103,35 @@ export const MeterReadingsPage: React.FC = () => {
   };
 
   const handleSaveAll = () => {
+    const invalid = allReadings.find((r) => r.currElectric < r.prevElectric || r.currWater < r.prevWater);
+    if (invalid) {
+      const isElec = invalid.currElectric < invalid.prevElectric;
+      toast.error(
+        'Chỉ số không hợp lệ',
+        `Phòng ${invalid.roomCode} có chỉ số ${isElec ? 'điện' : 'nước'} mới nhỏ hơn chỉ số cũ (${isElec ? `${invalid.currElectric} < ${invalid.prevElectric} kWh` : `${invalid.currWater} < ${invalid.prevWater} m³`}).`
+      );
+      return;
+    }
+
     setIsSaving(true);
     setTimeout(() => {
       setIsSaving(false);
-      toast.success('Đã lưu chỉ số điện nước', `Dữ liệu kỳ ${periodParam} đã được lưu an toàn.`);
+      toast.success('Đã lưu chỉ số điện nước', `Dữ liệu kỳ ${periodParam} đã được lưu an toàn. Chỉ số cũ được cố định.`);
     }, 400);
   };
 
   const handleConfirmFinalize = () => {
+    const invalid = allReadings.find((r) => r.currElectric < r.prevElectric || r.currWater < r.prevWater);
+    if (invalid) {
+      setShowConfirmModal(false);
+      const isElec = invalid.currElectric < invalid.prevElectric;
+      toast.error(
+        'Không thể chốt sổ',
+        `Phòng ${invalid.roomCode} có chỉ số ${isElec ? 'điện' : 'nước'} mới nhỏ hơn chỉ số cũ. Vui lòng kiểm tra lại.`
+      );
+      return;
+    }
+
     setShowConfirmModal(false);
     toast.success('Đã chốt kỳ điện nước!', `Kỳ ${periodParam} đã chốt. Hệ thống đã tính tiền và tạo hóa đơn.`);
     navigate(`/invoices?period=${periodParam}`);
@@ -361,7 +382,6 @@ export const MeterReadingsPage: React.FC = () => {
                 const usedElectric = Math.max(0, r.currElectric - r.prevElectric);
                 const usedWater = Math.max(0, r.currWater - r.prevWater);
                 const roomCost = usedElectric * r.electricUnitPrice + usedWater * r.waterUnitPrice;
-                const isInvalidReading = r.currElectric < r.prevElectric || r.currWater < r.prevWater;
 
                 return (
                   <tr
@@ -389,6 +409,7 @@ export const MeterReadingsPage: React.FC = () => {
                     <td onClick={(e) => e.stopPropagation()}>
                       <input
                         type="number"
+                        min={r.prevElectric}
                         value={r.currElectric}
                         onChange={(e) =>
                           handleReadingChange(r.id, 'currElectric', parseInt(e.target.value, 10) || 0)
@@ -397,10 +418,12 @@ export const MeterReadingsPage: React.FC = () => {
                           width: '80px',
                           padding: '4px 8px',
                           borderRadius: '4px',
-                          border: isInvalidReading ? '1px solid #DC2626' : '1px solid #D1D5DB',
+                          border: r.currElectric < r.prevElectric ? '2px solid #DC2626' : '1px solid #D1D5DB',
+                          backgroundColor: r.currElectric < r.prevElectric ? '#FEF2F2' : '#FFFFFF',
                           fontSize: '13px',
                           fontWeight: 600,
                         }}
+                        title={r.currElectric < r.prevElectric ? `Lỗi: Chỉ số mới phải ≥ chỉ số cũ (${r.prevElectric})` : undefined}
                       />
                     </td>
                     <td>
@@ -410,6 +433,7 @@ export const MeterReadingsPage: React.FC = () => {
                     <td onClick={(e) => e.stopPropagation()}>
                       <input
                         type="number"
+                        min={r.prevWater}
                         value={r.currWater}
                         onChange={(e) =>
                           handleReadingChange(r.id, 'currWater', parseInt(e.target.value, 10) || 0)
@@ -418,10 +442,12 @@ export const MeterReadingsPage: React.FC = () => {
                           width: '70px',
                           padding: '4px 8px',
                           borderRadius: '4px',
-                          border: isInvalidReading ? '1px solid #DC2626' : '1px solid #D1D5DB',
+                          border: r.currWater < r.prevWater ? '2px solid #DC2626' : '1px solid #D1D5DB',
+                          backgroundColor: r.currWater < r.prevWater ? '#FEF2F2' : '#FFFFFF',
                           fontSize: '13px',
                           fontWeight: 600,
                         }}
+                        title={r.currWater < r.prevWater ? `Lỗi: Chỉ số mới phải ≥ chỉ số cũ (${r.prevWater})` : undefined}
                       />
                     </td>
                     <td>

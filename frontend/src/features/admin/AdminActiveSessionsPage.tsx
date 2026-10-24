@@ -52,11 +52,7 @@ export const AdminActiveSessionsPage: React.FC = () => {
       {/* Page Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="rf-badge rf-badge-danger">BẢO MẬT & TRUY CẬP</span>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>Quản lý token & phiên làm việc trực tiếp</span>
-          </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '4px 0 2px 0' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '0 0 2px 0' }}>
             Các phiên đăng nhập đang hoạt động (Active Sessions)
           </h1>
           <p style={{ fontSize: '13px', color: '#6B7280', margin: 0 }}>

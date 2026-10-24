@@ -41,11 +41,7 @@ export const AdminIntegrationsPage: React.FC = () => {
       {/* Page Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="rf-badge rf-badge-danger">VẬN HÀNH HỆ THỐNG</span>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>Dịch vụ bên thứ ba & Đối tác tích hợp</span>
-          </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '4px 0 2px 0' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '0 0 2px 0' }}>
             Tích hợp hệ thống & Dịch vụ ngoại vi (Integrations)
           </h1>
           <p style={{ fontSize: '13px', color: '#6B7280', margin: 0 }}>

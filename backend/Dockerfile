@@ -1,39 +1,36 @@
-# Multi-stage Dockerfile for RentFlow Backend
-FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
+# ==============================================================================
+# Build stage
+# ==============================================================================
+FROM eclipse-temurin:17-jdk-alpine AS builder
+WORKDIR /workspace
 
+# Cache Maven wrapper and dependencies
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
+
+# Build application
+COPY src/ src/
+RUN ./mvnw clean package -DskipTests -B
+
+# ==============================================================================
+# Runtime stage
+# ==============================================================================
+FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-# Enable bytecode compilation
-ENV UV_COMPILE_BYTECODE=1
-ENV UV_LINK_MODE=copy
+# Create non-root user for security
+RUN addgroup -S rentflow && adduser -S rentflow -G rentflow
+USER rentflow:rentflow
 
-# Install dependencies first for efficient layer caching
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
+COPY --from=builder /workspace/target/*.jar app.jar
 
-# Copy project source and install project
-COPY README.md ./
-COPY src/ ./src/
-COPY alembic/ ./alembic/
-COPY alembic.ini ./
-RUN uv sync --frozen --no-dev
+ENV SERVER_PORT=8080
+ENV SPRING_PROFILES_ACTIVE=prod
 
-# Final runtime stage
-FROM python:3.13-slim-bookworm AS runner
+EXPOSE 8080
 
-WORKDIR /app
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/api/v1/health/live || exit 1
 
-# Run as non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
-
-ENV PATH="/app/.venv/bin:$PATH"
-ENV PYTHONUNBUFFERED=1
-
-COPY --from=builder /app/.venv /app/.venv
-COPY --from=builder /app /app
-
-USER appuser
-
-EXPOSE 8000
-
-CMD ["uvicorn", "rentflow_backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]

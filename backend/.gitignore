@@ -1,12 +1,33 @@
-__pycache__/
-*.py[cod]
-.venv/
-venv/
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradletask/
+
+### Visual Studio Code ###
+.vscode/
+
+### Environment & Secrets ###
 .env
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
-htmlcov/
-.coverage
-*.db
-*.sqlite
+*.local

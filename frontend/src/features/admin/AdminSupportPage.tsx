@@ -81,11 +81,7 @@ export const AdminSupportPage: React.FC = () => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="rf-badge rf-badge-danger">Customer Support Desk</span>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>Tiếp nhận & xử lý sự cố người dùng</span>
-          </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '4px 0 0 0' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: 0 }}>
             Trung tâm hỗ trợ CSKH nền tảng
           </h1>
         </div>

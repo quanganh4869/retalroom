@@ -34,13 +34,25 @@ export const Button: React.FC<ButtonProps> = ({
   };
 
   const variantStyles: Record<string, React.CSSProperties> = {
-    primary: { backgroundColor: 'var(--primary)', color: '#fff' },
-    secondary: { backgroundColor: '#f1f5f9', color: 'var(--text-primary)', borderColor: '#cbd5e1' },
-    danger: { backgroundColor: 'var(--danger)', color: '#fff' },
+    primary: {
+      backgroundColor: 'var(--primary, #00594C)',
+      color: '#ffffff',
+      borderColor: 'var(--primary, #00594C)',
+    },
+    secondary: {
+      backgroundColor: '#f1f5f9',
+      color: 'var(--text-primary, #111827)',
+      borderColor: '#cbd5e1',
+    },
+    danger: {
+      backgroundColor: 'var(--danger, #DC2626)',
+      color: '#ffffff',
+      borderColor: 'var(--danger, #DC2626)',
+    },
     outline: {
       backgroundColor: 'transparent',
-      borderColor: 'var(--primary)',
-      color: 'var(--primary)',
+      borderColor: 'var(--primary, #00594C)',
+      color: 'var(--primary, #00594C)',
     },
   };
 

@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Building2, MessageSquare, DoorOpen } from 'lucide-react';
-import { mockTenants, mockProperties, formatVND, TenantItem } from '@/lib/mockData';
+import { Link } from 'react-router-dom';
+import { Plus, Search, Building2, FileText, ExternalLink } from 'lucide-react';
+import { mockTenants, mockProperties, mockContracts, formatVND, TenantItem, ContractItem } from '@/lib/mockData';
 import { Modal } from '@/components/ui/Modal';
-import { useActionModal } from '@/components/ui/ActionModal';
 
 export const TenantsPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { confirmAction } = useActionModal();
   const [tenants, setTenants] = useState<TenantItem[]>(mockTenants);
   const [selectedTenant, setSelectedTenant] = useState<TenantItem | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterProperty, setFilterProperty] = useState('all');
+
+  const getTenantContract = (t: TenantItem): ContractItem | undefined => {
+    return mockContracts.find((c) => c.tenantPhone === t.phone || c.roomCode === t.roomCode || c.tenantName === t.name);
+  };
 
   // Modal State for adding new tenant
   const [showAddModal, setShowAddModal] = useState(false);
@@ -60,14 +61,9 @@ export const TenantsPage: React.FC = () => {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1440px', margin: '0 auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', margin: 0 }}>
-            Hồ sơ người thuê & Quản lý cư dân
-          </h1>
-          <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 0 0' }}>
-            Hồ sơ khách thuê, quản lý nhiều người ở cùng phòng, định danh CCCD và phân loại theo từng dãy trọ. Bấm vào từng hàng để xem chi tiết hồ sơ.
-          </p>
-        </div>
+        <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', margin: 0 }}>
+          Hồ sơ người thuê & Quản lý cư dân
+        </h1>
         <button
           type="button"
           className="rf-btn rf-btn-primary"
@@ -148,144 +144,190 @@ export const TenantsPage: React.FC = () => {
               <th>Số CCCD</th>
               <th>Dãy trọ / Tòa nhà</th>
               <th>Phòng cư trú</th>
+              <th>Hợp đồng thuê</th>
               <th>Tiền cọc giữ</th>
               <th>Thời hạn thuê</th>
               <th>Trạng thái</th>
             </tr>
           </thead>
           <tbody>
-            {filteredTenants.map((t) => (
-              <tr
-                key={t.id}
-                onClick={() => setSelectedTenant(t)}
-                style={{
-                  cursor: 'pointer',
-                  transition: 'background-color 0.15s ease',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
-                title={`Bấm để xem hồ sơ chi tiết của ${t.name}`}
-              >
-                <td>
-                  <div style={{ fontWeight: 600, color: '#00594C' }}>
-                    {t.name} →
-                  </div>
-                </td>
-                <td style={{ fontWeight: 500 }}>{t.phone}</td>
-                <td style={{ color: '#4B5563', fontSize: '12px' }}>{t.idCard}</td>
-                <td>
-                  <span style={{ fontSize: '12px', color: '#4B5563' }}>{t.propertyName}</span>
-                </td>
-                <td>
-                  <span className="rf-badge rf-badge-active">Phòng {t.roomCode}</span>
-                </td>
-                <td style={{ fontWeight: 600, color: '#137333' }}>{formatVND(t.deposit)}</td>
-                <td style={{ fontSize: '12px', color: '#6B7280' }}>
-                  {t.leaseStart} → {t.leaseEnd}
-                </td>
-                <td>
-                  <span className="rf-badge rf-badge-active">Đang cư trú</span>
-                </td>
-              </tr>
-            ))}
+            {filteredTenants.map((t) => {
+              const contract = getTenantContract(t);
+              return (
+                <tr
+                  key={t.id}
+                  onClick={() => setSelectedTenant(t)}
+                  style={{
+                    cursor: 'pointer',
+                    transition: 'background-color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F0FDF4')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  title={`Bấm để xem hồ sơ chi tiết của ${t.name}`}
+                >
+                  <td>
+                    <div style={{ fontWeight: 600, color: '#00594C' }}>
+                      {t.name}
+                    </div>
+                  </td>
+                  <td style={{ fontWeight: 500 }}>{t.phone}</td>
+                  <td style={{ color: '#4B5563', fontSize: '12px' }}>{t.idCard}</td>
+                  <td>
+                    <span style={{ fontSize: '12px', color: '#4B5563' }}>{t.propertyName}</span>
+                  </td>
+                  <td>
+                    <span className="rf-badge rf-badge-active">Phòng {t.roomCode}</span>
+                  </td>
+                  <td>
+                    {contract ? (
+                      <Link
+                        to={`/contracts/${contract.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          color: '#00594C',
+                          fontWeight: 700,
+                          fontSize: '12px',
+                          textDecoration: 'none',
+                          backgroundColor: '#E8F5E9',
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          border: '1px solid #A7F3D0',
+                          transition: 'all 0.15s ease',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#C8E6C9')}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#E8F5E9')}
+                        title={`Xem chi tiết hợp đồng ${contract.id} của ${t.name}`}
+                      >
+                        <FileText size={13} color="#00594C" />
+                        <span>{contract.id}</span>
+                        <ExternalLink size={11} color="#00594C" />
+                      </Link>
+                    ) : (
+                      <Link
+                        to={`/contracts?roomCode=${t.roomCode}`}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          color: '#6B7280',
+                          fontSize: '11px',
+                          textDecoration: 'none',
+                        }}
+                        title="Chưa liên kết HĐ - Bấm để tạo"
+                      >
+                        <span style={{ fontStyle: 'italic' }}>Tạo HĐ</span>
+                        <ExternalLink size={10} />
+                      </Link>
+                    )}
+                  </td>
+                  <td style={{ fontWeight: 600, color: '#137333' }}>{formatVND(t.deposit)}</td>
+                  <td style={{ fontSize: '12px', color: '#6B7280' }}>
+                    {t.leaseStart} - {t.leaseEnd}
+                  </td>
+                  <td>
+                    <span className="rf-badge rf-badge-active">Đang cư trú</span>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
       {/* Tenant Profile Modal */}
-      {selectedTenant && (
-        <Modal
-          isOpen={Boolean(selectedTenant)}
-          onClose={() => setSelectedTenant(null)}
-          title={`Hồ sơ cư dân — ${selectedTenant.name}`}
-        >
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', minWidth: '460px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', borderBottom: '1px solid #E5E7EB', paddingBottom: '16px' }}>
-              <div
-                style={{
-                  width: '50px',
-                  height: '50px',
-                  borderRadius: '50%',
-                  backgroundColor: '#00594C',
-                  color: '#FFFFFF',
-                  fontWeight: 700,
-                  fontSize: '18px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {selectedTenant.name.slice(0, 2).toUpperCase()}
+      {selectedTenant && (() => {
+        const selectedContract = getTenantContract(selectedTenant);
+        return (
+          <Modal
+            isOpen={Boolean(selectedTenant)}
+            onClose={() => setSelectedTenant(null)}
+            title={`Hồ sơ cư dân — ${selectedTenant.name}`}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: '440px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
+                  <span style={{ color: '#6B7280' }}>Số điện thoại:</span>
+                  <strong style={{ color: '#111827' }}>{selectedTenant.phone}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
+                  <span style={{ color: '#6B7280' }}>Số CCCD / Định danh:</span>
+                  <span style={{ fontWeight: 600 }}>{selectedTenant.idCard}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
+                  <span style={{ color: '#6B7280' }}>Dãy trọ / Tòa nhà:</span>
+                  <span style={{ fontWeight: 600, color: '#111827' }}>{selectedTenant.propertyName}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
+                  <span style={{ color: '#6B7280' }}>Phòng cư trú:</span>
+                  <strong style={{ color: '#00594C' }}>Phòng {selectedTenant.roomCode}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB', alignItems: 'center' }}>
+                  <span style={{ color: '#6B7280' }}>Hợp đồng thuê:</span>
+                  {selectedContract ? (
+                    <Link
+                      to={`/contracts/${selectedContract.id}`}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        color: '#00594C',
+                        fontWeight: 700,
+                        fontSize: '12px',
+                        textDecoration: 'none',
+                        backgroundColor: '#E8F5E9',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        border: '1px solid #A7F3D0',
+                      }}
+                    >
+                      <FileText size={13} color="#00594C" />
+                      <span>{selectedContract.id} ({formatVND(selectedContract.monthlyRent)}/tháng)</span>
+                      <ExternalLink size={12} color="#00594C" />
+                    </Link>
+                  ) : (
+                    <span style={{ color: '#9CA3AF', fontStyle: 'italic', fontSize: '12px' }}>Chưa có hợp đồng</span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
+                  <span style={{ color: '#6B7280' }}>Tiền cọc đang giữ:</span>
+                  <strong style={{ color: '#137333' }}>{formatVND(selectedTenant.deposit)}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
+                  <span style={{ color: '#6B7280' }}>Thời hạn hợp đồng thuê:</span>
+                  <span>{selectedTenant.leaseStart} đến {selectedTenant.leaseEnd}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
+                  <span style={{ color: '#6B7280' }}>Trạng thái:</span>
+                  <span className="rf-badge rf-badge-active">Đang cư trú</span>
+                </div>
               </div>
-              <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#111827', margin: 0 }}>
-                  {selectedTenant.name}
-                </h3>
-                <span style={{ fontSize: '13px', color: '#6B7280' }}>
-                  Phòng {selectedTenant.roomCode} • {selectedTenant.propertyName}
-                </span>
-              </div>
-            </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
-                <span style={{ color: '#6B7280' }}>Số điện thoại:</span>
-                <strong style={{ color: '#111827' }}>{selectedTenant.phone}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
-                <span style={{ color: '#6B7280' }}>Số CCCD / Định danh:</span>
-                <span style={{ fontWeight: 600 }}>{selectedTenant.idCard}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
-                <span style={{ color: '#6B7280' }}>Phòng cư trú:</span>
-                <strong style={{ color: '#00594C' }}>Phòng {selectedTenant.roomCode}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px dashed #E5E7EB' }}>
-                <span style={{ color: '#6B7280' }}>Tiền cọc đang giữ:</span>
-                <strong style={{ color: '#137333' }}>{formatVND(selectedTenant.deposit)}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
-                <span style={{ color: '#6B7280' }}>Thời hạn hợp đồng thuê:</span>
-                <span>{selectedTenant.leaseStart} đến {selectedTenant.leaseEnd}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #E5E7EB', paddingTop: '14px' }}>
+                {selectedContract ? (
+                  <Link
+                    to={`/contracts/${selectedContract.id}`}
+                    className="rf-btn rf-btn-primary"
+                    style={{ textDecoration: 'none', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <FileText size={14} /> Xem chi tiết hợp đồng
+                  </Link>
+                ) : <div />}
+                <button
+                  type="button"
+                  className="rf-btn rf-btn-secondary"
+                  onClick={() => setSelectedTenant(null)}
+                >
+                  Đóng
+                </button>
               </div>
             </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid #E5E7EB', paddingTop: '16px' }}>
-              <button
-                type="button"
-                className="rf-btn rf-btn-secondary"
-                style={{ width: '100%' }}
-                onClick={() => {
-                  const room = selectedTenant.roomCode;
-                  setSelectedTenant(null);
-                  navigate(`/rooms/${room}`);
-                }}
-              >
-                <DoorOpen size={14} />
-                <span>Xem chi tiết phòng {selectedTenant.roomCode}</span>
-              </button>
-              <button
-                type="button"
-                className="rf-btn rf-btn-primary"
-                style={{ width: '100%' }}
-                onClick={() => {
-                  confirmAction({
-                    title: `Gửi tin nhắn đến ${selectedTenant.name}`,
-                    description: `Gửi tin nhắn thông báo đến số điện thoại ${selectedTenant.phone} qua ứng dụng Zalo và SMS.`,
-                    confirmText: 'Gửi tin nhắn',
-                    successTitle: 'Đã gửi tin nhắn thành công!',
-                    successMessage: `Khách thuê ${selectedTenant.name} đã nhận được tin nhắn thông báo.`,
-                    simulateDelayMs: 600,
-                  });
-                }}
-              >
-                <MessageSquare size={14} />
-                <span>Nhắn tin thông báo (Zalo / SMS)</span>
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
+          </Modal>
+        );
+      })()}
 
       {/* Modal: Thêm người thuê mới */}
       <Modal

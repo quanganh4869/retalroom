@@ -58,6 +58,7 @@ interface PlatformAdminContextType {
   updateAccountRole: (accountId: string, role: PlatformAccount['role']) => void;
   toggleOrganizationStatus: (orgId: string, reason?: string) => void;
   updateOrganizationPlan: (orgId: string, planId: SubscriptionPlan['id']) => void;
+  updatePlan: (planId: SubscriptionPlan['id'], data: Partial<SubscriptionPlan>) => void;
   updateTicketStatus: (ticketId: string, status: PlatformSupportTicket['status']) => void;
   replyToTicket: (ticketId: string, content: string, isInternal?: boolean, senderName?: string) => void;
   createAnnouncement: (announcement: Omit<PlatformAnnouncement, 'id' | 'publishedAt'>) => void;
@@ -98,7 +99,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
     return saved ? JSON.parse(saved) : initialPlatformOrganizations;
   });
 
-  const [plans] = useState<SubscriptionPlan[]>(() => {
+  const [plans, setPlans] = useState<SubscriptionPlan[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}plans`);
     return saved ? JSON.parse(saved) : initialSubscriptionPlans;
   });
@@ -306,6 +307,26 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         return org;
       })
     );
+  };
+
+  const updatePlan = (planId: SubscriptionPlan['id'], data: Partial<SubscriptionPlan>) => {
+    setPlans((prev) => {
+      const updated = prev.map((p) => {
+        if (p.id === planId) {
+          const newPlan = { ...p, ...data };
+          appendAuditLog(
+            'Cập nhật tham số gói SaaS',
+            'SETTING',
+            planId,
+            `Gói ${newPlan.name}: Giá ${newPlan.monthlyPrice.toLocaleString('vi-VN')} đ/tháng, tối đa ${newPlan.maxRooms} phòng`
+          );
+          return newPlan;
+        }
+        return p;
+      });
+      localStorage.setItem(`${STORAGE_KEY_PREFIX}plans`, JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const updateTicketStatus = (ticketId: string, status: PlatformSupportTicket['status']) => {
@@ -516,6 +537,7 @@ export const PlatformAdminProvider: React.FC<{ children: React.ReactNode }> = ({
         updateAccountRole,
         toggleOrganizationStatus,
         updateOrganizationPlan,
+        updatePlan,
         updateTicketStatus,
         replyToTicket,
         createAnnouncement,

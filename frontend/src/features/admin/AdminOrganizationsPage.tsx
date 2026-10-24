@@ -64,11 +64,7 @@ export const AdminOrganizationsPage: React.FC = () => {
       {/* Page Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="rf-badge rf-badge-danger">Organization Management</span>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>Không gian khách hàng B2B / SaaS Tenants</span>
-          </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '4px 0 0 0' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: 0 }}>
             Tổ chức & Tài khoản chủ nhà
           </h1>
         </div>

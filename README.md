@@ -1,165 +1,109 @@
-# RentFlow — Enterprise Rental Management Monorepo
+# RentFlow — Nền tảng SaaS Quản lý Phòng trọ Thông minh
 
-RentFlow is an enterprise-grade property and rental management platform designed with a clean, decoupled monorepo architecture.
+Hệ thống quản lý phòng trọ hiện đại, tinh gọn và bảo mật cao, hỗ trợ 3 vai trò người dùng chính: **Admin Nền tảng (SaaS SuperAdmin)**, **Chủ trọ (Landlord)** và **Khách thuê (Tenant)**.
 
-## 1. Architecture Overview
+Dự án áp dụng kiến trúc **Monorepo cấp repository** phân tách hoàn toàn Frontend và Backend thành hai ứng dụng độc lập, có thể cài đặt dependency, chạy, kiểm thử, build và triển khai riêng biệt.
+
+---
+
+## 1. Cấu trúc Tổng thể Repository
 
 ```text
-                       RENTFLOW MONOREPO
-                               │
-             ┌─────────────────┼─────────────────┐
-             │                 │                 │
-        FRONTEND            BACKEND              AI
-        React/TS            FastAPI           Python API
-        (Vite)             (Async SQLAlchemy)  (Provider-based)
-             │                 │                 │
-             │                 ├────── HTTP ─────┘
-             │                 │
-             │                 ▼
-             │             PostgreSQL
-             │
-             └──── HTTP REST API ────► Backend
+rentflow/
+├── frontend/             # Ứng dụng giao diện React 18, TypeScript, Vite (Feature-based)
+├── backend/              # Ứng dụng máy chủ Java 17, Spring Boot 3, PostgreSQL (Modular Monolith)
+├── ops/                  # Cấu hình hạ tầng Docker, init scripts PostgreSQL
+├── docs/                 # Tài liệu kiến trúc, quy chuẩn REST API, schema DB, bảo mật
+├── scripts/              # Các script hỗ trợ tự động hóa dev-env, test-all, build-all
+├── .github/workflows/    # CI Pipeline (GitHub Actions) chạy độc lập cho Frontend và Backend
+├── compose.yaml          # Điều phối Docker Compose (PostgreSQL, Backend, Frontend)
+├── .env.example          # Biến môi trường mẫu điều phối hệ thống
+├── .gitignore            # Khai báo loại trừ version control
+├── .gitattributes        # Chuẩn hóa line-ending và định dạng tệp
+├── .editorconfig         # Quy chuẩn định dạng code cho toàn đội ngũ
+└── README.md             # Hướng dẫn tổng thể
 ```
 
-### Decoupled Service Responsibilities
+---
 
-- **`frontend/` (React + TypeScript + Vite)**: User interface, client-side routing, form validation with Zod and React Hook Form, server state caching via TanStack Query. Does NOT query the database directly and contains zero secrets.
-- **`backend/` (FastAPI + SQLAlchemy 2.x + Alembic)**: Source of truth for business logic, data persistence, multi-entity transactions, authentication foundation, and audit trails. Communicates with AI via structured HTTP requests.
-- **`ai/` (Python API + Provider Pattern)**: Independent service for NLP and AI tasks (e.g. maintenance request categorization and priority scoring). Defaults to an offline, deterministic `MockAIProvider` so the system runs and tests completely without third-party API keys. Never touches the operational database.
+## 2. Công nghệ Sử dụng
+
+| Thành phần | Công nghệ chính |
+|---|---|
+| **Frontend** | React 18, TypeScript, Vite, React Router 6, TanStack Query, Zod |
+| **Backend** | Java 17 LTS, Spring Boot 3.3.4, Spring Security, Spring Data JPA, Hibernate, Actuator |
+| **Cơ sở dữ liệu** | PostgreSQL 16 (H2 cho Unit/Integration Tests tự động) |
+| **Migration** | Flyway (`V1__...`, `V2__...`, `V3__...`) |
+| **Tài liệu API** | Springdoc OpenAPI 2.6 / Swagger UI |
+| **Đóng gói & CI** | Multi-stage Docker, Docker Compose, GitHub Actions |
 
 ---
 
-## 2. Prerequisites
+## 3. Khởi động Nhanh trong Môi trường Phát triển (Local Dev)
 
-- **Node.js**: `v20+` (tested with Node 24 and npm 11)
-- **Python**: `3.11+` (tested with Python 3.13)
-- **uv**: Fast Python package installer and resolver (`uv >= 0.5`)
-- **Docker & Docker Compose**: Optional for running the entire stack in containers
-
----
-
-## 3. Quickstart with Docker Compose
-
-1. Copy the environment configuration:
-   ```bash
-   cp .env.example .env
-   ```
-
-2. Validate the compose configuration:
-   ```bash
-   docker compose --env-file .env.example config
-   ```
-
-3. Launch all services (PostgreSQL, Backend, AI, Frontend):
-   ```bash
-   docker compose --env-file .env.example up --build -d
-   ```
-
-4. Service URLs:
-   - **Frontend UI**: [http://localhost:3000](http://localhost:3000)
-   - **Backend API & Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-   - **AI Service Swagger Docs**: [http://localhost:8001/docs](http://localhost:8001/docs)
-
-5. Stop services:
-   ```bash
-   docker compose down -v
-   ```
-
----
-
-## 4. Running Services Individually (Host Machine)
-
-### 4.1. AI Service
+### Bước 1: Khởi động Cơ sở dữ liệu PostgreSQL
+Bạn có thể sử dụng script có sẵn hoặc Docker Compose:
 ```bash
-cd ai
-cp .env.example .env
-uv sync
-uv run uvicorn rentflow_ai.main:app --host 0.0.0.0 --port 8001 --reload
-```
-Health check: [http://localhost:8001/health/live](http://localhost:8001/health/live)
+# Trên Windows PowerShell:
+.\scripts\dev-env.ps1 up
 
-### 4.2. Backend Service
+# Hoặc trên Linux/macOS:
+./scripts/dev-env.sh up
+
+# Hoặc dùng trực tiếp docker compose:
+docker compose up -d postgres
+```
+> Database PostgreSQL sẽ lắng nghe tại cổng `localhost:5432` với database `rentflow_db`.
+
+### Bước 2: Chạy Backend (Spring Boot)
 ```bash
 cd backend
-cp .env.example .env
-uv sync
 
-# Run database migrations (if PostgreSQL is running)
-uv run alembic upgrade head
+# Chạy kiểm thử tự động (Unit & Integration tests với Flyway migration):
+.\mvnw.cmd clean test
 
-uv run uvicorn rentflow_backend.main:app --host 0.0.0.0 --port 8000 --reload
+# Chạy server Backend (Profile: dev):
+.\mvnw.cmd spring-boot:run -Dspring-boot.run.profiles=dev
 ```
-Health check: [http://localhost:8000/health/live](http://localhost:8000/health/live)
-Interactive OpenAPI docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+- API Base URL: `http://localhost:8080`
+- Swagger UI (Tài liệu tương tác): `http://localhost:8080/swagger-ui.html`
+- Health Liveness: `http://localhost:8080/api/v1/health/live`
+- Health Readiness: `http://localhost:8080/api/v1/health/ready`
 
-### 4.3. Frontend
+### Bước 3: Chạy Frontend (React Vite)
+Mở một cửa sổ terminal mới:
 ```bash
 cd frontend
-cp .env.example .env
+
+# Cài đặt thư viện nếu chưa cài:
 npm install
+
+# Khởi động máy chủ dev:
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+- Giao diện truy cập tại: `http://localhost:3000`
 
 ---
 
-## 5. Testing, Linting & Type Checking
+## 4. Kiểm tra Toàn bộ Hệ thống (Automated Testing & Build)
 
-### Automated Testing Matrix
-| Service | Lint / Format | Static Typecheck | Test Suite |
-| :--- | :--- | :--- | :--- |
-| **Frontend** | `npm run lint`<br/>`npm run format:check` | `npm run typecheck` | `npm run test` (Vitest)<br/>`npm run test:e2e` (Playwright) |
-| **Backend** | `uv run ruff check .`<br/>`uv run ruff format --check .` | `uv run mypy src` | `uv run pytest` (with coverage) |
-| **AI Service**| `uv run ruff check .`<br/>`uv run ruff format --check .` | `uv run mypy src` | `uv run pytest` (with coverage) |
+Hệ thống cung cấp sẵn các script hỗ trợ chạy kiểm thử và build độc lập:
 
-To run all checks quickly from the monorepo root:
-```bash
-# Using Makefile
-make lint
-make test
-
-# Or run commands directly inside each directory
-```
+- **Chạy toàn bộ kiểm thử:**
+  ```powershell
+  .\scripts\test-all.ps1
+  ```
+- **Build toàn bộ hai ứng dụng:**
+  ```powershell
+  .\scripts\build-all.ps1
+  ```
 
 ---
 
-## 6. Database Migrations (Backend)
-
-We use **Alembic** with async SQLAlchemy:
-```bash
-cd backend
-
-# Create a new migration revision
-uv run alembic revision -m "add_table_name"
-
-# Apply pending migrations
-uv run alembic upgrade head
-
-# Rollback one migration
-uv run alembic downgrade -1
-```
-
----
-
-## 7. Working Sample Features (Vertical Slice)
-
-1. **Frontend**:
-   - `PropertyListPage`: Dynamic listing of properties with loading, empty, and error feedback states.
-   - `PropertyForm`: Form validation with React Hook Form + Zod, displaying field-level errors and sending typed requests through the unified `apiClient`.
-2. **Backend**:
-   - `GET /health/live` & `GET /health/ready`.
-   - `GET /api/v1/properties`: Paginated property listing.
-   - `POST /api/v1/properties`: Property creation with uniqueness validation.
-   - `GET /api/v1/properties/{id}`: Detailed entity retrieval.
-   - `POST /api/v1/properties/{id}/maintenance/classify-ai`: Inter-service HTTP call delegating ticket triage to the AI service.
-3. **AI Service**:
-   - `GET /health/live` & `GET /health/ready`.
-   - `POST /api/v1/maintenance/classify`: Structured triage returning `category`, `suggested_priority`, `confidence_score`, and `rationale`. Defaults to deterministic mock engine with zero external dependencies.
-
----
-
-## 8. Troubleshooting
-
-- **Database connection error**: Ensure PostgreSQL is running. For local host development, set `DATABASE_URL=postgresql+asyncpg://postgres:postgres_local_secret@localhost:5432/rentflow_db`.
-- **CORS error in frontend**: Ensure `CORS_ORIGINS` in `backend/.env` contains your frontend dev server address (e.g. `http://localhost:3000`).
-- **AI Service unreachable in backend**: Ensure AI service is running on port 8001 and `AI_SERVICE_URL=http://localhost:8001` in `backend/.env`.
+## 5. Tài liệu Chi tiết
+- [Kiến trúc Modular Monolith & Ranh giới Nghiệp vụ](docs/architecture.md)
+- [Quy chuẩn Thiết kế RESTful API & Response Envelopes](docs/api-design.md)
+- [Cơ sở Dữ liệu & Quản lý Migration bằng Flyway](docs/database-schema.md)
+- [Bảo mật & Phân quyền RBAC](docs/security-and-auth.md)
+- [Hạ tầng Docker & Vận hành](ops/README.md)
+- [Lưu trữ mã nguồn cũ (FastAPI Archive)](legacy/backend-python/README.md)

@@ -140,11 +140,7 @@ export const AdminAccountsPage: React.FC = () => {
       {/* Page Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="rf-badge rf-badge-danger">Account Directory</span>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>Cơ sở dữ liệu danh tính người dùng</span>
-          </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '4px 0 0 0' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: 0 }}>
             Quản lý tài khoản toàn hệ thống RentFlow
           </h1>
         </div>

@@ -1,69 +1,47 @@
-# OS & System
+# OS & Editor
 .DS_Store
 Thumbs.db
-desktop.ini
-
-# Environment variables & secrets (CRITICAL: never commit .env files with credentials)
-.env
-.env.local
-.env.*.local
-*.env
-!*.env.example
-
-# Version control & IDE
 .idea/
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-*.sublime-project
-*.sublime-workspace
+.vscode/
 *.swp
 *.swo
 
-# Node / Frontend
+# Node & Frontend
 node_modules/
+dist/
+coverage/
+.vitest/
+.eslintcache
+*.tsbuildinfo
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
-dist/
-dist-ssr/
-build/
-*.tsbuildinfo
-.eslintcache
 
-# Playwright & Testing artifacts
-test-results/
-playwright-report/
-blob-report/
-playwright/.cache/
-coverage/
-.nyc_output/
+# Java & Backend
+backend/target/
+backend/.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
 
-# Python / Backend / AI
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Docker & Database
+postgres_data/
+
+# Python Cache
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-.venv/
-ENV/
-env.bak/
-venv.bak/
-.pytest_cache/
-.ruff_cache/
-.mypy_cache/
-htmlcov/
-.coverage
-.coverage.*
+*.pyc
+*.pyo
 
-# Database dumps / temp files
-*.sqlite
-*.sqlite3
-*.db
-*.log
-logs/
-tmp/
-scratch/
+# Legacy Python (Archive)
+legacy/backend-python/.venv/
+legacy/backend-python/.pytest_cache/
+legacy/backend-python/.ruff_cache/
+legacy/backend-python/.mypy_cache/
+legacy/backend-python/.coverage

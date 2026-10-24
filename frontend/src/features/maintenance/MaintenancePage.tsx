@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Plus, Search, Wrench } from 'lucide-react';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { Plus, Search, Wrench, Receipt } from 'lucide-react';
 import { mockMaintenance, formatVND, MaintenanceItem } from '@/lib/mockData';
 
 export const MaintenancePage: React.FC = () => {
@@ -82,10 +82,20 @@ export const MaintenancePage: React.FC = () => {
             Tiếp nhận báo hỏng từ người thuê, điều phối thợ sửa và theo dõi chi phí. Bấm vào từng hàng để mở trang chi tiết phiếu.
           </p>
         </div>
-        <button className="rf-btn rf-btn-primary">
-          <Plus size={15} />
-          <span>Tạo phiếu bảo trì mới</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Link
+            to="/expenses?category=Sửa chữa điện nước"
+            className="rf-btn rf-btn-secondary"
+            style={{ textDecoration: 'none' }}
+            title="Xem toàn bộ hóa đơn chi phí vật tư và sửa chữa"
+          >
+            <Receipt size={14} color="#00594C" /> Sổ chi phí sửa chữa
+          </Link>
+          <button className="rf-btn rf-btn-primary">
+            <Plus size={15} />
+            <span>Tạo phiếu bảo trì mới</span>
+          </button>
+        </div>
       </div>
 
       {/* Metrics Row */}
@@ -210,7 +220,6 @@ export const MaintenancePage: React.FC = () => {
           <table className="rf-table">
             <thead>
               <tr>
-                <th>Mã phiếu</th>
                 <th>Phòng / Vấn đề sự cố</th>
                 <th>Danh mục</th>
                 <th>Mức độ</th>
@@ -233,13 +242,9 @@ export const MaintenancePage: React.FC = () => {
                   onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                   title={`Bấm để xem chi tiết phiếu bảo trì ${t.id}`}
                 >
-                  <td style={{ fontWeight: 700, color: '#00594C' }}>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      {t.id} →
-                    </span>
-                  </td>
                   <td>
                     <div style={{ fontWeight: 600, color: '#111827' }}>
+                      <span style={{ color: '#00594C', marginRight: '6px' }}>{t.id}</span>
                       [{t.roomCode}] {t.title}
                     </div>
                     <div style={{ fontSize: '11px', color: '#6B7280' }}>

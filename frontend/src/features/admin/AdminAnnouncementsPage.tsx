@@ -75,11 +75,7 @@ export const AdminAnnouncementsPage: React.FC = () => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="rf-badge rf-badge-danger">Broadcast Communications</span>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>Bản tin & Thông báo hệ thống tập trung</span>
-          </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '4px 0 0 0' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: 0 }}>
             Quản lý thông báo toàn nền tảng RentFlow
           </h1>
         </div>
