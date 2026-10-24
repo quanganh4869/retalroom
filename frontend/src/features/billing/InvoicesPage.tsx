@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Download,
-  ChevronRight,
   FileText,
   Search,
   Calendar,
@@ -98,67 +97,6 @@ export const InvoicesPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1440px', margin: '0 auto' }}>
-      {/* 4-Step Wizard Progress Banner */}
-      <div
-        style={{
-          backgroundColor: '#FFFFFF',
-          border: '1px solid #E5E7EB',
-          borderRadius: '8px',
-          padding: '16px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-          {/* Step 1 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#E6F4EA', color: '#137333', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '12px' }}>
-              ✓
-            </div>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#111827' }}>1. Chốt chỉ số điện nước</div>
-              <div style={{ fontSize: '11px', color: '#6B7280' }}>Đầy đủ các kỳ lịch sử</div>
-            </div>
-          </div>
-          <ChevronRight size={16} color="#D1D5DB" />
-
-          {/* Step 2 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#00594C', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '12px' }}>
-              2
-            </div>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#00594C' }}>2. Lịch sử hóa đơn hàng tháng</div>
-              <div style={{ fontSize: '11px', color: '#6B7280' }}>
-                {periodParam === 'all' ? 'Tất cả các kỳ' : availablePeriods.find((p) => p.key === periodParam)?.label || periodParam}
-              </div>
-            </div>
-          </div>
-          <ChevronRight size={16} color="#D1D5DB" />
-
-          {/* Step 3 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '26px', height: '26px', borderRadius: '50%', backgroundColor: '#F3F4F6', color: '#9CA3AF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '12px' }}>
-              3
-            </div>
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: '#9CA3AF' }}>3. Thu tiền & Quyết toán</div>
-              <div style={{ fontSize: '11px', color: '#9CA3AF' }}>Gạch nợ VietQR tự động</div>
-            </div>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          className="rf-btn rf-btn-primary"
-          onClick={() => navigate('/meter-readings')}
-        >
-          <Calendar size={14} />
-          <span>Ghi chỉ số & Tạo kỳ mới</span>
-        </button>
-      </div>
-
       {/* Filter Toolbar: Month/Year Period, Property, Search, Status */}
       <div
         className="rf-card"

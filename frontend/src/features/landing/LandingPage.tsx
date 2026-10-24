@@ -2,32 +2,54 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
-  Building2,
-  Zap,
+  ArrowUp,
   ChevronDown,
   CheckCircle2,
-  Wrench,
-  Users,
   ShieldCheck,
-  Receipt,
-  CreditCard,
-  Sparkles,
   Menu,
   X,
   Phone,
   Mail,
   MapPin,
-  ArrowUp,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { RentFlowLogo } from '@/components/ui/RentFlowLogo';
+import { useAuth } from '@/features/auth/AuthContext';
+import { useToast } from '@/components/feedback/ToastSystem';
 
 export const LandingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const toast = useToast();
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [activeAudience, setActiveAudience] = useState<'landlord' | 'tenant'>('landlord');
   const [showcaseTab, setShowcaseTab] = useState<'overview' | 'roomGrid' | 'meterReading' | 'invoice' | 'tenantPortal'>('overview');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('admin@rentflow.vn');
+  const [adminPassword, setAdminPassword] = useState('••••••••••••');
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
+  const [adminSubmitting, setAdminSubmitting] = useState(false);
+  const [adminError, setAdminError] = useState<string | null>(null);
+
+  const handleAdminModalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAdminSubmitting(true);
+    setAdminError(null);
+    try {
+      await login(adminEmail, 'SUPERADMIN');
+      toast.success('Xác thực Platform Admin thành công');
+      setAdminModalOpen(false);
+      navigate('/platform/dashboard');
+    } catch {
+      setAdminError('Đăng nhập quản trị viên thất bại. Vui lòng kiểm tra lại thông tin.');
+      toast.error('Đăng nhập quản trị viên thất bại');
+    } finally {
+      setAdminSubmitting(false);
+    }
+  };
 
   // Monitor scroll for header elevation
   React.useEffect(() => {
@@ -121,7 +143,7 @@ export const LandingPage: React.FC = () => {
         minHeight: '100vh',
         backgroundColor: '#FBFBF9',
         color: '#111827',
-        fontFamily: 'var(--font-landing)',
+        fontFamily: "'Nunito', var(--font-landing), sans-serif",
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -168,7 +190,6 @@ export const LandingPage: React.FC = () => {
           <nav style={{ display: 'none', alignItems: 'center', gap: '26px' }} className="rf-desktop-nav">
             <a href="#overview" className="rf-nav-link">Giải pháp</a>
             <a href="#features" className="rf-nav-link">Tính năng</a>
-            <a href="#workflow" className="rf-nav-link">Quy trình 4 bước</a>
             <a href="#showcase" className="rf-nav-link">Giao diện thực tế</a>
             <a href="#gallery" className="rf-nav-link">Không gian phòng</a>
             <a href="#faq" className="rf-nav-link">Hỏi đáp</a>
@@ -226,7 +247,6 @@ export const LandingPage: React.FC = () => {
         >
           <a href="#overview" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '15px', fontWeight: 600, color: '#F1F5F9', textDecoration: 'none' }}>Giải pháp</a>
           <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '15px', fontWeight: 600, color: '#F1F5F9', textDecoration: 'none' }}>Tính năng</a>
-          <a href="#workflow" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '15px', fontWeight: 600, color: '#F1F5F9', textDecoration: 'none' }}>Quy trình 4 bước</a>
           <a href="#showcase" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '15px', fontWeight: 600, color: '#F1F5F9', textDecoration: 'none' }}>Giao diện thực tế</a>
           <a href="#gallery" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '15px', fontWeight: 600, color: '#F1F5F9', textDecoration: 'none' }}>Không gian phòng</a>
           <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ fontSize: '15px', fontWeight: 600, color: '#F1F5F9', textDecoration: 'none' }}>Hỏi đáp</a>
@@ -258,7 +278,7 @@ export const LandingPage: React.FC = () => {
         </div>
       )}
 
-      {/* 2. HERO SECTION — IMAGE-RICH EDITORIAL COMPOSITION */}
+      {/* 2. HERO SECTION — CLEAN EDITORIAL COMPOSITION */}
       <section
         id="overview"
         style={{
@@ -271,11 +291,6 @@ export const LandingPage: React.FC = () => {
           textAlign: 'center',
         }}
       >
-        <div className="rf-pill-tag rf-hero-item-1" style={{ marginBottom: '20px' }}>
-          <Sparkles size={13} color="#00594C" />
-          <span>Nền tảng quản lý vận hành phòng trọ & căn hộ cho thuê</span>
-        </div>
-
         <h1
           className="rf-hero-item-2"
           style={{
@@ -305,26 +320,7 @@ export const LandingPage: React.FC = () => {
           RentFlow hợp nhất quản lý danh mục phòng, khách thuê, hợp đồng, chốt số điện nước, phát hành hóa đơn tự động và xử lý báo hỏng trong một không gian vận hành chuyên nghiệp.
         </p>
 
-        <div className="rf-hero-item-4" style={{ display: 'flex', gap: '14px', marginBottom: '52px', flexWrap: 'wrap', justifyContent: 'center' }}>
-          <button
-            type="button"
-            className="rf-btn rf-btn-primary"
-            style={{ padding: '12px 26px', fontSize: '15px' }}
-            onClick={() => navigate('/auth/register')}
-          >
-            <span>Bắt đầu quản lý (Miễn phí 14 ngày)</span>
-            <ArrowRight size={16} />
-          </button>
-          <a
-            href="#features"
-            className="rf-btn rf-btn-secondary"
-            style={{ padding: '12px 24px', fontSize: '15px' }}
-          >
-            Khám phá tính năng
-          </a>
-        </div>
-
-        {/* LAYERED HERO IMAGE COMPOSITION (1 DOMINANT PHOTO + 2 SECONDARY PHOTOS + 2 FLOATING REAL UI CARDS) */}
+        {/* HERO IMAGE */}
         <div
           className="rf-hero-stage"
           style={{
@@ -334,7 +330,6 @@ export const LandingPage: React.FC = () => {
             marginTop: '10px',
           }}
         >
-          {/* Main Dominant Image */}
           <div
             className="rf-img-container rf-img-zoom rf-reveal-mask is-revealed"
             style={{
@@ -350,316 +345,15 @@ export const LandingPage: React.FC = () => {
               className="rf-img-cover"
               loading="eager"
             />
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                background: 'linear-gradient(180deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.48) 100%)',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '24px',
-                left: '28px',
-                textAlign: 'left',
-                color: '#FFFFFF',
-              }}
-            >
-              <div style={{ fontSize: '12px', fontWeight: 600, opacity: 0.9, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-                Hệ sinh thái nhà trọ & căn hộ
-              </div>
-              <div style={{ fontSize: 'clamp(18px, 2.5vw, 22px)', fontWeight: 700, marginTop: '2px' }}>
-                Quản lý liền mạch 10 đến 500+ phòng
-              </div>
-            </div>
-          </div>
-
-          {/* Floating Metrics Bar (Responsive overlay on desktop, clean stacked cards on mobile) */}
-          <div className="rf-hero-badges-wrapper">
-            {/* Metric Card 1: Occupancy Rate */}
-            <div className="rf-glass-card rf-hero-floating-card">
-              <div
-                style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '10px',
-                  backgroundColor: '#E6F0EE',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#00594C',
-                  flexShrink: 0,
-                }}
-              >
-                <Building2 size={22} />
-              </div>
-              <div>
-                <div style={{ fontSize: '11px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>
-                  Tỷ lệ lấp đầy tháng này
-                </div>
-                <div style={{ fontSize: '19px', fontWeight: 800, color: '#111827', marginTop: '2px' }}>
-                  79.2% <span style={{ fontSize: '12px', fontWeight: 600, color: '#137333' }}>+4.2%</span>
-                </div>
-                <div style={{ fontSize: '11px', color: '#6B7280' }}>52/66 phòng có khách ở</div>
-              </div>
-            </div>
-
-            {/* Metric Card 2: Billing & Collection */}
-            <div className="rf-glass-card rf-hero-floating-card">
-              <div
-                style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '10px',
-                  backgroundColor: '#E6F4EA',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#137333',
-                  flexShrink: 0,
-                }}
-              >
-                <Receipt size={22} />
-              </div>
-              <div>
-                <div style={{ fontSize: '11px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase' }}>
-                  Hóa đơn tháng & Thu tiền
-                </div>
-                <div style={{ fontSize: '18px', fontWeight: 800, color: '#137333', marginTop: '2px' }}>
-                  86.400.000 đ
-                </div>
-                <div style={{ fontSize: '11px', color: '#4B5563' }}>Tự động xuất PDF kèm mã QR Zalo</div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* 3. TRUST & OPERATIONAL CAPABILITIES BAR */}
-      <section
-        style={{
-          backgroundColor: '#FFFFFF',
-          borderTop: '1px solid #E5E7EB',
-          borderBottom: '1px solid #E5E7EB',
-          padding: '44px 24px',
-          marginTop: '36px',
-        }}
-      >
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 600, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              6 trụ cột vận hành được tích hợp đồng bộ trong RentFlow
-            </span>
-          </div>
 
-          <div
-            className="rf-reveal"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-              gap: '14px',
-              textAlign: 'center',
-            }}
-          >
-            {[
-              { icon: Building2, color: '#00594C', title: 'Quản lý phòng', sub: 'Sơ đồ & trạng thái' },
-              { icon: Users, color: '#00594C', title: 'Khách & Hợp đồng', sub: 'Theo dõi hạn thuê' },
-              { icon: Zap, color: '#D97706', title: 'Điện & Nước', sub: 'Chốt số tự động' },
-              { icon: CreditCard, color: '#137333', title: 'Thu tiền & Nợ', sub: 'Gạch nợ chuẩn xác' },
-              { icon: ShieldCheck, color: '#00594C', title: 'Tiền đặt cọc', sub: 'Quyết toán minh bạch' },
-              { icon: Wrench, color: '#C5221F', title: 'Bảo trì sự cố', sub: 'Điều phối thợ sửa' },
-            ].map((pillar, i) => {
-              const Icon = pillar.icon;
-              return (
-                <div
-                  key={i}
-                  style={{
-                    padding: '16px 12px',
-                    borderRadius: '8px',
-                    backgroundColor: '#F9FAFB',
-                    border: '1px solid #F3F4F6',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.backgroundColor = '#FFFFFF';
-                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.04)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.backgroundColor = '#F9FAFB';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  <Icon size={20} color={pillar.color} style={{ margin: '0 auto 8px auto' }} />
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: '#111827' }}>{pillar.title}</div>
-                  <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '2px' }}>{pillar.sub}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* 4. REAL PAIN POINTS SECTION — EDITORIAL STAGGERED LAYOUT */}
-      <section style={{ padding: '80px 24px', maxWidth: '1200px', margin: '0 auto' }}>
-        <div className="rf-reveal" style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <span className="rf-badge rf-badge-warning" style={{ marginBottom: '10px' }}>Thực trạng quản lý truyền thống</span>
-          <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 34px)', fontWeight: 800, letterSpacing: '-0.02em', color: '#111827', margin: 0 }}>
-            Những bất cập khiến chủ nhà tiêu tốn hàng chục giờ mỗi tháng
-          </h2>
-          <p style={{ fontSize: '15px', color: '#4B5563', maxWidth: '640px', margin: '10px auto 0 auto', lineHeight: 1.6 }}>
-            Ghi chép sổ tay và chat Zalo rời rạc dễ dẫn đến sai sót chỉ số điện, quên thu nợ cũ và thất lạc yêu cầu sửa chữa.
-          </p>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
-          {/* Card 1: Ghi số điện nước & Sai lệch */}
-          <div
-            className="rf-card rf-reveal rf-reveal-delay-1"
-            style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-          >
-            <div className="rf-img-container rf-img-zoom" style={{ height: '210px' }}>
-              <img
-                src={realEstatePhotos.utilityMeter}
-                alt="Kiểm tra công tơ điện nước phòng trọ"
-                className="rf-img-cover"
-                loading="lazy"
-              />
-            </div>
-            <div style={{ padding: '22px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <span className="rf-badge rf-badge-danger" style={{ alignSelf: 'flex-start' }}>Sai sót phổ biến</span>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: '#111827' }}>Chốt số điện nước thủ công, nhầm lẫn bậc giá</h3>
-              <p style={{ fontSize: '13px', color: '#4B5563', margin: 0, lineHeight: 1.55 }}>
-                Phải đi từng tầng ghi sổ tay, về nhà nhập Excel thủ công gây nhầm số cũ và số mới, dễ dẫn đến tranh cãi khi khách thanh toán.
-              </p>
-            </div>
-          </div>
-
-          {/* Card 2: Quên hạn hợp đồng & Thất thoát cọc */}
-          <div
-            className="rf-card rf-reveal rf-reveal-delay-2"
-            style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-          >
-            <div className="rf-img-container rf-img-zoom" style={{ height: '210px' }}>
-              <img
-                src={realEstatePhotos.handoverKeys}
-                alt="Bàn giao chìa khóa và kiểm tra hợp đồng"
-                className="rf-img-cover"
-                loading="lazy"
-              />
-            </div>
-            <div style={{ padding: '22px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <span className="rf-badge rf-badge-warning" style={{ alignSelf: 'flex-start' }}>Rủi ro pháp lý</span>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: '#111827' }}>Quên thời hạn hợp đồng, tranh cãi tiền cọc</h3>
-              <p style={{ fontSize: '13px', color: '#4B5563', margin: 0, lineHeight: 1.55 }}>
-                Không nhớ khách nào sắp hết hạn để tìm khách mới. Khi trả phòng không có bảng cấn trừ hư hỏng minh bạch khiến mất lòng đôi bên.
-              </p>
-            </div>
-          </div>
-
-          {/* Card 3: Thất lạc báo hỏng & Chậm trễ */}
-          <div
-            className="rf-card rf-reveal rf-reveal-delay-3"
-            style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-          >
-            <div className="rf-img-container rf-img-zoom" style={{ height: '210px' }}>
-              <img
-                src={realEstatePhotos.maintenanceTech}
-                alt="Thợ kỹ thuật sửa chữa thiết bị"
-                className="rf-img-cover"
-                loading="lazy"
-              />
-            </div>
-            <div style={{ padding: '22px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <span className="rf-badge rf-badge-neutral" style={{ alignSelf: 'flex-start' }}>Trải nghiệm cư dân</span>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: '#111827' }}>Tin nhắn báo hỏng bị trôi, thợ không rõ chi phí</h3>
-              <p style={{ fontSize: '13px', color: '#4B5563', margin: 0, lineHeight: 1.55 }}>
-                Khách báo nghẹt nước hay cháy bóng đèn qua Zalo dễ bị quên. Không theo dõi được chi phí đã chi trả cho thợ sửa hàng tháng.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. HOW IT WORKS — 4 CONNECTED STEPS WITH ACTUAL INTERFACES */}
-      <section id="workflow" style={{ padding: '80px 24px', backgroundColor: '#FFFFFF', borderTop: '1px solid #E5E7EB', borderBottom: '1px solid #E5E7EB' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div className="rf-reveal" style={{ textAlign: 'center', marginBottom: '50px' }}>
-            <span className="rf-badge rf-badge-active" style={{ marginBottom: '10px' }}>Quy trình vận hành chuẩn</span>
-            <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 34px)', fontWeight: 800, letterSpacing: '-0.02em', color: '#111827', margin: 0 }}>
-              Chu trình khép kín trong 4 bước đơn giản
-            </h2>
-            <p style={{ fontSize: '15px', color: '#4B5563', maxWidth: '600px', margin: '10px auto 0 auto', lineHeight: 1.6 }}>
-              Từ ngày khách dọn vào đến ngày chốt sổ cuối tháng, mọi nghiệp vụ đều có quy chuẩn rõ ràng.
-            </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
-            {/* Step 1 */}
-            <div className="rf-card rf-reveal rf-reveal-delay-1" style={{ display: 'flex', flexDirection: 'column', gap: '14px', border: '1px solid #E5E7EB' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#00594C', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '14px' }}>
-                1
-              </div>
-              <div className="rf-img-container rf-img-zoom" style={{ height: '140px', borderRadius: '8px' }}>
-                <img src={realEstatePhotos.buildingExterior} alt="Tòa nhà cho thuê" className="rf-img-cover" loading="lazy" />
-              </div>
-              <h4 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: '#111827' }}>Khởi tạo cơ sở & Phòng</h4>
-              <p style={{ fontSize: '13px', color: '#4B5563', margin: 0, lineHeight: 1.55 }}>
-                Nhập số tầng, mã phòng, đơn giá thuê và định mức điện nước. Thiết lập sơ đồ trực quan chỉ trong 5 phút.
-              </p>
-            </div>
-
-            {/* Step 2 */}
-            <div className="rf-card rf-reveal rf-reveal-delay-2" style={{ display: 'flex', flexDirection: 'column', gap: '14px', border: '1px solid #E5E7EB' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#00594C', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '14px' }}>
-                2
-              </div>
-              <div className="rf-img-container rf-img-zoom" style={{ height: '140px', borderRadius: '8px' }}>
-                <img src={productScreens.contractDetail} alt="Hợp đồng điện tử" className="rf-img-cover" loading="lazy" />
-              </div>
-              <h4 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: '#111827' }}>Ký hợp đồng & Nhận cọc</h4>
-              <p style={{ fontSize: '13px', color: '#4B5563', margin: 0, lineHeight: 1.55 }}>
-                Khai báo thông tin khách thuê, số tiền cọc bảo chứng và lập biên bản bàn giao phòng kèm đồng hồ ban đầu.
-              </p>
-            </div>
-
-            {/* Step 3 */}
-            <div className="rf-card rf-reveal rf-reveal-delay-3" style={{ display: 'flex', flexDirection: 'column', gap: '14px', border: '1px solid #E5E7EB' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#00594C', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '14px' }}>
-                3
-              </div>
-              <div className="rf-img-container rf-img-zoom" style={{ height: '140px', borderRadius: '8px' }}>
-                <img src={productScreens.meterReading} alt="Bảng ghi số điện nước" className="rf-img-cover" loading="lazy" />
-              </div>
-              <h4 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: '#111827' }}>Chốt số & Xuất hóa đơn</h4>
-              <p style={{ fontSize: '13px', color: '#4B5563', margin: 0, lineHeight: 1.55 }}>
-                Ghi số công tơ trên bảng tính hàng loạt, hệ thống tự động cộng tiền phòng, điện, nước và xuất phiếu thu PDF.
-              </p>
-            </div>
-
-            {/* Step 4 */}
-            <div className="rf-card rf-reveal rf-reveal-delay-3" style={{ display: 'flex', flexDirection: 'column', gap: '14px', border: '1px solid #E5E7EB' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#00594C', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '14px' }}>
-                4
-              </div>
-              <div className="rf-img-container rf-img-zoom" style={{ height: '140px', borderRadius: '8px' }}>
-                <img src={productScreens.paymentReceipt} alt="Gạch nợ và theo dõi tiền về" className="rf-img-cover" loading="lazy" />
-              </div>
-              <h4 style={{ fontSize: '16px', fontWeight: 700, margin: 0, color: '#111827' }}>Gạch nợ & Quyết toán</h4>
-              <p style={{ fontSize: '13px', color: '#4B5563', margin: 0, lineHeight: 1.55 }}>
-                Xác nhận chuyển khoản ngân hàng, gạch nợ từng hóa đơn và lập phiếu hoàn cọc khi khách kết thúc hợp đồng.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* 6. IMMERSIVE ALTERNATING FEATURE SHOWCASE (IMAGE + REAL PRODUCT PREVIEW) */}
       <section id="features" style={{ padding: '80px 24px', maxWidth: '1200px', margin: '0 auto' }}>
         <div className="rf-reveal" style={{ textAlign: 'center', marginBottom: '60px' }}>
-          <span className="rf-badge rf-badge-active" style={{ marginBottom: '10px' }}>Chi tiết tính năng</span>
           <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 34px)', fontWeight: 800, letterSpacing: '-0.02em', color: '#111827', margin: 0 }}>
             Công cụ chuyên sâu cho từng khâu vận hành
           </h2>
@@ -672,7 +366,6 @@ export const LandingPage: React.FC = () => {
           {/* Feature 1: Room & Property Grid */}
           <div className="rf-feature-grid rf-reveal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'center' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <span className="rf-badge rf-badge-active" style={{ alignSelf: 'flex-start' }}>Sơ đồ tầng trực quan</span>
               <h3 style={{ fontSize: 'clamp(22px, 3vw, 26px)', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.3 }}>
                 Kiểm soát toàn bộ trạng thái phòng chỉ trong một màn hình
               </h3>
@@ -695,7 +388,6 @@ export const LandingPage: React.FC = () => {
               <img src={productScreens.meterReading} alt="Bảng ghi số điện nước RentFlow" className="rf-img-cover" loading="lazy" />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <span className="rf-badge rf-badge-warning" style={{ alignSelf: 'flex-start' }}>Tự động hóa tính toán</span>
               <h3 style={{ fontSize: 'clamp(22px, 3vw, 26px)', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.3 }}>
                 Ghi điện nước siêu tốc, phát hiện chỉ số bất thường
               </h3>
@@ -712,7 +404,6 @@ export const LandingPage: React.FC = () => {
           {/* Feature 3: Invoices & Payment Verification */}
           <div className="rf-feature-grid rf-reveal" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '48px', alignItems: 'center' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <span className="rf-badge rf-badge-active" style={{ alignSelf: 'flex-start' }}>Hóa đơn & Dòng tiền</span>
               <h3 style={{ fontSize: 'clamp(22px, 3vw, 26px)', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.3 }}>
                 Hóa đơn minh bạch, gạch nợ tức thì không lo thất thoát
               </h3>
@@ -735,7 +426,6 @@ export const LandingPage: React.FC = () => {
               <img src={productScreens.maintenanceDesk} alt="Trung tâm điều phối bảo trì sự cố" className="rf-img-cover" loading="lazy" />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <span className="rf-badge rf-badge-danger" style={{ alignSelf: 'flex-start' }}>Xử lý sự cố</span>
               <h3 style={{ fontSize: 'clamp(22px, 3vw, 26px)', fontWeight: 700, color: '#111827', margin: 0, lineHeight: 1.3 }}>
                 Tiếp nhận báo hỏng từ cư dân, điều phối thợ nhanh chóng
               </h3>
@@ -755,7 +445,6 @@ export const LandingPage: React.FC = () => {
       <section id="showcase" style={{ padding: '80px 24px', backgroundColor: '#FFFFFF', borderTop: '1px solid #E5E7EB' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', textAlign: 'center' }}>
           <div className="rf-reveal">
-            <span className="rf-badge rf-badge-active" style={{ marginBottom: '10px' }}>Trải nghiệm giao diện</span>
             <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 34px)', fontWeight: 800, letterSpacing: '-0.02em', color: '#111827', margin: 0 }}>
               Giao diện thực tế được thiết kế chuẩn mực cho quản trị viên
             </h2>
@@ -878,7 +567,6 @@ export const LandingPage: React.FC = () => {
       {/* 8. RESIDENTIAL PHOTO GALLERY — REAL LIVING SPACES */}
       <section id="gallery" style={{ padding: '80px 24px', maxWidth: '1200px', margin: '0 auto' }}>
         <div className="rf-reveal" style={{ textAlign: 'center', marginBottom: '44px' }}>
-          <span className="rf-badge rf-badge-active" style={{ marginBottom: '10px' }}>Không gian thực tế</span>
           <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 34px)', fontWeight: 800, letterSpacing: '-0.02em', color: '#111827', margin: 0 }}>
             Phục vụ đa dạng không gian sống và mô hình cho thuê
           </h2>
@@ -949,7 +637,6 @@ export const LandingPage: React.FC = () => {
       <section style={{ padding: '80px 24px', backgroundColor: '#FFFFFF', borderTop: '1px solid #E5E7EB' }}>
         <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
           <div className="rf-reveal" style={{ textAlign: 'center', marginBottom: '36px' }}>
-            <span className="rf-badge rf-badge-active" style={{ marginBottom: '10px' }}>Trải nghiệm phân vai</span>
             <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 34px)', fontWeight: 800, letterSpacing: '-0.02em', color: '#111827', margin: 0 }}>
               Thiết kế chuyên biệt cho từng nhóm người dùng
             </h2>
@@ -1055,7 +742,6 @@ export const LandingPage: React.FC = () => {
       {/* 10. FAQ ACCORDION SECTION */}
       <section id="faq" style={{ padding: '80px 24px', maxWidth: '840px', margin: '0 auto', width: '100%' }}>
         <div className="rf-reveal" style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <span className="rf-badge rf-badge-active" style={{ marginBottom: '10px' }}>Giải đáp thắc mắc</span>
           <h2 style={{ fontSize: 'clamp(26px, 3.5vw, 32px)', fontWeight: 800, letterSpacing: '-0.02em', color: '#111827', margin: 0 }}>
             Câu hỏi thường gặp về RentFlow
           </h2>
@@ -1182,61 +868,6 @@ export const LandingPage: React.FC = () => {
                 </div>
               </div>
             </div>
-
-            {/* Quick Action Box */}
-            <div
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '12px',
-                padding: '24px 28px',
-                maxWidth: '420px',
-                width: '100%',
-              }}
-            >
-              <h4 style={{ fontSize: '16px', fontWeight: 700, color: '#FFFFFF', margin: '0 0 8px 0' }}>
-                Bắt đầu đơn giản hóa quản lý ngay
-              </h4>
-              <p style={{ fontSize: '13px', color: '#94A3B8', margin: '0 0 18px 0', lineHeight: 1.55 }}>
-                Tạo cơ sở đầu tiên và trải nghiệm trọn bộ tính năng chỉ sau 2 phút đăng ký.
-              </p>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  className="rf-btn"
-                  style={{
-                    backgroundColor: '#FFFFFF',
-                    color: '#00594C',
-                    fontWeight: 700,
-                    padding: '10px 18px',
-                    fontSize: '13px',
-                    border: 'none',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                  }}
-                  onClick={() => navigate('/auth/register')}
-                >
-                  <span>Đăng ký dùng thử</span>
-                  <ArrowRight size={14} />
-                </button>
-                <button
-                  type="button"
-                  className="rf-btn"
-                  style={{
-                    backgroundColor: 'transparent',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    color: '#FFFFFF',
-                    fontWeight: 600,
-                    padding: '10px 16px',
-                    fontSize: '13px',
-                  }}
-                  onClick={() => navigate('/auth/roles')}
-                >
-                  Cổng đăng nhập
-                </button>
-              </div>
-            </div>
           </div>
 
           {/* Navigation Links Grid (4 Columns) */}
@@ -1258,7 +889,7 @@ export const LandingPage: React.FC = () => {
                 <li><a href="#features" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Sơ đồ trạng thái phòng</a></li>
                 <li><a href="#features" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Ghi số điện nước & Cảnh báo lệch</a></li>
                 <li><a href="#features" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Phát hành hóa đơn & Mã QR</a></li>
-                <li><a href="#workflow" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Hợp đồng & Sổ quỹ tiền cọc</a></li>
+                <li><a href="#features" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Hợp đồng & Sổ quỹ tiền cọc</a></li>
                 <li><a href="#features" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Tiếp nhận báo hỏng & Sửa chữa</a></li>
                 <li><a href="#showcase" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Khám phá giao diện thực tế</a></li>
               </ul>
@@ -1274,7 +905,6 @@ export const LandingPage: React.FC = () => {
                 <li><a href="#gallery" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Căn hộ mini & Serviced Apartments</a></li>
                 <li><a href="#gallery" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Ký túc xá & Mô hình Co-living</a></li>
                 <li><button type="button" onClick={() => navigate('/tenant/dashboard')} style={{ background: 'none', border: 'none', padding: 0, color: '#94A3B8', cursor: 'pointer', textAlign: 'left', font: 'inherit', fontSize: '13.5px' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Cổng cư dân (Tenant Portal)</button></li>
-                <li><button type="button" onClick={() => navigate('/admin')} style={{ background: 'none', border: 'none', padding: 0, color: '#94A3B8', cursor: 'pointer', textAlign: 'left', font: 'inherit', fontSize: '13.5px' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Platform Admin Control Center</button></li>
               </ul>
             </div>
 
@@ -1284,7 +914,7 @@ export const LandingPage: React.FC = () => {
                 Hỗ trợ & Hướng dẫn
               </div>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13.5px' }}>
-                <li><a href="#workflow" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Quy trình khởi tạo 4 bước</a></li>
+                <li><a href="#features" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Tính năng quản trị vận hành</a></li>
                 <li><a href="#faq" style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.15s ease' }} onMouseEnter={(e) => (e.currentTarget.style.color = '#34D399')} onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}>Câu hỏi thường gặp (FAQ)</a></li>
                 <li><span style={{ color: '#64748B' }}>Biểu mẫu bàn giao phòng chuẩn</span></li>
                 <li><span style={{ color: '#64748B' }}>Chính sách tính tiền điện lũy tiến</span></li>
@@ -1336,7 +966,7 @@ export const LandingPage: React.FC = () => {
               </div>
               <button
                 type="button"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                onClick={() => setAdminModalOpen(true)}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -1352,6 +982,8 @@ export const LandingPage: React.FC = () => {
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
                 onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
+                title="Về đầu trang"
+                aria-label="Về đầu trang"
               >
                 <span>Về đầu trang</span>
                 <ArrowUp size={14} />
@@ -1360,6 +992,187 @@ export const LandingPage: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* SECRET ADMIN LOGIN MODAL */}
+      {adminModalOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Platform Admin Console"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            animation: 'rfFadeIn 0.2s ease-out',
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setAdminModalOpen(false);
+            }
+          }}
+        >
+          <div
+            style={{
+              width: '100%',
+              maxWidth: '430px',
+              backgroundColor: '#1E293B',
+              border: '1px solid #334155',
+              borderRadius: '14px',
+              padding: '32px 28px',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+              position: 'relative',
+              color: '#F8FAFC',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => setAdminModalOpen(false)}
+              aria-label="Đóng"
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'none',
+                border: 'none',
+                color: '#94A3B8',
+                cursor: 'pointer',
+                padding: '6px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '6px',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
+            >
+              <X size={18} />
+            </button>
+
+            <div style={{ textAlign: 'center', marginBottom: '22px' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                <RentFlowLogo size={36} textColor="#F8FAFC" />
+              </div>
+              <h3 style={{ fontSize: '19px', fontWeight: 700, color: '#F8FAFC', margin: '14px 0 4px 0' }}>
+                Platform Admin Console
+              </h3>
+              <p style={{ fontSize: '12px', color: '#94A3B8', margin: 0 }}>
+                Cổng xác thực quản trị viên vận hành RentFlow
+              </p>
+            </div>
+
+            {adminError && (
+              <div style={{ padding: '8px 12px', borderRadius: '6px', backgroundColor: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#F87171', fontSize: '12px', marginBottom: '16px' }}>
+                {adminError}
+              </div>
+            )}
+
+            <form onSubmit={handleAdminModalSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#CBD5E1', marginBottom: '6px' }}>
+                  Tài khoản quản trị (Root Account)
+                </label>
+                <input
+                  type="email"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  disabled={adminSubmitting}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #475569',
+                    backgroundColor: '#0F172A',
+                    color: '#F8FAFC',
+                    fontSize: '13px',
+                    boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#CBD5E1', marginBottom: '6px' }}>
+                  Mật khẩu quản trị
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showAdminPassword ? 'text' : 'password'}
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    disabled={adminSubmitting}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '9px 36px 9px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid #475569',
+                      backgroundColor: '#0F172A',
+                      color: '#F8FAFC',
+                      fontSize: '13px',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminPassword(!showAdminPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      border: 'none',
+                      background: 'none',
+                      color: '#94A3B8',
+                      cursor: 'pointer',
+                      display: 'flex',
+                    }}
+                  >
+                    {showAdminPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={adminSubmitting}
+                className="rf-btn"
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  backgroundColor: '#00594C',
+                  color: '#FFFFFF',
+                  fontWeight: 600,
+                  fontSize: '13.5px',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  marginTop: '4px',
+                }}
+              >
+                {adminSubmitting ? (
+                  <span>Đang xác thực...</span>
+                ) : (
+                  <>
+                    <span>Đăng nhập Quản trị viên</span>
+                    <ArrowRight size={15} />
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -39,11 +39,7 @@ export const AdminSettingsPage: React.FC = () => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="rf-badge rf-badge-danger">Platform Configuration</span>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>Thiết lập an ninh & cổng dịch vụ toàn hệ thống</span>
-          </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '4px 0 0 0' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: 0 }}>
             Cài đặt & Cấu hình nền tảng RentFlow
           </h1>
         </div>

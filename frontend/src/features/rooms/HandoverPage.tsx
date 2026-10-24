@@ -1,15 +1,76 @@
 import React, { useState } from 'react';
-import { Camera, CheckCircle2, ChevronRight, Droplets, Zap } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { CheckCircle2, ChevronRight, Droplets, Eye, X, Zap, ArrowLeft } from 'lucide-react';
+import { useToast } from '@/components/feedback/ToastSystem';
+
+interface ChecklistItem {
+  id: number;
+  name: string;
+  checked: boolean;
+  imageUrl: string;
+  photoDate: string;
+  condition: string;
+}
 
 export const HandoverPage: React.FC = () => {
-  const [checklist, setChecklist] = useState([
-    { id: 1, name: 'Khóa cửa phòng & thẻ từ căn hộ (2 chìa, 1 thẻ)', checked: true },
-    { id: 2, name: 'Máy lạnh hoạt động tốt, có remote điều khiển', checked: true },
-    { id: 3, name: 'Tủ lạnh mini, sạch sẽ, làm đá bình thường', checked: true },
-    { id: 4, name: 'Hệ thống đèn trần & công tắc điện hoạt động đủ', checked: false },
-    { id: 5, name: 'Bồn cầu, vòi sen, lavabo không rò rỉ nước', checked: true },
-    { id: 6, name: 'Giường, nệm, tủ quần áo không trầy xước nặng', checked: true },
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const toast = useToast();
+
+  const contractId = searchParams.get('contractId') || 'CT-2023-048';
+  const roomCode = searchParams.get('roomCode') || 'P.302';
+  const [checklist, setChecklist] = useState<ChecklistItem[]>([
+    {
+      id: 1,
+      name: 'Khóa cửa phòng & thẻ từ căn hộ (2 chìa, 1 thẻ)',
+      checked: true,
+      imageUrl: 'https://images.unsplash.com/photo-1558036117-15d82a90b9b1?w=800&auto=format&fit=crop&q=80',
+      photoDate: '11/10/2026 09:05',
+      condition: 'Khóa cửa điện tử và 2 chìa khóa cơ hoạt động trơn tru.',
+    },
+    {
+      id: 2,
+      name: 'Máy lạnh hoạt động tốt, có remote điều khiển',
+      checked: true,
+      imageUrl: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=800&auto=format&fit=crop&q=80',
+      photoDate: '11/10/2026 09:10',
+      condition: 'Máy lạnh làm lạnh sâu, lưới lọc đã được vệ sinh sạch.',
+    },
+    {
+      id: 3,
+      name: 'Tủ lạnh mini, sạch sẽ, làm đá bình thường',
+      checked: true,
+      imageUrl: 'https://images.unsplash.com/photo-1584992236310-6edddc08acff?w=800&auto=format&fit=crop&q=80',
+      photoDate: '11/10/2026 09:12',
+      condition: 'Tủ lạnh mini 90L chạy êm, đủ khay kệ.',
+    },
+    {
+      id: 4,
+      name: 'Hệ thống đèn trần & công tắc điện hoạt động đủ',
+      checked: false,
+      imageUrl: 'https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?w=800&auto=format&fit=crop&q=80',
+      photoDate: '11/10/2026 09:15',
+      condition: 'Đèn led downlight sáng đều, 1 bóng góc tường hơi chớp nhẹ.',
+    },
+    {
+      id: 5,
+      name: 'Bồn cầu, vòi sen, lavabo không rò rỉ nước',
+      checked: true,
+      imageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&auto=format&fit=crop&q=80',
+      photoDate: '11/10/2026 09:18',
+      condition: 'Áp lực nước mạnh, thiết bị vệ sinh sạch sẽ không rò rỉ.',
+    },
+    {
+      id: 6,
+      name: 'Giường, nệm, tủ quần áo không trầy xước nặng',
+      checked: true,
+      imageUrl: 'https://images.unsplash.com/photo-1540518614846-7ede433c4ef5?w=800&auto=format&fit=crop&q=80',
+      photoDate: '11/10/2026 09:20',
+      condition: 'Nệm cao su non có ga bọc mới, tủ gỗ mở êm.',
+    },
   ]);
+
+  const [previewItem, setPreviewItem] = useState<ChecklistItem | null>(null);
 
   const toggleCheck = (id: number) => {
     setChecklist((prev) =>
@@ -20,14 +81,24 @@ export const HandoverPage: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1000px', margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', margin: 0 }}>
-            Biên bản bàn giao phòng — P.302
-          </h1>
-          <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 0 0' }}>
-            Khách nhận phòng: Bùi Lan Anh • Ngày bàn giao: 11/10/2026 • Hợp đồng CT-2023-048
-          </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            type="button"
+            className="rf-btn rf-btn-secondary"
+            onClick={() => navigate(-1)}
+            title="Quay lại trang trước"
+          >
+            <ArrowLeft size={14} /> Quay lại
+          </button>
+          <div>
+            <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', margin: 0 }}>
+              Biên bản bàn giao phòng — {roomCode}
+            </h1>
+            <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 0 0' }}>
+              Khách nhận phòng: Bùi Lan Anh • Ngày bàn giao: 11/10/2026 • Hợp đồng {contractId}
+            </p>
+          </div>
         </div>
         <span className="rf-badge rf-badge-warning" style={{ fontSize: '13px', padding: '6px 12px' }}>
           Đang thực hiện bàn giao
@@ -114,14 +185,14 @@ export const HandoverPage: React.FC = () => {
               <button
                 type="button"
                 className="rf-btn rf-btn-secondary"
-                style={{ padding: '3px 8px', fontSize: '11px' }}
+                style={{ padding: '3px 10px', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '5px' }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  alert('Chức năng đính kèm ảnh hiện trạng trang thiết bị');
+                  setPreviewItem(item);
                 }}
               >
-                <Camera size={12} />
-                Chụp ảnh
+                <Eye size={12} />
+                Xem ảnh
               </button>
             </div>
           ))}
@@ -158,15 +229,157 @@ export const HandoverPage: React.FC = () => {
 
         {/* Bottom Actions */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid #E5E7EB', paddingTop: '16px' }}>
-          <button className="rf-btn rf-btn-secondary">
+          <button
+            type="button"
+            className="rf-btn rf-btn-secondary"
+            onClick={() => {
+              toast.info('Đã lưu bản nháp', 'Tiến trình kiểm kê hiện trạng đã được lưu tạm.');
+            }}
+          >
             Lưu bản nháp
           </button>
-          <button className="rf-btn rf-btn-primary">
+          <button
+            type="button"
+            className="rf-btn rf-btn-primary"
+            onClick={() => {
+              toast.success('Bàn giao thành công!', `Biên bản bàn giao phòng ${roomCode} theo hợp đồng ${contractId} đã được ký nhận điện tử.`);
+              navigate(-1);
+            }}
+          >
             <CheckCircle2 size={15} />
             <span>Xác nhận & Hoàn tất bàn giao phòng</span>
           </button>
         </div>
       </div>
+
+      {/* Image Preview Modal */}
+      {previewItem && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px',
+            backdropFilter: 'blur(3px)',
+          }}
+          onClick={() => setPreviewItem(null)}
+        >
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '12px',
+              maxWidth: '560px',
+              width: '100%',
+              overflow: 'hidden',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.25)',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '14px 18px',
+                borderBottom: '1px solid #E5E7EB',
+              }}
+            >
+              <div>
+                <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: 0 }}>
+                  Ảnh hiện trạng bàn giao
+                </h3>
+                <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>
+                  {previewItem.name}
+                </div>
+              </div>
+              <button
+                onClick={() => setPreviewItem(null)}
+                style={{
+                  border: 'none',
+                  background: 'none',
+                  cursor: 'pointer',
+                  color: '#6B7280',
+                  padding: '4px',
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                aria-label="Đóng"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div style={{ padding: '16px', backgroundColor: '#F9FAFB' }}>
+              <div
+                style={{
+                  width: '100%',
+                  height: '280px',
+                  borderRadius: '8px',
+                  overflow: 'hidden',
+                  backgroundColor: '#E5E7EB',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <img
+                  src={previewItem.imageUrl}
+                  alt={previewItem.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+              <div
+                style={{
+                  marginTop: '12px',
+                  padding: '10px 14px',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '6px',
+                  border: '1px solid #E5E7EB',
+                  fontSize: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#6B7280' }}>Thời điểm chụp:</span>
+                  <span style={{ fontWeight: 600, color: '#111827' }}>{previewItem.photoDate}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#6B7280' }}>Tình trạng:</span>
+                  <span style={{ fontWeight: 600, color: '#00594C' }}>{previewItem.condition}</span>
+                </div>
+              </div>
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                padding: '12px 18px',
+                borderTop: '1px solid #E5E7EB',
+                backgroundColor: '#FFFFFF',
+              }}
+            >
+              <button
+                type="button"
+                className="rf-btn rf-btn-secondary"
+                onClick={() => setPreviewItem(null)}
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

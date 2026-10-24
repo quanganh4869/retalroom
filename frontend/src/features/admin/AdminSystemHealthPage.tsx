@@ -73,11 +73,7 @@ export const AdminSystemHealthPage: React.FC = () => {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="rf-badge rf-badge-active">Infrastructure Monitoring</span>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>Giám sát độ sẵn sàng hạ tầng SaaS theo thời gian thực</span>
-          </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '4px 0 0 0' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: 0 }}>
             Sức khỏe hệ thống & Hạ tầng Cloud (System Health)
           </h1>
         </div>

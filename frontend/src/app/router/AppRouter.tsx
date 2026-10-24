@@ -16,6 +16,7 @@ import { InvoicesPage } from '@/features/billing/InvoicesPage';
 import { PaymentsPage } from '@/features/payments/PaymentsPage';
 import { MaintenancePage } from '@/features/maintenance/MaintenancePage';
 import { ContractsPage } from '@/features/leases/ContractsPage';
+import { CreateContractPage } from '@/features/leases/CreateContractPage';
 import { MeterReadingsPage } from '@/features/billing/MeterReadingsPage';
 import { DepositsPage } from '@/features/billing/DepositsPage';
 import { TenantsPage } from '@/features/tenants/TenantsPage';
@@ -26,14 +27,20 @@ import { AdminOverviewPage } from '@/features/admin/AdminOverviewPage';
 import { AdminAccountsPage } from '@/features/admin/AdminAccountsPage';
 import { AdminOrganizationsPage } from '@/features/admin/AdminOrganizationsPage';
 import { AdminSubscriptionPlansPage } from '@/features/admin/AdminSubscriptionPlansPage';
+import { AdminConfigurePlansPage } from '@/features/admin/AdminConfigurePlansPage';
 import { AdminSupportPage } from '@/features/admin/AdminSupportPage';
 import { AdminAnnouncementsPage } from '@/features/admin/AdminAnnouncementsPage';
 import { AdminAuditLogsPage } from '@/features/admin/AdminAuditLogsPage';
 import { AdminSystemHealthPage } from '@/features/admin/AdminSystemHealthPage';
 import { AdminSettingsPage } from '@/features/admin/AdminSettingsPage';
-import { AdminLoginHistoryPage } from '@/features/admin/AdminLoginHistoryPage';
+import {
+  AdminLoginLogsPage,
+  AdminLoginAnalyticsPage,
+  AdminSecurityAlertsPage,
+  AdminBlockedIPsPage,
+  AdminLoginEventDetailPage,
+} from '@/features/admin/security';
 import { AdminActiveSessionsPage } from '@/features/admin/AdminActiveSessionsPage';
-import { AdminSecurityEventsPage } from '@/features/admin/AdminSecurityEventsPage';
 import { AdminAccessControlPage } from '@/features/admin/AdminAccessControlPage';
 import { AdminSystemLogsPage } from '@/features/admin/AdminSystemLogsPage';
 import { AdminIntegrationsPage } from '@/features/admin/AdminIntegrationsPage';
@@ -255,14 +262,28 @@ export const AppRouter: React.FC = () => {
               }
             />
             <Route
-              path="/platform/subscriptions"
+              path="/platform/subscription-plans/configure"
               element={
                 <ProtectedRoute allowedRoles={['SUPERADMIN']}>
                   <AppShell>
-                    <AdminSubscriptionPlansPage />
+                    <AdminConfigurePlansPage />
                   </AppShell>
                 </ProtectedRoute>
               }
+            />
+            <Route
+              path="/platform/subscription-plans/configure/:planId"
+              element={
+                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                  <AppShell>
+                    <AdminConfigurePlansPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/platform/subscriptions"
+              element={<Navigate to="/platform/subscription-plans?tab=subscriptions" replace />}
             />
             <Route
               path="/platform/transactions"
@@ -294,16 +315,90 @@ export const AppRouter: React.FC = () => {
                 </ProtectedRoute>
               }
             />
+            {/* Security: Multi-tier Login Logs & Threat Admin Module */}
             <Route
-              path="/platform/security/login-history"
+              path="/platform/security/login-logs"
               element={
                 <ProtectedRoute allowedRoles={['SUPERADMIN']}>
                   <AppShell>
-                    <AdminLoginHistoryPage />
+                    <AdminLoginLogsPage />
                   </AppShell>
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/platform/security/login-logs/analytics"
+              element={
+                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                  <AppShell>
+                    <AdminLoginAnalyticsPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/platform/security/login-logs/alerts"
+              element={
+                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                  <AppShell>
+                    <AdminSecurityAlertsPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/platform/security/login-logs/blocked-ips"
+              element={
+                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                  <AppShell>
+                    <AdminBlockedIPsPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/platform/security/login-logs/events/:eventId"
+              element={
+                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                  <AppShell>
+                    <AdminLoginEventDetailPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Legacy & Route Aliases for Login Logs */}
+            <Route
+              path="/platform/security/login-history"
+              element={<Navigate to="/platform/security/login-logs" replace />}
+            />
+            <Route
+              path="/admin/security/login-logs"
+              element={<Navigate to="/platform/security/login-logs" replace />}
+            />
+            <Route
+              path="/admin/security/login-logs/analytics"
+              element={<Navigate to="/platform/security/login-logs/analytics" replace />}
+            />
+            <Route
+              path="/admin/security/login-logs/alerts"
+              element={<Navigate to="/platform/security/login-logs/alerts" replace />}
+            />
+            <Route
+              path="/admin/security/login-logs/blocked-ips"
+              element={<Navigate to="/platform/security/login-logs/blocked-ips" replace />}
+            />
+            <Route
+              path="/admin/security/login-logs/events/:eventId"
+              element={
+                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
+                  <AppShell>
+                    <AdminLoginEventDetailPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+
             <Route
               path="/platform/security/sessions"
               element={
@@ -316,13 +411,7 @@ export const AppRouter: React.FC = () => {
             />
             <Route
               path="/platform/security/events"
-              element={
-                <ProtectedRoute allowedRoles={['SUPERADMIN']}>
-                  <AppShell>
-                    <AdminSecurityEventsPage />
-                  </AppShell>
-                </ProtectedRoute>
-              }
+              element={<Navigate to="/platform/security/login-logs/alerts" replace />}
             />
             <Route
               path="/platform/audit-logs"
@@ -482,6 +571,20 @@ export const AppRouter: React.FC = () => {
               }
             />
             <Route
+              path="/contracts/new"
+              element={
+                <ProtectedRoute allowedRoles={['LANDLORD', 'SUPERADMIN']}>
+                  <AppShell>
+                    <CreateContractPage />
+                  </AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contracts/create"
+              element={<Navigate to="/contracts/new" replace />}
+            />
+            <Route
               path="/contracts/:id"
               element={
                 <ProtectedRoute allowedRoles={['LANDLORD', 'SUPERADMIN']}>
@@ -490,6 +593,10 @@ export const AppRouter: React.FC = () => {
                   </AppShell>
                 </ProtectedRoute>
               }
+            />
+            <Route
+              path="/contracts/:id/handover"
+              element={<Navigate to="/handover" replace />}
             />
             <Route
               path="/invoices"

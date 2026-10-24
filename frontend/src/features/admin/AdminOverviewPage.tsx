@@ -1,78 +1,173 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users,
   Building2,
   DollarSign,
-  Activity,
   AlertCircle,
-  Clock,
-  ShieldCheck,
   ArrowRight,
   TrendingUp,
   Server,
-  Zap,
+  Filter,
 } from 'lucide-react';
 import { usePlatformAdmin } from './PlatformAdminContext';
+import { TrendLineChart, DonutDistributionChart } from '@/components/ui/DashboardCharts';
+
+type TimeRangeFilter = '7d' | '30d' | 'this_month' | '6m';
 
 export const AdminOverviewPage: React.FC = () => {
   const navigate = useNavigate();
-  const { metrics, tickets, auditLogs, organizations } = usePlatformAdmin();
+  const { metrics, tickets, organizations, accounts, subscriptions } = usePlatformAdmin();
+  const [timeRange, setTimeRange] = useState<TimeRangeFilter>('30d');
 
+  // Filter urgent support tickets
   const urgentTickets = tickets.filter(
     (t) => (t.status === 'OPEN' || t.status === 'IN_PROGRESS') && (t.priority === 'URGENT' || t.priority === 'HIGH')
   );
 
-  const pendingOrganizations = organizations.filter((o) => o.status === 'SUSPENDED');
+  // Subscription plan breakdown for secondary chart
+  const planCounts = {
+    starter: subscriptions.filter((s) => s.planName.toLowerCase().includes('starter') || s.planName.toLowerCase().includes('cơ bản')).length || 45,
+    pro: subscriptions.filter((s) => s.planName.toLowerCase().includes('pro') || s.planName.toLowerCase().includes('chuyên nghiệp')).length || 85,
+    enterprise: subscriptions.filter((s) => s.planName.toLowerCase().includes('enterprise') || s.planName.toLowerCase().includes('doanh nghiệp')).length || 55,
+  };
+
+  const donutSegments = [
+    { label: 'Gói Chuyên nghiệp (Pro)', value: planCounts.pro, color: '#00594C' },
+    { label: 'Gói Doanh nghiệp (Enterprise)', value: planCounts.enterprise, color: '#4F46E5' },
+    { label: 'Gói Khởi nghiệp (Starter)', value: planCounts.starter, color: '#10B981' },
+  ];
+
+  // Dynamic growth trend data based on selected time range
+  const getGrowthData = () => {
+    switch (timeRange) {
+      case '7d':
+        return [
+          { label: 'T2', accounts: 1395, orgs: 180 },
+          { label: 'T3', accounts: 1400, orgs: 181 },
+          { label: 'T4', accounts: 1405, orgs: 182 },
+          { label: 'T5', accounts: 1410, orgs: 183 },
+          { label: 'T6', accounts: 1414, orgs: 184 },
+          { label: 'T7', accounts: 1418, orgs: 184 },
+          { label: 'CN', accounts: 1420, orgs: 185 },
+        ];
+      case 'this_month':
+        return [
+          { label: 'Tuần 1', accounts: 1370, orgs: 176 },
+          { label: 'Tuần 2', accounts: 1390, orgs: 179 },
+          { label: 'Tuần 3', accounts: 1405, orgs: 182 },
+          { label: 'Tuần 4', accounts: 1420, orgs: 185 },
+        ];
+      case '6m':
+      case '30d':
+      default:
+        return [
+          { label: 'T05', accounts: 1150, orgs: 142 },
+          { label: 'T06', accounts: 1210, orgs: 153 },
+          { label: 'T07', accounts: 1280, orgs: 161 },
+          { label: 'T08', accounts: 1340, orgs: 172 },
+          { label: 'T09', accounts: 1390, orgs: 179 },
+          { label: 'T10', accounts: 1420, orgs: 185 },
+        ];
+    }
+  };
+
+  const growthSeries = [
+    { key: 'accounts', name: 'Tài khoản người dùng', color: '#00594C' },
+    { key: 'orgs', name: 'Tổ chức chủ nhà', color: '#4F46E5' },
+  ];
+
+  // Filtered metrics adjustments for consistency
+  const activeAccountsCount = accounts.filter((a) => a.status === 'ACTIVE').length || 1420;
+  const activeLandlordsCount = organizations.filter((o) => o.status === 'ACTIVE').length || metrics.activeLandlords;
+  const currentMrrMillions = (metrics.mrrVnd / 1000000).toFixed(1);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1440px', margin: '0 auto' }}>
-      {/* Platform Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1440px', margin: '0 auto' }}>
+      {/* 1. Header with Context, Live Status & Time Filter */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '16px',
+          backgroundColor: '#FFFFFF',
+          padding: '18px 24px',
+          borderRadius: '8px',
+          border: '1px solid #E5E7EB',
+        }}
+      >
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span className="rf-badge rf-badge-danger" style={{ fontWeight: 700, letterSpacing: '0.5px' }}>
-              PLATFORM ADMIN CONSOLE
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#16A34A', fontWeight: 600 }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#16A34A', display: 'inline-block' }} />
-              Hệ thống vận hành bình thường (99.98% Uptime)
-            </div>
-          </div>
-          <h1 style={{ fontSize: '24px', fontWeight: 700, color: '#111827', margin: '6px 0 2px 0' }}>
-            Trung tâm giám sát & điều hành nền tảng RentFlow
+          <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', margin: '0 0 2px 0' }}>
+            Tổng quan
           </h1>
           <p style={{ fontSize: '13px', color: '#6B7280', margin: 0 }}>
-            Tổng quan vĩ mô hệ thống SaaS đa khách hàng (Multi-tenant), doanh thu định kỳ và bảo mật hạ tầng.
+            Giám sát vĩ mô hệ thống SaaS đa khách hàng, tình hình tăng trưởng và an ninh hạ tầng.
           </p>
         </div>
 
-        {/* Quick Top Actions */}
-        <div style={{ display: 'flex', gap: '10px' }}>
+        {/* Time Filters & Quick System Status Button */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              backgroundColor: '#F3F4F6',
+              padding: '3px',
+              borderRadius: '6px',
+              border: '1px solid #E5E7EB',
+            }}
+          >
+            <span style={{ padding: '0 8px', color: '#6B7280', display: 'flex', alignItems: 'center' }}>
+              <Filter size={13} />
+            </span>
+            {[
+              { id: '7d', label: '7 ngày' },
+              { id: '30d', label: '30 ngày' },
+              { id: 'this_month', label: 'Tháng này' },
+              { id: '6m', label: '6 tháng' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setTimeRange(tab.id as TimeRangeFilter)}
+                style={{
+                  border: 'none',
+                  padding: '5px 12px',
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  fontWeight: timeRange === tab.id ? 700 : 500,
+                  backgroundColor: timeRange === tab.id ? '#FFFFFF' : 'transparent',
+                  color: timeRange === tab.id ? '#00594C' : '#4B5563',
+                  boxShadow: timeRange === tab.id ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           <button
             type="button"
             className="rf-btn rf-btn-secondary"
             onClick={() => navigate('/platform/system-health')}
+            style={{ fontSize: '12px', padding: '6px 12px' }}
           >
             <Server size={14} /> Kiểm tra hạ tầng
-          </button>
-          <button
-            type="button"
-            className="rf-btn rf-btn-primary"
-            onClick={() => navigate('/platform/support')}
-          >
-            <AlertCircle size={14} /> Xem yêu cầu hỗ trợ ({metrics.pendingTicketsCount})
           </button>
         </div>
       </div>
 
-      {/* High-level SaaS Metrics Grid (Clickable to dedicated routes) */}
+      {/* 2. Top 4 Core SaaS KPIs (Clickable directly to management modules) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '16px' }}>
-        {/* Metric 1: Total Active Organizations */}
+        {/* KPI 1: Active Accounts */}
         <div
           className="rf-card"
-          onClick={() => navigate('/platform/organizations')}
-          style={{ cursor: 'pointer', transition: 'all 0.18s ease', position: 'relative', overflow: 'hidden' }}
+          onClick={() => navigate('/platform/accounts')}
+          style={{ cursor: 'pointer', transition: 'all 0.18s ease' }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-2px)';
             e.currentTarget.style.borderColor = '#00594C';
@@ -83,17 +178,17 @@ export const AdminOverviewPage: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '13px', color: '#6B7280', fontWeight: 500 }}>Tổ chức & Doanh nghiệp</span>
+            <span style={{ fontSize: '13px', color: '#6B7280', fontWeight: 600 }}>Tài khoản người dùng</span>
             <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#E6F0EE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#00594C' }}>
-              <Building2 size={16} />
+              <Users size={16} />
             </div>
           </div>
-          <div style={{ fontSize: '28px', fontWeight: 800, color: '#111827', margin: '8px 0 4px 0' }}>
-            {metrics.activeLandlords.toLocaleString('vi-VN')}
+          <div style={{ fontSize: '26px', fontWeight: 800, color: '#111827', margin: '8px 0 4px 0', letterSpacing: '-0.4px' }}>
+            {activeAccountsCount.toLocaleString('vi-VN')}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px' }}>
             <span style={{ color: '#16A34A', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
-              <TrendingUp size={13} /> +12% tháng này
+              <TrendingUp size={13} /> +8.5% so với kỳ trước
             </span>
             <span style={{ color: '#00594C', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2px' }}>
               Quản lý <ArrowRight size={12} />
@@ -101,7 +196,7 @@ export const AdminOverviewPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Metric 2: Total Managed Rental Rooms */}
+        {/* KPI 2: Active Organizations */}
         <div
           className="rf-card"
           onClick={() => navigate('/platform/organizations')}
@@ -116,23 +211,25 @@ export const AdminOverviewPage: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '13px', color: '#6B7280', fontWeight: 500 }}>Phòng trọ đang quản lý</span>
+            <span style={{ fontSize: '13px', color: '#6B7280', fontWeight: 600 }}>Tổ chức chủ nhà hoạt động</span>
             <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4F46E5' }}>
-              <Users size={16} />
+              <Building2 size={16} />
             </div>
           </div>
-          <div style={{ fontSize: '28px', fontWeight: 800, color: '#00594C', margin: '8px 0 4px 0' }}>
-            {metrics.totalManagedRooms.toLocaleString('vi-VN')}
+          <div style={{ fontSize: '26px', fontWeight: 800, color: '#111827', margin: '8px 0 4px 0', letterSpacing: '-0.4px' }}>
+            {activeLandlordsCount.toLocaleString('vi-VN')}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: '#6B7280' }}>Phủ sóng 63 tỉnh thành VN</span>
+            <span style={{ color: '#16A34A', fontWeight: 600 }}>
+              +12 tổ chức mới
+            </span>
             <span style={{ color: '#00594C', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2px' }}>
               Chi tiết <ArrowRight size={12} />
             </span>
           </div>
         </div>
 
-        {/* Metric 3: SaaS Recurring Revenue (MRR) */}
+        {/* KPI 3: SaaS Recurring Revenue (MRR) */}
         <div
           className="rf-card"
           onClick={() => navigate('/platform/subscriptions')}
@@ -147,30 +244,32 @@ export const AdminOverviewPage: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '13px', color: '#6B7280', fontWeight: 500 }}>Doanh thu phần mềm (MRR)</span>
+            <span style={{ fontSize: '13px', color: '#6B7280', fontWeight: 600 }}>Doanh thu thuê bao (MRR)</span>
             <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#D97706' }}>
               <DollarSign size={16} />
             </div>
           </div>
-          <div style={{ fontSize: '28px', fontWeight: 800, color: '#111827', margin: '8px 0 4px 0' }}>
-            {(metrics.mrrVnd / 1000000).toFixed(1)} tr đ
+          <div style={{ fontSize: '26px', fontWeight: 800, color: '#00594C', margin: '8px 0 4px 0', letterSpacing: '-0.4px' }}>
+            {currentMrrMillions} tr đ
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: '#6B7280' }}>{metrics.activeSubscriptionsCount} gói trả phí hoạt động</span>
+            <span style={{ color: '#16A34A', fontWeight: 600 }}>
+              +15.2% so với tháng trước
+            </span>
             <span style={{ color: '#00594C', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2px' }}>
-              Gói dịch vụ <ArrowRight size={12} />
+              Gói SaaS <ArrowRight size={12} />
             </span>
           </div>
         </div>
 
-        {/* Metric 4: System Availability & SLA */}
+        {/* KPI 4: Pending Support & SLA Tickets */}
         <div
           className="rf-card"
-          onClick={() => navigate('/platform/system-health')}
+          onClick={() => navigate('/platform/support')}
           style={{ cursor: 'pointer', transition: 'all 0.18s ease' }}
           onMouseEnter={(e) => {
             e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.borderColor = '#16A34A';
+            e.currentTarget.style.borderColor = urgentTickets.length > 0 ? '#DC2626' : '#16A34A';
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
@@ -178,327 +277,77 @@ export const AdminOverviewPage: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '13px', color: '#6B7280', fontWeight: 500 }}>Độ sẵn sàng hạ tầng</span>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16A34A' }}>
-              <Activity size={16} />
+            <span style={{ fontSize: '13px', color: '#6B7280', fontWeight: 600 }}>Yêu cầu hỗ trợ mở</span>
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: urgentTickets.length > 0 ? '#FEE2E2' : '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: urgentTickets.length > 0 ? '#DC2626' : '#16A34A' }}>
+              <AlertCircle size={16} />
             </div>
           </div>
-          <div style={{ fontSize: '28px', fontWeight: 800, color: '#16A34A', margin: '8px 0 4px 0' }}>
-            {metrics.systemUptime}
+          <div style={{ fontSize: '26px', fontWeight: 800, color: urgentTickets.length > 0 ? '#DC2626' : '#111827', margin: '8px 0 4px 0', letterSpacing: '-0.4px' }}>
+            {metrics.pendingTicketsCount}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px' }}>
-            <span style={{ color: '#6B7280' }}>Response time: 42ms</span>
-            <span style={{ color: '#16A34A', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2px' }}>
-              Health Check <ArrowRight size={12} />
+            <span style={{ color: urgentTickets.length > 0 ? '#DC2626' : '#6B7280', fontWeight: 600 }}>
+              {urgentTickets.length} ticket khẩn cấp cần xử lý
+            </span>
+            <span style={{ color: '#00594C', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '2px' }}>
+              Hỗ trợ <ArrowRight size={12} />
             </span>
           </div>
         </div>
       </div>
 
-      {/* Two Column Layout: Operational Worklist & Real-time Audit Activity */}
+      {/* 3. Analytics Charts Grid: Main Trend & Secondary Distribution */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '20px' }}>
-        {/* Left Column: Immediate Attention / Operational Action Center */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {/* Action Center Card */}
-          <div className="rf-card" style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0 }}>
-                  Trung tâm tác vụ cần xử lý ngay
-                </h3>
-                <span style={{ fontSize: '12px', color: '#6B7280' }}>
-                  Các vấn đề về ticket khẩn cấp hoặc tài khoản quá hạn thanh toán
-                </span>
-              </div>
-              <span className="rf-badge rf-badge-danger" style={{ fontWeight: 600 }}>
-                {urgentTickets.length + pendingOrganizations.length} Mục chờ
-              </span>
-            </div>
-
-            {/* List of Tasks */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {urgentTickets.map((t) => (
-                <div
-                  key={t.id}
-                  onClick={() => navigate('/platform/support')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 14px',
-                    borderRadius: '8px',
-                    backgroundColor: '#FEF2F2',
-                    border: '1px solid #FEE2E2',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.15s ease',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#FEE2E2')}
-                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FEF2F2')}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                    <AlertCircle size={18} color="#DC2626" style={{ marginTop: '2px', flexShrink: 0 }} />
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontWeight: 700, fontSize: '13px', color: '#991B1B' }}>
-                          [{t.ticketNumber}] {t.subject}
-                        </span>
-                        <span className="rf-badge rf-badge-danger" style={{ fontSize: '10px' }}>
-                          {t.priority}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#7F1D1D', marginTop: '2px' }}>
-                        Tổ chức: <strong>{t.organizationName}</strong> • Người gửi: {t.requesterName}
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="rf-btn rf-btn-primary"
-                    style={{ fontSize: '11px', padding: '4px 10px', backgroundColor: '#DC2626', borderColor: '#DC2626' }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate('/platform/support');
-                    }}
-                  >
-                    Xử lý
-                  </button>
-                </div>
-              ))}
-
-              {pendingOrganizations.map((org) => (
-                <div
-                  key={org.id}
-                  onClick={() => navigate('/platform/organizations')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 14px',
-                    borderRadius: '8px',
-                    backgroundColor: '#FFFBEB',
-                    border: '1px solid #FEF3C7',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
-                    <Clock size={18} color="#D97706" style={{ marginTop: '2px', flexShrink: 0 }} />
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: '13px', color: '#92400E' }}>
-                        Tổ chức tạm ngưng dịch vụ do quá hạn: {org.name}
-                      </div>
-                      <div style={{ fontSize: '12px', color: '#B45309', marginTop: '2px' }}>
-                        Chủ sở hữu: {org.ownerName} ({org.ownerPhone}) • Gói: {org.planName}
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    className="rf-btn rf-btn-secondary"
-                    style={{ fontSize: '11px', padding: '4px 10px' }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate('/platform/organizations');
-                    }}
-                  >
-                    Xem xét
-                  </button>
-                </div>
-              ))}
+        {/* Main Chart: Growth Trend Over Time */}
+        <div className="rf-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+            <div>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0 }}>
+                Xu hướng tăng trưởng người dùng & tổ chức
+              </h3>
+              <p style={{ fontSize: '12px', color: '#6B7280', margin: '2px 0 0 0' }}>
+                Số lượng tài khoản cá nhân và doanh nghiệp gia nhập hệ thống theo thời gian
+              </p>
             </div>
           </div>
 
-          {/* Quick Navigation to Admin Subsystems */}
-          <div className="rf-card" style={{ padding: '20px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', marginBottom: '14px' }}>
-              Lối tắt phân hệ quản trị lõi
-            </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-              <div
-                onClick={() => navigate('/platform/security/login-history')}
-                style={{
-                  padding: '12px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                  cursor: 'pointer',
-                  backgroundColor: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#00594C')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
-              >
-                <ShieldCheck size={18} color="#00594C" />
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Lịch sử Đăng nhập</div>
-                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Phát hiện brute-force & vị trí lạ</div>
-                </div>
-              </div>
-
-              <div
-                onClick={() => navigate('/platform/security/events')}
-                style={{
-                  padding: '12px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                  cursor: 'pointer',
-                  backgroundColor: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#DC2626')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
-              >
-                <AlertCircle size={18} color="#DC2626" />
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Sự kiện An ninh ({metrics.securityThreatsCount})</div>
-                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Điều tra cảnh báo & chặn IP</div>
-                </div>
-              </div>
-
-              <div
-                onClick={() => navigate('/platform/access-control')}
-                style={{
-                  padding: '12px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                  cursor: 'pointer',
-                  backgroundColor: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#00594C')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
-              >
-                <Users size={18} color="#00594C" />
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Vai trò & Phân quyền</div>
-                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Ma trận quyền hạn RBAC</div>
-                </div>
-              </div>
-
-              <div
-                onClick={() => navigate('/platform/transactions')}
-                style={{
-                  padding: '12px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                  cursor: 'pointer',
-                  backgroundColor: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#00594C')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
-              >
-                <DollarSign size={18} color="#00594C" />
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Giao dịch SaaS</div>
-                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Đối soát cổng VNPay / MoMo</div>
-                </div>
-              </div>
-
-              <div
-                onClick={() => navigate('/platform/system-logs')}
-                style={{
-                  padding: '12px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                  cursor: 'pointer',
-                  backgroundColor: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#00594C')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
-              >
-                <Server size={18} color="#00594C" />
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Nhật ký ứng dụng & Lỗi</div>
-                  <div style={{ fontSize: '11px', color: '#6B7280' }}>Truy vết lỗi API & HTTP 500</div>
-                </div>
-              </div>
-
-              <div
-                onClick={() => navigate('/platform/integrations')}
-                style={{
-                  padding: '12px',
-                  borderRadius: '6px',
-                  border: '1px solid #E5E7EB',
-                  cursor: 'pointer',
-                  backgroundColor: '#FFFFFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#00594C')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
-              >
-                <Zap size={18} color="#00594C" />
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '13px', color: '#111827' }}>Dịch vụ Tích hợp</div>
-                  <div style={{ fontSize: '11px', color: '#6B7280' }}>VNPay, VietQR, Zalo OA, AI OCR</div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <TrendLineChart
+            data={getGrowthData()}
+            series={growthSeries}
+            height={230}
+            yAxisTitle="Quy mô (Tài khoản / Tổ chức)"
+          />
         </div>
 
-        {/* Right Column: Recent Audit Trail Feed */}
-        <div className="rf-card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <div
-            style={{
-              padding: '16px 20px',
-              borderBottom: '1px solid #E5E7EB',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <div>
-              <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: 0 }}>
-                Nhật ký kiểm toán gần đây
-              </h3>
-              <span style={{ fontSize: '12px', color: '#6B7280' }}>Theo dõi hành vi quản trị & biến động hệ thống</span>
-            </div>
-            <button
-              type="button"
-              className="rf-btn rf-btn-secondary"
-              style={{ fontSize: '11px', padding: '4px 8px' }}
-              onClick={() => navigate('/platform/audit-logs')}
-            >
-              Xem tất cả →
-            </button>
+        {/* Secondary Chart: Subscription Plan Breakdown */}
+        <div className="rf-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#111827', margin: 0 }}>
+              Cơ cấu gói thuê bao SaaS
+            </h3>
+            <p style={{ fontSize: '12px', color: '#6B7280', margin: '2px 0 0 0' }}>
+              Tỷ trọng phân bố giữa các gói dịch vụ RentFlow đang phát sinh thuê bao
+            </p>
           </div>
 
-          <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto', maxHeight: '420px' }}>
-            {auditLogs.slice(0, 6).map((log) => (
-              <div
-                key={log.id}
-                style={{
-                  padding: '10px 12px',
-                  borderRadius: '6px',
-                  backgroundColor: '#F9FAFB',
-                  border: '1px solid #F3F4F6',
-                  fontSize: '12px',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 600, color: '#111827' }}>{log.action}</span>
-                  <span style={{ fontSize: '11px', color: '#9CA3AF' }}>{log.timestamp}</span>
-                </div>
-                <div style={{ color: '#4B5563', marginTop: '3px' }}>{log.details}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', fontSize: '11px', color: '#6B7280' }}>
-                  <span>Bởi: <strong>{log.actorEmail}</strong></span>
-                  <span>•</span>
-                  <span>IP: {log.ipAddress} ({log.location})</span>
-                </div>
-              </div>
-            ))}
+          <div style={{ marginTop: '16px' }}>
+            <DonutDistributionChart
+              segments={donutSegments}
+              centerValue={`${subscriptions.length || 185}`}
+              centerLabel="Tổng gói đăng ký"
+              size={170}
+            />
+          </div>
+
+          <div style={{ borderTop: '1px solid #F3F4F6', paddingTop: '12px', marginTop: '14px', display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+            <span style={{ color: '#6B7280' }}>Tỷ lệ gia hạn đúng hạn: <strong style={{ color: '#16A34A' }}>94.6%</strong></span>
+            <button
+              type="button"
+              onClick={() => navigate('/platform/subscription-plans')}
+              style={{ background: 'none', border: 'none', color: '#00594C', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+            >
+              Xem bảng giá SaaS →
+            </button>
           </div>
         </div>
       </div>

@@ -3,6 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import {
   Printer,
   FileCheck,
+  ClipboardCheck,
+  ArrowLeft,
 } from 'lucide-react';
 import {
   mockContracts,
@@ -69,21 +71,39 @@ export const ContractDetailPage: React.FC = () => {
   return (
     <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Action Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-        <button
-          type="button"
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+        <Link
+          to="/contracts"
           className="rf-btn rf-btn-secondary"
-          onClick={handlePrint}
+          style={{ textDecoration: 'none' }}
         >
-          <Printer size={14} /> In hợp đồng thuê nhà
-        </button>
-        <button
-          type="button"
-          className="rf-btn rf-btn-primary"
-          onClick={handleRenew}
-        >
-          <FileCheck size={14} /> Gia hạn thêm 1 năm
-        </button>
+          <ArrowLeft size={14} /> Danh sách hợp đồng
+        </Link>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Link
+            to={`/handover?contractId=${contract.id}&roomCode=${contract.roomCode}`}
+            className="rf-btn rf-btn-secondary"
+            style={{ textDecoration: 'none', color: '#00594C', fontWeight: 600 }}
+            title="Kiểm kê tài sản & bàn giao phòng theo hợp đồng"
+          >
+            <ClipboardCheck size={14} color="#00594C" /> Biên bản bàn giao phòng
+          </Link>
+          <button
+            type="button"
+            className="rf-btn rf-btn-secondary"
+            onClick={handlePrint}
+          >
+            <Printer size={14} /> In hợp đồng
+          </button>
+          <button
+            type="button"
+            className="rf-btn rf-btn-primary"
+            onClick={handleRenew}
+          >
+            <FileCheck size={14} /> Gia hạn thêm 1 năm
+          </button>
+        </div>
       </div>
 
       {/* Main Printable Legal Contract Document */}

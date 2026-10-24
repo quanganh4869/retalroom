@@ -35,11 +35,7 @@ export const AdminAccessControlPage: React.FC = () => {
       {/* Page Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="rf-badge rf-badge-danger">NGƯỜI DÙNG & TRUY CẬP</span>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>Phân quyền theo vai trò (Role-Based Access Control)</span>
-          </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '4px 0 2px 0' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '0 0 2px 0' }}>
             Quản lý vai trò & Phân quyền hệ thống (Roles & Permissions)
           </h1>
           <p style={{ fontSize: '13px', color: '#6B7280', margin: 0 }}>

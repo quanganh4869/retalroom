@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Search,
   Check,
+  Bell,
+  Send,
+  Sliders,
 } from 'lucide-react';
 import { usePlatformAdmin } from './PlatformAdminContext';
 import { useToast } from '@/components/feedback/ToastSystem';
@@ -9,10 +13,26 @@ import { useToast } from '@/components/feedback/ToastSystem';
 export const AdminSubscriptionPlansPage: React.FC = () => {
   const { plans, subscriptions } = usePlatformAdmin();
   const toast = useToast();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<'plans' | 'subscriptions'>('plans');
+  const initialTab = searchParams.get('tab') === 'subscriptions' ? 'subscriptions' : 'plans';
+  const [activeTab, setActiveTab] = useState<'plans' | 'subscriptions'>(initialTab);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl === 'subscriptions' || tabFromUrl === 'plans') {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab: 'plans' | 'subscriptions') => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
 
   const filteredSubscriptions = subscriptions.filter((sub) => {
     const matchesSearch =
@@ -22,26 +42,83 @@ export const AdminSubscriptionPlansPage: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const isAllSelected = filteredSubscriptions.length > 0 && filteredSubscriptions.every((s) => selectedIds.includes(s.id));
+  const isSomeSelected = filteredSubscriptions.some((s) => selectedIds.includes(s.id)) && !isAllSelected;
+
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredSubscriptions.map((s) => s.id));
+    }
+  };
+
+  const handleSelectOne = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleRemindAll = () => {
+    if (filteredSubscriptions.length === 0) {
+      toast.warning('Danh sách trống', 'Không có tổ chức nào trong danh sách để gửi nhắc phí.');
+      return;
+    }
+    toast.success(
+      'Đã gửi nhắc phí hàng loạt',
+      `Đã gửi thông báo nhắc gia hạn thuê bao tới tất cả ${filteredSubscriptions.length} tổ chức.`
+    );
+  };
+
+  const handleRemindSelected = () => {
+    if (selectedIds.length === 0) {
+      toast.warning('Chưa chọn mục nào', 'Vui lòng đánh dấu tích ít nhất một tổ chức để nhắc phí.');
+      return;
+    }
+    const selectedOrgs = subscriptions.filter((s) => selectedIds.includes(s.id));
+    const orgNames = selectedOrgs.slice(0, 2).map((s) => s.organizationName).join(', ');
+    const extraCount = selectedOrgs.length > 2 ? ` và ${selectedOrgs.length - 2} tổ chức khác` : '';
+    toast.success(
+      'Đã gửi nhắc phí đã chọn',
+      `Đã gửi thông báo gia hạn tới ${selectedIds.length} tổ chức (${orgNames}${extraCount}).`
+    );
+  };
+
+  const handleRemindSingle = (sub: typeof subscriptions[0]) => {
+    toast.success(
+      'Đã gửi nhắc phí',
+      `Đã gửi thông báo nhắc gia hạn thuê bao tới ${sub.organizationName}`
+    );
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', maxWidth: '1440px', margin: '0 auto' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="rf-badge rf-badge-danger">Commercial Operations</span>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>Doanh thu gói thuê bao RentFlow SaaS</span>
-          </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '4px 0 0 0' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: 0 }}>
             Gói dịch vụ phần mềm & Quản lý thuê bao
           </h1>
+          <p style={{ fontSize: '13px', color: '#6B7280', margin: '4px 0 0 0' }}>
+            Thiết lập biểu phí SaaS toàn hệ thống và theo dõi các hợp đồng thuê bao của chủ trọ.
+          </p>
         </div>
+        <button
+          type="button"
+          className="rf-btn rf-btn-primary"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '13px', padding: '8px 16px' }}
+          onClick={() => navigate('/platform/subscription-plans/configure')}
+        >
+          <Sliders size={15} />
+          <span>Tùy chỉnh thông số 3 gói SaaS</span>
+        </button>
       </div>
 
       {/* Tabs */}
       <div style={{ display: 'flex', borderBottom: '1px solid #E5E7EB', gap: '24px', fontSize: '13px' }}>
         <button
           type="button"
-          onClick={() => setActiveTab('plans')}
+          onClick={() => handleTabChange('plans')}
           style={{
             padding: '8px 0',
             border: 'none',
@@ -56,7 +133,7 @@ export const AdminSubscriptionPlansPage: React.FC = () => {
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab('subscriptions')}
+          onClick={() => handleTabChange('subscriptions')}
           style={{
             padding: '8px 0',
             border: 'none',
@@ -84,8 +161,8 @@ export const AdminSubscriptionPlansPage: React.FC = () => {
                   flexDirection: 'column',
                   gap: '16px',
                   position: 'relative',
-                  borderColor: p.isPopular ? '#00594C' : '#E5E7EB',
-                  backgroundColor: p.isPopular ? '#FAFDFD' : '#FFFFFF',
+                  border: '1px solid #E5E7EB',
+                  backgroundColor: '#FFFFFF',
                 }}
               >
                 {p.isPopular && (
@@ -94,15 +171,16 @@ export const AdminSubscriptionPlansPage: React.FC = () => {
                       position: 'absolute',
                       top: '12px',
                       right: '12px',
-                      backgroundColor: '#00594C',
-                      color: '#FFFFFF',
+                      backgroundColor: '#E6F4EA',
+                      color: '#00594C',
+                      border: '1px solid #A7F3D0',
                       fontSize: '11px',
                       fontWeight: 600,
-                      padding: '2px 8px',
+                      padding: '3px 8px',
                       borderRadius: '12px',
                     }}
                   >
-                    PHỔ BIẾN NHẤT
+                    GỢI Ý TĂNG TRƯỞNG
                   </div>
                 )}
 
@@ -112,7 +190,7 @@ export const AdminSubscriptionPlansPage: React.FC = () => {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-                  <span style={{ fontSize: '28px', fontWeight: 800, color: p.isPopular ? '#00594C' : '#111827' }}>
+                  <span style={{ fontSize: '28px', fontWeight: 800, color: '#111827' }}>
                     {p.monthlyPrice.toLocaleString('vi-VN')} đ
                   </span>
                   <span style={{ fontSize: '12px', color: '#6B7280' }}>/tháng</span>
@@ -140,10 +218,11 @@ export const AdminSubscriptionPlansPage: React.FC = () => {
                 <button
                   type="button"
                   className="rf-btn rf-btn-secondary"
-                  style={{ width: '100%', justifyContent: 'center' }}
-                  onClick={() => toast.info('Cập nhật biểu phí', `Đang chỉnh sửa tham số gói ${p.name}`)}
+                  style={{ width: '100%', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  onClick={() => navigate(`/platform/subscription-plans/configure/${p.id.toLowerCase()}`)}
                 >
-                  Cấu hình tham số gói
+                  <Sliders size={14} />
+                  <span>Cấu hình tham số gói {p.name}</span>
                 </button>
               </div>
             ))}
@@ -154,9 +233,9 @@ export const AdminSubscriptionPlansPage: React.FC = () => {
       {/* TAB 2: Subscriptions Table */}
       {activeTab === 'subscriptions' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Search bar */}
-          <div className="rf-card" style={{ padding: '14px 20px', display: 'flex', gap: '14px', alignItems: 'center' }}>
-            <div style={{ position: 'relative', flex: 1 }}>
+          {/* Action & Filter bar */}
+          <div className="rf-card" style={{ padding: '14px 20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', flex: '1 1 280px' }}>
               <Search size={15} color="#9CA3AF" style={{ position: 'absolute', left: '10px', top: '10px' }} />
               <input
                 type="text"
@@ -188,12 +267,48 @@ export const AdminSubscriptionPlansPage: React.FC = () => {
               <option value="ACTIVE">Hiệu lực (Active)</option>
               <option value="PAST_DUE">Quá hạn thanh toán</option>
             </select>
+
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginLeft: 'auto' }}>
+              {selectedIds.length > 0 && (
+                <button
+                  type="button"
+                  className="rf-btn rf-btn-primary"
+                  onClick={handleRemindSelected}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}
+                >
+                  <Send size={14} />
+                  <span>Nhắc đã chọn ({selectedIds.length})</span>
+                </button>
+              )}
+              <button
+                type="button"
+                className="rf-btn rf-btn-secondary"
+                onClick={handleRemindAll}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}
+                title="Gửi thông báo nhắc phí tới toàn bộ tổ chức trong danh sách"
+              >
+                <Bell size={14} />
+                <span>Nhắc tất cả</span>
+              </button>
+            </div>
           </div>
 
           <div className="rf-card" style={{ padding: 0, overflow: 'hidden' }}>
             <table className="rf-table">
               <thead>
                 <tr>
+                  <th style={{ width: '42px', textAlign: 'center' }}>
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      ref={(el) => {
+                        if (el) el.indeterminate = isSomeSelected;
+                      }}
+                      onChange={handleSelectAll}
+                      style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                      title="Chọn tất cả"
+                    />
+                  </th>
                   <th>Tổ chức khách hàng</th>
                   <th>Gói dịch vụ</th>
                   <th>Chu kỳ & Giá trị</th>
@@ -205,51 +320,66 @@ export const AdminSubscriptionPlansPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredSubscriptions.map((sub) => (
-                  <tr key={sub.id}>
-                    <td>
-                      <div style={{ fontWeight: 600, color: '#111827' }}>{sub.organizationName}</div>
-                      <div style={{ fontSize: '11px', color: '#6B7280' }}>Mã HĐ: {sub.id}</div>
-                    </td>
-                    <td>
-                      <span className="rf-badge rf-badge-active">{sub.planName}</span>
-                    </td>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{sub.amountVnd.toLocaleString('vi-VN')} đ</div>
-                      <div style={{ fontSize: '11px', color: '#6B7280' }}>
-                        {sub.billingCycle === 'ANNUAL' ? '12 Tháng' : 'Hàng tháng'}
-                      </div>
-                    </td>
-                    <td>
-                      <span style={{ fontSize: '12px', fontWeight: 500, color: '#4B5563' }}>{sub.paymentMethod}</span>
-                    </td>
-                    <td style={{ fontSize: '12px' }}>{sub.currentPeriodEnd}</td>
-                    <td>
-                      {sub.autoRenew ? (
-                        <span style={{ fontSize: '12px', color: '#16A34A', fontWeight: 500 }}>Bật Auto-debit</span>
-                      ) : (
-                        <span style={{ fontSize: '12px', color: '#9CA3AF' }}>Tắt</span>
-                      )}
-                    </td>
-                    <td>
-                      {sub.status === 'ACTIVE' ? (
-                        <span className="rf-badge rf-badge-active">Hiệu lực</span>
-                      ) : (
-                        <span className="rf-badge rf-badge-danger">Quá hạn (Past Due)</span>
-                      )}
-                    </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <button
-                        type="button"
-                        className="rf-btn rf-btn-secondary"
-                        style={{ fontSize: '11px', padding: '4px 8px' }}
-                        onClick={() => toast.info('Đang gửi thông báo gia hạn', `Đã nhắc phí tới ${sub.organizationName}`)}
-                      >
-                        Nhắc phí
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {filteredSubscriptions.map((sub) => {
+                  const isChecked = selectedIds.includes(sub.id);
+                  return (
+                    <tr
+                      key={sub.id}
+                      style={{ backgroundColor: isChecked ? '#F0FDF4' : undefined }}
+                    >
+                      <td style={{ textAlign: 'center' }}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleSelectOne(sub.id)}
+                          style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                        />
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 600, color: '#111827' }}>{sub.organizationName}</div>
+                        <div style={{ fontSize: '11px', color: '#6B7280' }}>Mã HĐ: {sub.id}</div>
+                      </td>
+                      <td>
+                        <span className="rf-badge rf-badge-active">{sub.planName}</span>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{sub.amountVnd.toLocaleString('vi-VN')} đ</div>
+                        <div style={{ fontSize: '11px', color: '#6B7280' }}>
+                          {sub.billingCycle === 'ANNUAL' ? '12 Tháng' : 'Hàng tháng'}
+                        </div>
+                      </td>
+                      <td>
+                        <span style={{ fontSize: '12px', fontWeight: 500, color: '#4B5563' }}>{sub.paymentMethod}</span>
+                      </td>
+                      <td style={{ fontSize: '12px' }}>{sub.currentPeriodEnd}</td>
+                      <td>
+                        {sub.autoRenew ? (
+                          <span style={{ fontSize: '12px', color: '#16A34A', fontWeight: 500 }}>Bật Auto-debit</span>
+                        ) : (
+                          <span style={{ fontSize: '12px', color: '#9CA3AF' }}>Tắt</span>
+                        )}
+                      </td>
+                      <td>
+                        {sub.status === 'ACTIVE' ? (
+                          <span className="rf-badge rf-badge-active">Hiệu lực</span>
+                        ) : (
+                          <span className="rf-badge rf-badge-danger">Quá hạn (Past Due)</span>
+                        )}
+                      </td>
+                      <td style={{ textAlign: 'right' }}>
+                        <button
+                          type="button"
+                          className="rf-btn rf-btn-secondary"
+                          style={{ fontSize: '11px', padding: '4px 8px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                          onClick={() => handleRemindSingle(sub)}
+                        >
+                          <Bell size={12} />
+                          Nhắc phí
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

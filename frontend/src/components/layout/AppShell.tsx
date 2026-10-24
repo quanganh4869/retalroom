@@ -3,19 +3,16 @@ import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Building2,
-  DoorOpen,
   Users,
   FileText,
   Receipt,
   Zap,
   CreditCard,
-  PiggyBank,
   Wrench,
   Bell,
   Settings,
   Search,
   ShieldAlert,
-  LogOut,
   LifeBuoy,
   Layers,
   Activity,
@@ -26,10 +23,12 @@ import {
   Server,
   Database,
   Play,
+  Wallet,
 } from 'lucide-react';
 import { useAuth, UserRole } from '@/features/auth/AuthContext';
 import { RentFlowLogo } from '@/components/ui/RentFlowLogo';
 import { useToast } from '@/components/feedback/ToastSystem';
+import { ErrorBoundary } from '@/components/feedback/ErrorBoundary';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -43,30 +42,34 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const { user, logout } = useAuth();
   const isSuperAdmin = user?.role === 'SUPERADMIN';
   const isTenant = user?.role === 'TENANT';
+  const dashboardPath = isSuperAdmin ? '/platform/dashboard' : isTenant ? '/tenant/dashboard' : '/landlord/dashboard';
 
   // Landlord Operations Navigation (Screen 1-28)
-  const landlordOverviewNav = [
-    { name: 'Tổng quan vận hành', path: '/landlord/dashboard', icon: LayoutDashboard },
-    { name: 'Bất động sản', path: '/properties', icon: Building2 },
-    { name: 'Phòng & Sơ đồ', path: '/rooms', icon: DoorOpen },
+  const landlordDashboardNav = [
+    { name: 'Tổng quan', path: '/landlord/dashboard', icon: LayoutDashboard },
+  ];
+
+  const landlordPropertyFlowNav = [
+    { name: 'Bất động sản & Phòng', path: '/properties', icon: Building2 },
     { name: 'Hồ sơ người thuê', path: '/tenants', icon: Users },
     { name: 'Hợp đồng thuê', path: '/contracts', icon: FileText },
   ];
 
-  const landlordOperationsNav = [
+  const landlordFinanceNav = [
     { name: 'Hóa đơn tiền phòng', path: '/invoices', icon: Receipt },
     { name: 'Ghi chỉ số Điện & Nước', path: '/meter-readings', icon: Zap },
-    { name: 'Thanh toán & Công nợ', path: '/payments', icon: CreditCard },
-    { name: 'Tiền cọc & Quyết toán', path: '/deposits', icon: PiggyBank },
+    { name: 'Sổ thu chi & Quản lý quỹ', path: '/payments', icon: Wallet },
+  ];
+
+  const landlordOperationsNav = [
     { name: 'Bảo trì & Sửa chữa', path: '/maintenance', icon: Wrench },
-    { name: 'Checklist bàn giao', path: '/handover', icon: DoorOpen },
-    { name: 'Thông báo nội bộ', path: '/notifications', icon: Bell },
+    { name: 'Thông báo', path: '/notifications', icon: Bell },
     { name: 'Cài đặt & Gói dịch vụ', path: '/settings', icon: Settings },
   ];
 
   // Enterprise Admin Navigation (7 Core Architecture Categories)
   const adminA_OverviewNav = [
-    { name: 'Tổng quan nền tảng', path: '/platform/dashboard', icon: LayoutDashboard },
+    { name: 'Tổng quan', path: '/platform/dashboard', icon: LayoutDashboard },
   ];
 
   const adminB_UsersAccessNav = [
@@ -76,8 +79,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   ];
 
   const adminC_CommercialNav = [
-    { name: 'Gói dịch vụ SaaS', path: '/platform/subscription-plans', icon: Layers },
-    { name: 'Thuê bao nền tảng', path: '/platform/subscriptions', icon: CreditCard },
+    { name: 'Gói cước & Thuê bao SaaS', path: '/platform/subscription-plans', icon: Layers },
     { name: 'Giao dịch SaaS', path: '/platform/transactions', icon: FileSpreadsheet },
   ];
 
@@ -87,9 +89,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   ];
 
   const adminE_SecurityAuditNav = [
-    { name: 'Lịch sử đăng nhập', path: '/platform/security/login-history', icon: ShieldCheck },
+    { name: 'Lịch sử đăng nhập', path: '/platform/security/login-logs', icon: ShieldCheck },
     { name: 'Phiên đang hoạt động', path: '/platform/security/sessions', icon: Activity },
-    { name: 'Sự kiện bảo mật', path: '/platform/security/events', icon: ShieldAlert },
+    { name: 'Sự kiện bảo mật', path: '/platform/security/login-logs/alerts', icon: ShieldAlert },
     { name: 'Nhật ký Audit Logs', path: '/platform/audit-logs', icon: FileText },
   ];
 
@@ -107,7 +109,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
   // Tenant Portal Navigation (Section 27 & 35)
   const tenantNav = [
-    { name: 'Cổng cư dân (Tổng quan)', path: '/tenant/dashboard', icon: LayoutDashboard },
+    { name: 'Tổng quan', path: '/tenant/dashboard', icon: LayoutDashboard },
     { name: 'Hóa đơn & Tiền phòng', path: '/tenant/invoices', icon: Receipt },
     { name: 'Lịch sử Điện & Nước', path: '/tenant/utilities', icon: Zap },
     { name: 'Lịch sử thanh toán', path: '/tenant/payments', icon: CreditCard },
@@ -124,25 +126,28 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const getRoleLabel = (r?: UserRole) => {
     switch (r) {
       case 'LANDLORD': return 'Chủ sở hữu (Chủ nhà)';
-      case 'TENANT': return 'Cư dân / Khách thuê';
+      case 'TENANT': return 'Khách thuê';
       case 'SUPERADMIN': return 'Admin Nền Tảng (SaaS)';
       default: return 'Chủ nhà';
     }
   };
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', width: '100vw', backgroundColor: '#FBFBF9' }}>
+    <div style={{ display: 'flex', height: '100vh', maxHeight: '100vh', width: '100%', overflow: 'hidden', backgroundColor: '#FBFBF9' }}>
       {/* Fixed Sidebar */}
       <aside
         style={{
           width: '240px',
           minWidth: '240px',
-          backgroundColor: '#FBFBF9',
-          borderRight: '1px solid #E5E7EB',
+          height: '100vh',
+          maxHeight: '100vh',
+          backgroundColor: '#18584B',
+          borderRight: '1px solid rgba(255, 255, 255, 0.12)',
           display: 'flex',
           flexDirection: 'column',
           userSelect: 'none',
           zIndex: 40,
+          flexShrink: 0,
         }}
       >
         {/* Brand Header */}
@@ -154,52 +159,25 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             alignItems: 'center',
             justifyContent: 'flex-start',
             gap: '10px',
-            borderBottom: '1px solid #E5E7EB',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.12)',
           }}
         >
-          <RentFlowLogo size={28} withText={true} />
-        </div>
-
-        {/* Current Organization / User Info */}
-        <div style={{ padding: '12px 14px' }}>
-          <div
+          {/* Logo RentFlow bấm vào sẽ về trang tổng quan (Dashboard) */}
+          <Link
+            to={dashboardPath}
+            title="Về trang tổng quan"
             style={{
+              textDecoration: 'none',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              padding: '8px 10px',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #E5E7EB',
-              borderRadius: '6px',
-              fontSize: '12px',
+              cursor: 'pointer',
+              transition: 'opacity 0.15s ease',
             }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.85')}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
           >
-            <div
-              style={{
-                width: '24px',
-                height: '24px',
-                borderRadius: '4px',
-                backgroundColor: '#00594C',
-                color: '#FFFFFF',
-                fontSize: '11px',
-                fontWeight: 600,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              {user?.name.slice(0, 2).toUpperCase() || 'NA'}
-            </div>
-            <div style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              <div style={{ fontWeight: 600, color: '#111827', lineHeight: 1.2 }}>
-                {user?.organizationName || 'Nguyễn An Property'}
-              </div>
-              <div style={{ fontSize: '11px', color: '#6B7280', marginTop: '1px' }}>
-                {getRoleLabel(user?.role)}
-              </div>
-            </div>
-          </div>
+            <RentFlowLogo size={28} withText={true} textColor="#FFFFFF" />
+          </Link>
         </div>
 
         {/* Navigation Items by Role */}
@@ -207,6 +185,17 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           {(() => {
             const isItemActive = (path: string) => {
               if (location.pathname === path) return true;
+              if (path === '/platform/subscription-plans' && (location.pathname.startsWith('/platform/subscription-plans') || location.pathname === '/platform/subscriptions')) return true;
+              if (path === '/payments' && (
+                location.pathname === '/payments' ||
+                location.pathname === '/expenses' ||
+                location.pathname === '/landlord/expenses' ||
+                location.pathname === '/deposits' ||
+                location.pathname.startsWith('/payments/') ||
+                location.pathname.startsWith('/landlord/payments/') ||
+                location.pathname.startsWith('/deposits/')
+              )) return true;
+              if (path === '/properties' && (location.pathname.startsWith('/properties') || location.pathname.startsWith('/rooms'))) return true;
               // For nested routes
               if (path !== '/' && path !== '/tenant/dashboard' && path !== '/landlord/dashboard' && path !== '/platform/dashboard') {
                 return location.pathname.startsWith(path);
@@ -228,7 +217,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                   <Icon
                     size={17}
                     className="rf-nav-icon"
-                    color={active ? '#00594C' : '#6B7280'}
+                    color={active ? '#34D399' : '#9CA3AF'}
                   />
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {item.name}
@@ -240,8 +229,8 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             if (isTenant) {
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div style={{ padding: '8px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
-                    Cổng Cư Dân
+                  <div style={{ padding: '8px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#A7F3D0', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                    Menu
                   </div>
                   {tenantNav.map(renderNavLink)}
                 </div>
@@ -251,37 +240,37 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
             if (isSuperAdmin) {
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                  <div style={{ padding: '8px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <div style={{ padding: '8px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#A7F3D0', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                     Tổng quan
                   </div>
                   {adminA_OverviewNav.map(renderNavLink)}
 
-                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#A7F3D0', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                     Người dùng & Truy cập
                   </div>
                   {adminB_UsersAccessNav.map(renderNavLink)}
 
-                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#A7F3D0', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                     Thương mại & Thuê bao
                   </div>
                   {adminC_CommercialNav.map(renderNavLink)}
 
-                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#A7F3D0', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                     Chăm sóc khách hàng
                   </div>
                   {adminD_CustomerOpsNav.map(renderNavLink)}
 
-                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#A7F3D0', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                     Bảo mật & Kiểm toán
                   </div>
                   {adminE_SecurityAuditNav.map(renderNavLink)}
 
-                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#A7F3D0', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                     Vận hành hệ thống
                   </div>
                   {adminF_SystemOpsNav.map(renderNavLink)}
 
-                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <div style={{ padding: '14px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#A7F3D0', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                     Cấu hình nền tảng
                   </div>
                   {adminG_PlatformConfigNav.map(renderNavLink)}
@@ -291,15 +280,26 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
             return (
               <>
-                <div style={{ padding: '8px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
-                  Tổng quan
-                </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                  {landlordOverviewNav.map(renderNavLink)}
+                  {landlordDashboardNav.map(renderNavLink)}
                 </div>
 
-                <div style={{ padding: '16px 8px 4px 8px', fontSize: '11px', fontWeight: 600, color: '#9CA3AF', textTransform: 'uppercase' }}>
-                  Vận hành
+                <div style={{ padding: '16px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#A7F3D0', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                  Cơ sở & Cư dân
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                  {landlordPropertyFlowNav.map(renderNavLink)}
+                </div>
+
+                <div style={{ padding: '16px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#A7F3D0', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                  Tài chính & Thu chi
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                  {landlordFinanceNav.map(renderNavLink)}
+                </div>
+
+                <div style={{ padding: '16px 8px 4px 8px', fontSize: '11px', fontWeight: 700, color: '#A7F3D0', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                  Vận hành & Hỗ trợ
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                   {landlordOperationsNav.map(renderNavLink)}
@@ -309,16 +309,87 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           })()}
         </div>
 
+        {/* Sidebar Footer: User / Organization Info docked at bottom-left */}
+        <div
+          style={{
+            padding: '12px 14px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+            backgroundColor: 'rgba(0, 0, 0, 0.18)',
+            flexShrink: 0,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              padding: '6px 8px',
+              borderRadius: '6px',
+            }}
+          >
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '6px',
+                backgroundColor: '#0A362C',
+                border: '1.5px solid #34D399',
+                color: '#FFFFFF',
+                fontSize: '12px',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              {user?.name.slice(0, 2).toUpperCase() || 'NA'}
+            </div>
+            <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+              <div
+                style={{
+                  fontWeight: 600,
+                  color: '#FFFFFF',
+                  fontSize: '13px',
+                  lineHeight: 1.25,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+                title={isTenant ? user?.name : (user?.organizationName || user?.name || 'Nguyễn An Property')}
+              >
+                {isTenant ? user?.name : (user?.organizationName || user?.name || 'Nguyễn An Property')}
+              </div>
+              <div
+                style={{
+                  fontSize: '11px',
+                  color: '#A7F3D0',
+                  marginTop: '2px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {!isTenant
+                  ? getRoleLabel(user?.role)
+                  : user?.roomCode
+                  ? `Phòng ${user.roomCode}`
+                  : 'Cư dân'}
+              </div>
+            </div>
+          </div>
+        </div>
+
       </aside>
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflow: 'hidden' }}>
-        {/* Top Header - Fixed & Sticky on scroll */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', maxHeight: '100vh', overflow: 'hidden' }}>
+        {/* Top Header - Fixed Topbar */}
         <header
           style={{
             position: 'sticky',
             top: 0,
-            zIndex: 30,
+            zIndex: 50,
             height: '56px',
             backgroundColor: '#FFFFFF',
             borderBottom: '1px solid #E5E7EB',
@@ -334,24 +405,11 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
             <Link
               to={isSuperAdmin ? '/platform/dashboard' : isTenant ? '/tenant/dashboard' : '/landlord/dashboard'}
-              style={{ color: '#6B7280', textDecoration: 'none', transition: 'color 0.15s ease' }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#00594C')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = '#6B7280')}
-            >
-              RentFlow
-            </Link>
-            <span style={{ color: '#9CA3AF' }}>/</span>
-            <Link
-              to={isSuperAdmin ? '/platform/dashboard' : isTenant ? '/tenant/dashboard' : '/landlord/dashboard'}
               style={{ color: '#4B5563', textDecoration: 'none', fontWeight: 500, transition: 'color 0.15s ease' }}
               onMouseEnter={(e) => (e.currentTarget.style.color = '#00594C')}
               onMouseLeave={(e) => (e.currentTarget.style.color = '#4B5563')}
             >
-              {isSuperAdmin
-                ? 'Platform HQ'
-                : isTenant
-                ? 'Cổng cư dân'
-                : user?.organizationName || 'Nguyễn An Property'}
+              Tổng quan
             </Link>
             <span style={{ color: '#9CA3AF' }}>/</span>
             {(() => {
@@ -458,24 +516,27 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
               } else if (p === '/meter-readings') {
                 currentLabel = 'Chỉ số điện nước';
               } else if (p.startsWith('/landlord/payments/') || p.startsWith('/payments/')) {
-                parentLink = { label: 'Thanh toán & Công nợ', to: '/payments' };
+                parentLink = { label: 'Sổ thu chi & Quản lý quỹ', to: '/payments?tab=payments' };
                 currentLabel = 'Chi tiết phiếu thu';
               } else if (p === '/payments') {
-                currentLabel = 'Thanh toán & Công nợ';
-              } else if (p === '/expenses') {
+                currentLabel = 'Sổ thu chi & Quản lý quỹ';
+              } else if (p === '/expenses' || p === '/landlord/expenses') {
+                parentLink = { label: 'Sổ thu chi & Quản lý quỹ', to: '/payments?tab=expenses' };
                 currentLabel = 'Chi phí vận hành';
               } else if (p.startsWith('/deposits/')) {
-                parentLink = { label: 'Tiền cọc & Quyết toán', to: '/deposits' };
+                parentLink = { label: 'Sổ thu chi & Quản lý quỹ', to: '/payments?tab=deposits' };
                 currentLabel = 'Chi tiết tiền cọc';
               } else if (p === '/deposits') {
+                parentLink = { label: 'Sổ thu chi & Quản lý quỹ', to: '/payments?tab=deposits' };
                 currentLabel = 'Tiền cọc & Quyết toán';
               } else if (p.startsWith('/maintenance/')) {
                 parentLink = { label: 'Bảo trì & Sửa chữa', to: '/maintenance' };
                 currentLabel = 'Chi tiết sự cố';
               } else if (p === '/maintenance') {
                 currentLabel = 'Bảo trì & Sửa chữa';
-              } else if (p === '/handover') {
-                currentLabel = 'Bàn giao phòng';
+              } else if (p.startsWith('/handover')) {
+                parentLink = { label: 'Hợp đồng & Phòng', to: '/contracts' };
+                currentLabel = 'Biên bản bàn giao phòng';
               } else if (p === '/notifications') {
                 currentLabel = 'Thông báo';
               } else if (p === '/settings') {
@@ -506,14 +567,6 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                 </div>
               );
             })()}
-            <span
-              className={`rf-badge ${
-                isSuperAdmin ? 'rf-badge-danger' : isTenant ? 'rf-badge-vacant' : 'rf-badge-active'
-              }`}
-              style={{ fontSize: '10px', marginLeft: '4px' }}
-            >
-              {isSuperAdmin ? 'ADMIN' : isTenant ? 'CƯ DÂN' : 'CHỦ NHÀ'}
-            </span>
           </div>
 
           {/* Quick Search & Actions */}
@@ -571,7 +624,6 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
               className="rf-btn rf-btn-secondary"
               style={{ padding: '5px 10px', fontSize: '12px' }}
             >
-              <LogOut size={13} />
               Đăng xuất
             </button>
           </div>
@@ -584,11 +636,14 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
           style={{
             flex: 1,
             overflowY: 'auto',
+            overflowX: 'hidden',
             padding: '24px',
             backgroundColor: '#FBFBF9',
           }}
         >
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </main>
       </div>
     </div>

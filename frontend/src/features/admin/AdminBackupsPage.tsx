@@ -50,11 +50,7 @@ export const AdminBackupsPage: React.FC = () => {
       {/* Page Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span className="rf-badge rf-badge-danger">VẬN HÀNH HỆ THỐNG</span>
-            <span style={{ fontSize: '12px', color: '#6B7280' }}>Sao lưu dữ liệu & Chính sách lưu trữ (Demo Preview)</span>
-          </div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '4px 0 2px 0' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: '0 0 2px 0' }}>
             Trạng thái sao lưu & Lưu trữ dữ liệu (Backup Status & Retention)
           </h1>
           <p style={{ fontSize: '13px', color: '#6B7280', margin: 0 }}>

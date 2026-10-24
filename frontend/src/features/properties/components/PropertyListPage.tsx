@@ -8,14 +8,13 @@ import {
   MapPin,
   Building2,
   TrendingUp,
-  Search,
   Plus,
+  ArrowLeft,
 } from 'lucide-react';
 
 export const PropertyListPage: React.FC = () => {
   const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const { data } = useProperties();
 
   // Combine backend items with mockProperties so it is never empty in dev mode
@@ -40,16 +39,6 @@ export const PropertyListPage: React.FC = () => {
     return mockProperties;
   }, [data]);
 
-  const filteredProperties = propertiesList.filter((prop) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      prop.name.toLowerCase().includes(q) ||
-      prop.address.toLowerCase().includes(q) ||
-      (prop.manager && prop.manager.toLowerCase().includes(q))
-    );
-  });
-
   const totalProperties = propertiesList.length;
   const totalRooms = propertiesList.reduce((sum, p) => sum + p.totalRooms, 0);
   const totalRented = propertiesList.reduce((sum, p) => sum + p.rentedRooms, 0);
@@ -71,128 +60,111 @@ export const PropertyListPage: React.FC = () => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#111827', margin: 0 }}>
-              Quản lý Bất động sản & Tòa nhà
+              {showForm ? 'Thêm Cơ sở / Tòa nhà mới' : 'Quản lý Bất động sản & Tòa nhà'}
             </h1>
-            <span className="rf-badge rf-badge-active">
-              {totalProperties} CƠ SỞ VẬN HÀNH
-            </span>
+            {!showForm && (
+              <span className="rf-badge rf-badge-active">
+                {totalProperties} CƠ SỞ VẬN HÀNH
+              </span>
+            )}
           </div>
-          <p style={{ color: '#6B7280', fontSize: '13px', margin: '4px 0 0 0' }}>
-            Danh sách các cụm tòa nhà, chung cư mini và nhà trọ đang quản lý trong hệ thống RentFlow.
-          </p>
         </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            type="button"
-            className="rf-btn rf-btn-secondary"
-            onClick={() => navigate('/rooms')}
-          >
-            <DoorOpen size={14} /> Sơ đồ toàn bộ phòng
-          </button>
-          {!showForm && (
+          {showForm ? (
             <button
               type="button"
-              className="rf-btn rf-btn-primary"
-              onClick={() => setShowForm(true)}
+              className="rf-btn rf-btn-secondary"
+              onClick={() => setShowForm(false)}
             >
-              <Plus size={14} /> Thêm tòa nhà mới
+              <ArrowLeft size={14} /> Quay lại danh sách
             </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="rf-btn rf-btn-secondary"
+                onClick={() => navigate('/rooms')}
+              >
+                <DoorOpen size={14} /> Sơ đồ toàn bộ phòng
+              </button>
+              <button
+                type="button"
+                className="rf-btn rf-btn-primary"
+                onClick={() => setShowForm(true)}
+              >
+                <Plus size={14} /> Thêm tòa nhà mới
+              </button>
+            </>
           )}
         </div>
       </div>
 
-      {showForm && (
+      {showForm ? (
         <PropertyForm onSuccess={() => setShowForm(false)} onCancel={() => setShowForm(false)} />
-      )}
-
-      {/* KPI Overview Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-        <div className="rf-card" style={{ padding: '16px 20px' }}>
-          <span style={{ fontSize: '12px', color: '#6B7280' }}>Tổng số dãy / Cơ sở</span>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginTop: '6px' }}>
-            {totalProperties} tòa nhà
-          </div>
-          <div style={{ fontSize: '12px', color: '#137333', marginTop: '4px' }}>
-            Đang hoạt động ổn định
-          </div>
-        </div>
-
-        <div className="rf-card" style={{ padding: '16px 20px' }}>
-          <span style={{ fontSize: '12px', color: '#6B7280' }}>Quy mô phòng & Lấp đầy</span>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#00594C', marginTop: '6px' }}>
-            {totalRented} / {totalRooms} phòng
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#137333', marginTop: '4px' }}>
-            <TrendingUp size={13} />
-            <span>Tỷ lệ lấp đầy: {overallOccupancy}%</span>
-          </div>
-        </div>
-
-        <div className="rf-card" style={{ padding: '16px 20px' }}>
-          <span style={{ fontSize: '12px', color: '#6B7280' }}>Phòng trống cần cho thuê</span>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: totalRooms - totalRented > 0 ? '#D97706' : '#111827', marginTop: '6px' }}>
-            {totalRooms - totalRented} phòng trống
-          </div>
-          <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>
-            Sẵn sàng đón khách mới
-          </div>
-        </div>
-
-        <div className="rf-card" style={{ padding: '16px 20px' }}>
-          <span style={{ fontSize: '12px', color: '#6B7280' }}>Tổng doanh thu dự kiến</span>
-          <div style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginTop: '6px' }}>
-            {formatVND(totalRevenue)}
-          </div>
-          <div style={{ fontSize: '12px', color: '#137333', marginTop: '4px' }}>
-            Doanh thu định kỳ tháng
-          </div>
-        </div>
-      </div>
-
-      {/* Filter and Search Bar */}
-      <div className="rf-card" style={{ padding: '14px 20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', flex: 1, minWidth: '260px' }}>
-            <Search size={16} color="#9CA3AF" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-            <input
-              type="text"
-              placeholder="Tìm theo tên dãy trọ, địa chỉ, người quản lý..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px 12px 8px 36px',
-                borderRadius: '6px',
-                border: '1px solid #D1D5DB',
-                fontSize: '13px',
-                outline: 'none',
-              }}
-            />
-          </div>
-          <div style={{ fontSize: '13px', color: '#6B7280' }}>
-            Hiển thị <strong>{filteredProperties.length}</strong> / {totalProperties} cơ sở
-          </div>
-        </div>
-      </div>
-
-      {/* Property Cards Grid */}
-      {filteredProperties.length === 0 ? (
-        <div className="rf-card" style={{ padding: '48px', textAlign: 'center', color: '#6B7280' }}>
-          <Building2 size={40} color="#9CA3AF" style={{ margin: '0 auto 12px auto' }} />
-          <h3 style={{ margin: 0, fontSize: '16px', color: '#111827' }}>Không tìm thấy bất động sản nào</h3>
-          <p style={{ margin: '6px 0 16px 0', fontSize: '13px' }}>
-            Không có tòa nhà nào phù hợp với từ khóa "{searchQuery}".
-          </p>
-          <button
-            type="button"
-            className="rf-btn rf-btn-secondary"
-            onClick={() => setSearchQuery('')}
-          >
-            Đặt lại tìm kiếm
-          </button>
-        </div>
       ) : (
+        <>
+          {/* KPI Overview Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+            <div className="rf-card" style={{ padding: '16px 20px' }}>
+              <span style={{ fontSize: '12px', color: '#6B7280' }}>Tổng số dãy / Cơ sở</span>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginTop: '6px' }}>
+                {totalProperties} tòa nhà
+              </div>
+              <div style={{ fontSize: '12px', color: '#137333', marginTop: '4px' }}>
+                Đang hoạt động ổn định
+              </div>
+            </div>
+
+            <div className="rf-card" style={{ padding: '16px 20px' }}>
+              <span style={{ fontSize: '12px', color: '#6B7280' }}>Quy mô phòng & Lấp đầy</span>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#00594C', marginTop: '6px' }}>
+                {totalRented} / {totalRooms} phòng
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#137333', marginTop: '4px' }}>
+                <TrendingUp size={13} />
+                <span>Tỷ lệ lấp đầy: {overallOccupancy}%</span>
+              </div>
+            </div>
+
+            <div className="rf-card" style={{ padding: '16px 20px' }}>
+              <span style={{ fontSize: '12px', color: '#6B7280' }}>Phòng trống cần cho thuê</span>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: totalRooms - totalRented > 0 ? '#D97706' : '#111827', marginTop: '6px' }}>
+                {totalRooms - totalRented} phòng trống
+              </div>
+              <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>
+                Sẵn sàng đón khách mới
+              </div>
+            </div>
+
+            <div className="rf-card" style={{ padding: '16px 20px' }}>
+              <span style={{ fontSize: '12px', color: '#6B7280' }}>Tổng doanh thu dự kiến</span>
+              <div style={{ fontSize: '24px', fontWeight: 700, color: '#111827', marginTop: '6px' }}>
+                {formatVND(totalRevenue)}
+              </div>
+              <div style={{ fontSize: '12px', color: '#137333', marginTop: '4px' }}>
+                Doanh thu định kỳ tháng
+              </div>
+            </div>
+          </div>
+
+          {/* Property Cards Grid */}
+          {propertiesList.length === 0 ? (
+            <div className="rf-card" style={{ padding: '48px', textAlign: 'center', color: '#6B7280' }}>
+              <Building2 size={40} color="#9CA3AF" style={{ margin: '0 auto 12px auto' }} />
+              <h3 style={{ margin: 0, fontSize: '16px', color: '#111827' }}>Chưa có bất động sản nào</h3>
+              <p style={{ margin: '6px 0 16px 0', fontSize: '13px' }}>
+                Bắt đầu thiết lập cơ sở đầu tiên để quản lý các tầng và phòng trọ.
+              </p>
+              <button
+                type="button"
+                className="rf-btn rf-btn-primary"
+                onClick={() => setShowForm(true)}
+              >
+                <Plus size={14} /> Thêm tòa nhà mới
+              </button>
+            </div>
+          ) : (
         <div
           style={{
             display: 'grid',
@@ -200,7 +172,7 @@ export const PropertyListPage: React.FC = () => {
             gap: '20px',
           }}
         >
-          {filteredProperties.map((prop) => {
+          {propertiesList.map((prop) => {
             const occupancy = prop.totalRooms ? Math.round((prop.rentedRooms / prop.totalRooms) * 100) : 0;
             const vacantRooms = prop.totalRooms - prop.rentedRooms;
             const roomsInProp = mockRooms.filter((r) => r.propertyId === prop.id);
@@ -272,41 +244,14 @@ export const PropertyListPage: React.FC = () => {
                     <DoorOpen size={13} /> {roomsInProp.length > 0 ? `${roomsInProp.length} phòng sẵn sàng` : 'Xem sơ đồ'}
                   </span>
                 </div>
-
-                {/* Footer Buttons */}
-                <div
-                  style={{
-                    marginTop: 'auto',
-                    paddingTop: '12px',
-                    borderTop: '1px solid #F3F4F6',
-                    display: 'flex',
-                    gap: '8px',
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    type="button"
-                    className="rf-btn rf-btn-primary"
-                    style={{ fontSize: '12px', padding: '6px 12px', flex: 1 }}
-                    onClick={() => navigate(`/properties/${prop.id}`)}
-                  >
-                    <Building2 size={13} /> Chi tiết cơ sở
-                  </button>
-                  <button
-                    type="button"
-                    className="rf-btn rf-btn-secondary"
-                    style={{ fontSize: '12px', padding: '6px 12px', flex: 1 }}
-                    onClick={() => navigate(`/rooms?propertyId=${prop.id}`)}
-                  >
-                    <DoorOpen size={13} /> Sơ đồ phòng →
-                  </button>
-                </div>
               </div>
             );
           })}
         </div>
       )}
-    </div>
+    </>
+  )}
+</div>
   );
 };
 

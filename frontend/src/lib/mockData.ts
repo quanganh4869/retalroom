@@ -485,6 +485,7 @@ export const mockContracts: ContractItem[] = [
   { id: 'CT-2023-039', roomCode: 'P.102', tenantName: 'Trần Thị Mai', tenantPhone: '0912345678', startDate: '2023-09-15', endDate: '2024-09-15', depositAmount: 4500000, monthlyRent: 4500000, paymentCycle: '1 tháng/lần', status: 'expiring' },
   { id: 'CT-2023-035', roomCode: 'P.201', tenantName: 'Nguyễn Văn Đạt', tenantPhone: '0933445566', startDate: '2023-08-30', endDate: '2024-08-30', depositAmount: 4200000, monthlyRent: 4200000, paymentCycle: '1 tháng/lần', status: 'expiring' },
   { id: 'CT-2024-002', roomCode: 'P.301', tenantName: 'Võ Thanh Tùng', tenantPhone: '0977112233', startDate: '2024-01-15', endDate: '2025-01-15', depositAmount: 15000000, monthlyRent: 7500000, paymentCycle: '1 tháng/lần', status: 'active' },
+  { id: 'CT-2023-055', roomCode: 'P.302', tenantName: 'Bùi Lan Anh', tenantPhone: '0944556677', startDate: '2023-11-20', endDate: '2024-11-20', depositAmount: 5000000, monthlyRent: 5000000, paymentCycle: '1 tháng/lần', status: 'active' },
 ];
 
 export const mockMeterReadings: MeterReadingItem[] = [

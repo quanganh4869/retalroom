@@ -54,7 +54,7 @@ export const SettingsPage: React.FC = () => {
             cursor: 'pointer',
           }}
         >
-          Thông tin tổ chức (Screen 15)
+          Thông tin tổ chức
         </button>
         <button
           onClick={() => setTab('team')}
@@ -68,7 +68,7 @@ export const SettingsPage: React.FC = () => {
             cursor: 'pointer',
           }}
         >
-          Đội ngũ & Phân quyền (Screen 27)
+          Đội ngũ & Phân quyền
         </button>
         <button
           onClick={() => setTab('plans')}
@@ -82,11 +82,11 @@ export const SettingsPage: React.FC = () => {
             cursor: 'pointer',
           }}
         >
-          Gói cước dịch vụ (Screen 28)
+          Gói cước dịch vụ
         </button>
       </div>
 
-      {/* TAB 1: Organization Settings (Screen 15.png) */}
+      {/* TAB 1: Organization Settings */}
       {tab === 'org' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div className="rf-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -153,14 +153,13 @@ export const SettingsPage: React.FC = () => {
 
           {/* Dedicated Bank Account & Payment Gateway Settings */}
           <form onSubmit={handleSaveBank} className="rf-card" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F3F4F6', paddingBottom: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid #F3F4F6', paddingBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <CreditCard size={18} color="#00594C" />
                 <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#111827', margin: 0 }}>
                   Tài khoản ngân hàng nhận tiền phòng (VietQR) & Email thông báo
                 </h3>
               </div>
-              <span className="rf-badge rf-badge-active">Đang kết nối</span>
             </div>
 
             <p style={{ fontSize: '13px', color: '#6B7280', margin: 0 }}>
@@ -257,23 +256,10 @@ export const SettingsPage: React.FC = () => {
               </button>
             </div>
           </form>
-
-          {/* Danger Zone */}
-          <div className="rf-card" style={{ borderColor: '#FEE2E2', backgroundColor: '#FFFDFD' }}>
-            <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#C5221F', margin: 0 }}>
-              Khu vực nhạy cảm
-            </h4>
-            <p style={{ fontSize: '12px', color: '#6B7280', margin: '4px 0 12px 0' }}>
-              Xóa dữ liệu dùng thử hoặc xuất toàn bộ cơ sở dữ liệu nhà trọ sang định dạng sao lưu CSV.
-            </p>
-            <button className="rf-btn rf-btn-secondary" style={{ color: '#C5221F', borderColor: '#FEE2E2' }}>
-              Xóa cơ sở dữ liệu mẫu
-            </button>
-          </div>
         </div>
       )}
 
-      {/* TAB 2: Team & Permissions (Screen 27.png) */}
+      {/* TAB 2: Team & Permissions */}
       {tab === 'team' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -349,7 +335,7 @@ export const SettingsPage: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 3: Service Packages & Subscriptions (Screen 28.png) */}
+      {/* TAB 3: Service Packages & Subscriptions */}
       {tab === 'plans' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div>

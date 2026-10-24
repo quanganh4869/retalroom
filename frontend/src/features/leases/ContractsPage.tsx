@@ -66,7 +66,11 @@ export const ContractsPage: React.FC = () => {
             Theo dõi thời hạn, tiền cọc, điều khoản thuê và gia hạn hợp đồng. Bấm vào từng hàng để xem chi tiết toàn văn hợp đồng.
           </p>
         </div>
-        <button className="rf-btn rf-btn-primary">
+        <button
+          type="button"
+          className="rf-btn rf-btn-primary"
+          onClick={() => navigate('/contracts/new')}
+        >
           <Plus size={15} />
           <span>Tạo hợp đồng mới</span>
         </button>
