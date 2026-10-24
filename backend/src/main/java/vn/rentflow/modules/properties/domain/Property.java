@@ -33,6 +33,12 @@ public class Property {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "billing_day", nullable = false)
+    private Integer billingDay = 1;
+
+    @Column(name = "payment_cycle", nullable = false, length = 50)
+    private String paymentCycle = "MONTHLY";
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -45,12 +51,24 @@ public class Property {
     public Property(UUID id, UUID landlordId, String name, String address, String city, Integer totalFloors, String description) {
         this.id = id != null ? id : UUID.randomUUID();
         this.landlordId = landlordId;
-        this.name = name.trim();
-        this.address = address.trim();
-        this.city = city.trim();
+        this.name = name != null ? name.trim() : "";
+        this.address = address != null ? address.trim() : "";
+        this.city = city != null ? city.trim() : "";
         this.totalFloors = totalFloors != null ? totalFloors : 1;
         this.description = description;
+        this.billingDay = 1;
+        this.paymentCycle = "MONTHLY";
         this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    public void updateManagementConfig(Integer billingDay, String paymentCycle) {
+        if (billingDay != null && billingDay >= 1 && billingDay <= 31) {
+            this.billingDay = billingDay;
+        }
+        if (paymentCycle != null && !paymentCycle.isBlank()) {
+            this.paymentCycle = paymentCycle.trim();
+        }
         this.updatedAt = Instant.now();
     }
 
@@ -80,6 +98,14 @@ public class Property {
 
     public String getDescription() {
         return description;
+    }
+
+    public Integer getBillingDay() {
+        return billingDay;
+    }
+
+    public String getPaymentCycle() {
+        return paymentCycle;
     }
 
     public Instant getCreatedAt() {

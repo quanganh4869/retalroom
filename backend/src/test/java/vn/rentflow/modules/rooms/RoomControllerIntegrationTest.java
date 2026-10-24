@@ -45,6 +45,8 @@ class RoomControllerIntegrationTest {
         propertyId = UUID.randomUUID();
 
         // Clean tables
+        jdbcTemplate.execute("DELETE FROM tenancies");
+        jdbcTemplate.execute("DELETE FROM invitations");
         jdbcTemplate.execute("DELETE FROM audit_logs");
         jdbcTemplate.execute("DELETE FROM refresh_tokens");
         jdbcTemplate.execute("DELETE FROM rooms");

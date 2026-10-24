@@ -44,7 +44,7 @@ public class JwtTokenProvider {
                 .issuer(issuer)
                 .subject(user.getId().toString())
                 .claim("email", user.getEmail())
-                .claim("role", user.getRole().name())
+                .claim("role", user.getRole() != null ? user.getRole().name() : "PENDING")
                 .claim("fullName", user.getFullName())
                 .id(UUID.randomUUID().toString())
                 .issuedAt(Date.from(now))

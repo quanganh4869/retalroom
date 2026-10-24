@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import vn.rentflow.modules.rooms.domain.Room;
 import vn.rentflow.modules.rooms.domain.RoomStatus;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,6 +15,10 @@ import java.util.UUID;
 public interface RoomRepository extends JpaRepository<Room, UUID> {
 
     Page<Room> findByPropertyId(UUID propertyId, Pageable pageable);
+
+    List<Room> findByPropertyId(UUID propertyId);
+
+    Optional<Room> findFirstByPropertyIdOrderByCreatedAtDesc(UUID propertyId);
 
     Page<Room> findByPropertyIdAndStatus(UUID propertyId, RoomStatus status, Pageable pageable);
 

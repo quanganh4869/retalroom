@@ -8,6 +8,10 @@ import { RentFlowChatbot } from '@/components/ui/RentFlowChatbot';
 // Pages
 import { LandingPage } from '@/features/landing/LandingPage';
 import { RolesSelectionPage, LoginPage, PlatformLoginPage, RegisterPage, ForgotPasswordPage } from '@/features/auth/AuthPages';
+import { GoogleLoginPage } from '@/features/auth/GoogleLoginPage';
+import { ChooseRolePage } from '@/features/auth/ChooseRolePage';
+import { LandlordOnboardingPage } from '@/features/auth/LandlordOnboardingPage';
+import { TenantOnboardingPage } from '@/features/auth/TenantOnboardingPage';
 import { OnboardingWizardPage } from '@/features/auth/OnboardingWizardPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { PropertyListPage } from '@/features/properties/components/PropertyListPage';
@@ -73,16 +77,36 @@ import { AccessDeniedPage, NotFoundPage } from '@/features/feedback/ErrorPages';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: string[];
+  allowPendingOnboarding?: boolean;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  allowedRoles,
+  allowPendingOnboarding = false,
+}) => {
   const { isAuthenticated, user } = useAuth();
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/auth/login" replace />;
   }
 
-  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+  const isAdmin = user.role === 'ADMIN' || user.role === 'SUPERADMIN';
+
+  // If user has not completed onboarding and is trying to access regular app pages
+  if (!allowPendingOnboarding && !isAdmin && user.onboardingStatus !== 'COMPLETED') {
+    if (!user.role) {
+      return <Navigate to="/onboarding/role" replace />;
+    }
+    if (user.role === 'LANDLORD') {
+      return <Navigate to="/onboarding/landlord" replace />;
+    }
+    if (user.role === 'TENANT') {
+      return <Navigate to="/onboarding/tenant" replace />;
+    }
+  }
+
+  if (allowedRoles && user.role && !allowedRoles.includes(user.role)) {
     return <AccessDeniedPage />;
   }
 
@@ -100,18 +124,42 @@ export const AppRouter: React.FC = () => {
             {/* 1. Public Journeys */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/auth/roles" element={<RolesSelectionPage />} />
-            <Route path="/auth/login" element={<LoginPage />} />
+            <Route path="/auth/login" element={<GoogleLoginPage />} />
             <Route path="/login" element={<Navigate to="/auth/login" replace />} />
             <Route path="/auth/register" element={<RegisterPage />} />
             <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/platform/login" element={<PlatformLoginPage />} />
 
-            {/* 2. Onboarding for new Landlords */}
+            {/* 2. Onboarding Journeys (Google auth users) */}
+            <Route
+              path="/onboarding/role"
+              element={
+                <ProtectedRoute allowPendingOnboarding={true}>
+                  <ChooseRolePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/onboarding/landlord"
+              element={
+                <ProtectedRoute allowedRoles={['LANDLORD']} allowPendingOnboarding={true}>
+                  <LandlordOnboardingPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/onboarding/tenant"
+              element={
+                <ProtectedRoute allowedRoles={['TENANT']} allowPendingOnboarding={true}>
+                  <TenantOnboardingPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/onboarding"
               element={
-                <ProtectedRoute allowedRoles={['LANDLORD']}>
-                  <OnboardingWizardPage />
+                <ProtectedRoute allowPendingOnboarding={true}>
+                  <Navigate to="/onboarding/role" replace />
                 </ProtectedRoute>
               }
             />

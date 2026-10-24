@@ -77,11 +77,13 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html"
                         ).permitAll()
-                        // Public authentication endpoints
+                        // Public authentication & onboarding endpoints
                         .requestMatchers(
                                 "/api/v1/auth/register",
                                 "/api/v1/auth/login",
-                                "/api/v1/auth/refresh"
+                                "/api/v1/auth/google",
+                                "/api/v1/auth/refresh",
+                                "/api/v1/onboarding/tenant/invite-details"
                         ).permitAll()
                         // All other API endpoints require authentication & role authorization
                         .anyRequest().authenticated()

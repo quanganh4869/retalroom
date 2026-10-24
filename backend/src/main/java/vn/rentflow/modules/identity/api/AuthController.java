@@ -36,6 +36,13 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Đăng nhập thành công", response));
     }
 
+    @PostMapping("/google")
+    @Operation(summary = "Đăng nhập bằng Google", description = "Xác thực Google ID Token và tự động tạo tài khoản nếu lần đầu đăng nhập")
+    public ResponseEntity<ApiResponse<AuthResponse>> loginWithGoogle(@Valid @RequestBody GoogleLoginRequest request) {
+        AuthResponse response = authService.loginWithGoogle(request);
+        return ResponseEntity.ok(ApiResponse.success("Đăng nhập bằng Google thành công", response));
+    }
+
     @PostMapping("/refresh")
     @Operation(summary = "Cấp mới Access Token", description = "Sử dụng Refresh Token còn hiệu lực để cấp mới Access Token và xoay vòng Refresh Token")
     public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {

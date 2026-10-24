@@ -11,6 +11,7 @@ import vn.rentflow.modules.identity.infrastructure.persistence.RefreshTokenRepos
 import vn.rentflow.modules.users.domain.User;
 import vn.rentflow.modules.users.domain.UserRole;
 import vn.rentflow.modules.users.infrastructure.persistence.UserRepository;
+import vn.rentflow.security.GoogleTokenVerifier;
 import vn.rentflow.security.JwtTokenProvider;
 import vn.rentflow.security.SecurityUtils;
 import vn.rentflow.shared.exception.BusinessException;
@@ -22,6 +23,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HexFormat;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -32,6 +34,7 @@ public class AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final GoogleTokenVerifier googleTokenVerifier;
     private final AuditService auditService;
     private final long refreshTokenExpirationDays;
     private final long accessTokenExpirationMinutes;
@@ -41,6 +44,7 @@ public class AuthService {
             RefreshTokenRepository refreshTokenRepository,
             PasswordEncoder passwordEncoder,
             JwtTokenProvider jwtTokenProvider,
+            GoogleTokenVerifier googleTokenVerifier,
             AuditService auditService,
             @Value("${rentflow.security.jwt.refresh-token-expiration-days:14}") long refreshTokenExpirationDays,
             @Value("${rentflow.security.jwt.access-token-expiration-minutes:60}") long accessTokenExpirationMinutes) {
@@ -48,6 +52,7 @@ public class AuthService {
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.googleTokenVerifier = googleTokenVerifier;
         this.auditService = auditService;
         this.refreshTokenExpirationDays = refreshTokenExpirationDays;
         this.accessTokenExpirationMinutes = accessTokenExpirationMinutes;
@@ -76,6 +81,51 @@ public class AuthService {
                 saved.getId().toString(), "SUCCESS", "Tài khoản mới đăng ký thành công");
 
         return createAuthResponse(saved);
+    }
+
+    public AuthResponse loginWithGoogle(GoogleLoginRequest request) {
+        GoogleTokenVerifier.GoogleUserInfo userInfo = googleTokenVerifier.verify(request.getIdToken());
+
+        String email = userInfo.email().toLowerCase().trim();
+        Optional<User> existingUser = userRepository.findByProviderAndProviderSubject("GOOGLE", userInfo.sub());
+
+        User user;
+        if (existingUser.isPresent()) {
+            user = existingUser.get();
+            // Refresh avatar if available
+            if (userInfo.pictureUrl() != null && !userInfo.pictureUrl().isBlank()) {
+                user.updateProfile(user.getFullName(), user.getPhoneNumber(), userInfo.pictureUrl());
+            }
+        } else {
+            // Check if user exists by email (link Google identity)
+            Optional<User> userByEmail = userRepository.findByEmail(email);
+            if (userByEmail.isPresent()) {
+                user = userByEmail.get();
+                // Link Google provider info
+                user.updateProfile(user.getFullName(), user.getPhoneNumber(), userInfo.pictureUrl());
+            } else {
+                // First-time provisioning: create new user with unassigned role & NOT_STARTED onboarding
+                User newUser = User.createFromGoogle(
+                        UUID.randomUUID(),
+                        email,
+                        userInfo.name(),
+                        userInfo.pictureUrl(),
+                        userInfo.sub()
+                );
+                user = userRepository.save(newUser);
+                auditService.record(user.getId(), email, "GOOGLE_USER_PROVISIONED", "User",
+                        user.getId().toString(), "SUCCESS", "Tài khoản Google mới được khởi tạo tự động");
+            }
+        }
+
+        if (!user.isActive()) {
+            throw new BusinessException("ACCOUNT_INACTIVE", "Tài khoản đang bị vô hiệu hóa hoặc chưa kích hoạt");
+        }
+
+        auditService.record(user.getId(), user.getEmail(), "GOOGLE_LOGIN_SUCCESS", "User",
+                user.getId().toString(), "SUCCESS", "Đăng nhập bằng tài khoản Google thành công");
+
+        return createAuthResponse(user);
     }
 
     public AuthResponse login(LoginRequest request) {

@@ -1,6 +1,7 @@
 package vn.rentflow.modules.identity.api.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import vn.rentflow.modules.onboarding.domain.OnboardingStatus;
 import vn.rentflow.modules.users.domain.User;
 import vn.rentflow.modules.users.domain.UserRole;
 import vn.rentflow.modules.users.domain.UserStatus;
@@ -16,6 +17,10 @@ public class UserProfileResponse {
     private String phoneNumber;
     private UserRole role;
     private UserStatus status;
+    private String avatarUrl;
+    private String provider;
+    private OnboardingStatus onboardingStatus;
+    private String onboardingStep;
 
     public UserProfileResponse() {
     }
@@ -28,6 +33,10 @@ public class UserProfileResponse {
         resp.phoneNumber = user.getPhoneNumber();
         resp.role = user.getRole();
         resp.status = user.getStatus();
+        resp.avatarUrl = user.getAvatarUrl();
+        resp.provider = user.getProvider();
+        resp.onboardingStatus = user.getOnboardingStatus();
+        resp.onboardingStep = user.getOnboardingStep();
         return resp;
     }
 
@@ -53,5 +62,21 @@ public class UserProfileResponse {
 
     public UserStatus getStatus() {
         return status;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public OnboardingStatus getOnboardingStatus() {
+        return onboardingStatus;
+    }
+
+    public String getOnboardingStep() {
+        return onboardingStep;
     }
 }
