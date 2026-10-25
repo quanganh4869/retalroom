@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { onboardingService, OnboardingStatusResponse } from './services/authOnboardingService';
 import { useToast } from '@/components/feedback/ToastSystem';
-import { RentFlowLogo } from '@/components/ui/BrandLogos';
+import { RentFlowLogo } from '@/components/ui/RentFlowLogo';
 import { BrandLoader } from '@/components/ui/LoadingSystem';
 
 const STEPS = [

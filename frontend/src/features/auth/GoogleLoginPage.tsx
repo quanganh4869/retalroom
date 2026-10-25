@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, UserRole } from './AuthContext';
 import { useToast } from '@/components/feedback/ToastSystem';
-import { RentFlowLogo } from '@/components/ui/BrandLogos';
+import { RentFlowLogo } from '@/components/ui/RentFlowLogo';
 
 export const GoogleLoginPage: React.FC = () => {
   const navigate = useNavigate();

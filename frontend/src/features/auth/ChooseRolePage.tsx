@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { onboardingService } from './services/authOnboardingService';
 import { useToast } from '@/components/feedback/ToastSystem';
-import { RentFlowLogo } from '@/components/ui/BrandLogos';
+import { RentFlowLogo } from '@/components/ui/RentFlowLogo';
 
 export const ChooseRolePage: React.FC = () => {
   const navigate = useNavigate();
